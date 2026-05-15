@@ -50,11 +50,11 @@
 
 ## M5: sqlc config generation and plugin wiring
 
-- **Status:** pending
+- **Status:** done
 - **Description:** Generate `sqlc.yaml` configured for PostgreSQL with pgx, and wire everything into the `protoc-gen-clarity` plugin with output directory support.
 - **Acceptance Criteria:**
-  - [ ] `sqlc.yaml` generated at `internal/<provider>/<domain>/<version>/sqlc.yaml`
-  - [ ] Config references `sql/schema.sql` and `sql/queries/` directory
-  - [ ] Config targets PostgreSQL with pgx engine
-  - [ ] Plugin accepts output directory flag
+  - [x] `sqlc.yaml` generated at `internal/<provider>/<domain>/<version>/sqlc.yaml`
+  - [x] Config references `sql/schema.sql` and `sql/queries/` directory
+  - [x] Config targets PostgreSQL with pgx engine
+  - [x] Plugin accepts output directory flag
   - [ ] End-to-end test: proto input produces valid schema, queries, and sqlc config that passes `sqlc compile`

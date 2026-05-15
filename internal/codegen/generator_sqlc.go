@@ -19,7 +19,9 @@ var sqlcTemplateFS embed.FS
 
 var sqlcTemplates = template.Must(template.ParseFS(sqlcTemplateFS, "templates/sqlc/*.tmpl"))
 
-type sqlcGenerator struct{}
+type sqlcGenerator struct {
+	outputDir string
+}
 
 func (g *sqlcGenerator) Generate(plugin *protogen.Plugin) error {
 	for _, file := range plugin.Files {
@@ -43,16 +45,20 @@ func (g *sqlcGenerator) Generate(plugin *protogen.Plugin) error {
 			continue
 		}
 
+		outDir := meta.outputDir()
+		if g.outputDir != "" {
+			outDir = fmt.Sprintf("%s/%s", g.outputDir, outDir)
+		}
+
 		schemaContent, err := renderSchema(meta, entityMessages)
 		if err != nil {
 			return err
 		}
 
-		schemaFile := plugin.NewGeneratedFile(
-			fmt.Sprintf("%s/sql/schema.sql", meta.outputDir()),
+		plugin.NewGeneratedFile(
+			fmt.Sprintf("%s/sql/schema.sql", outDir),
 			"",
-		)
-		schemaFile.P(schemaContent)
+		).P(schemaContent)
 
 		for _, msg := range entityMessages {
 			queryContent, err := renderQueries(meta, msg)
@@ -60,12 +66,21 @@ func (g *sqlcGenerator) Generate(plugin *protogen.Plugin) error {
 				return err
 			}
 			queryFileName := toSnakeCase(string(msg.Desc.Name()))
-			queryFile := plugin.NewGeneratedFile(
-				fmt.Sprintf("%s/sql/queries/%s.sql", meta.outputDir(), queryFileName),
+			plugin.NewGeneratedFile(
+				fmt.Sprintf("%s/sql/queries/%s.sql", outDir, queryFileName),
 				"",
-			)
-			queryFile.P(queryContent)
+			).P(queryContent)
 		}
+
+		configContent, err := renderConfig(meta)
+		if err != nil {
+			return err
+		}
+
+		plugin.NewGeneratedFile(
+			fmt.Sprintf("%s/sqlc.yaml", outDir),
+			"",
+		).P(configContent)
 	}
 
 	return nil
@@ -197,6 +212,20 @@ func renderQueries(meta packageMeta, msg *protogen.Message) (string, error) {
 	var buf bytes.Buffer
 	if err := sqlcTemplates.ExecuteTemplate(&buf, "queries.sql.tmpl", data); err != nil {
 		return "", fmt.Errorf("executing queries template: %w", err)
+	}
+	return buf.String(), nil
+}
+
+// configData is the template data for sqlc.yaml.tmpl.
+type configData struct {
+	Package string
+}
+
+func renderConfig(meta packageMeta) (string, error) {
+	data := configData{Package: meta.Version}
+	var buf bytes.Buffer
+	if err := sqlcTemplates.ExecuteTemplate(&buf, "sqlc.yaml.tmpl", data); err != nil {
+		return "", fmt.Errorf("executing sqlc config template: %w", err)
 	}
 	return buf.String(), nil
 }

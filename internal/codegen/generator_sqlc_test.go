@@ -93,3 +93,13 @@ func TestRenderQueries(t *testing.T) {
 
 	assert.Equal(t, loadGolden(t, "queries_product.sql"), buf.String())
 }
+
+func TestRenderConfig(t *testing.T) {
+	data := configData{Package: "v1"}
+
+	var buf bytes.Buffer
+	err := sqlcTemplates.ExecuteTemplate(&buf, "sqlc.yaml.tmpl", data)
+	require.NoError(t, err)
+
+	assert.Equal(t, loadGolden(t, "sqlc.yaml"), buf.String())
+}

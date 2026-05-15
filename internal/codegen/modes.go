@@ -11,7 +11,7 @@ func GeneratorForMode(raw string) (Generator, error) {
 	case "echo":
 		return &echoGenerator{}, nil
 	case "sqlc":
-		return &sqlcGenerator{}, nil
+		return &sqlcGenerator{outputDir: p.outputDir}, nil
 	default:
 		return nil, fmt.Errorf("unknown mode %q", p.mode)
 	}
@@ -19,7 +19,8 @@ func GeneratorForMode(raw string) (Generator, error) {
 
 // params holds parsed plugin parameters.
 type params struct {
-	mode string
+	mode      string
+	outputDir string
 }
 
 func parseParams(raw string) params {
@@ -34,6 +35,8 @@ func parseParams(raw string) params {
 		switch strings.TrimSpace(key) {
 		case "mode":
 			p.mode = strings.TrimSpace(value)
+		case "output_dir":
+			p.outputDir = strings.TrimSpace(value)
 		}
 	}
 
