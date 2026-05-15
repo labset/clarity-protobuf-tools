@@ -1,0 +1,43 @@
+[tools]
+go = "1.25.3"
+buf = "1.67.0"
+golangci-lint = "2.5.0"
+goreleaser = "2.12.7"
+
+[tasks.deps]
+description = "Download Go module dependencies"
+run = "go mod download"
+
+[tasks.lint]
+description = "Run golangci-lint on the codebase"
+run = "golangci-lint run"
+
+[tasks."lint:fix"]
+description = "Run golangci-lint fix on the codebase"
+run = "golangci-lint run --fix"
+
+
+[tasks.format]
+description = "Run go format"
+run = "go fmt ./..."
+
+[tasks.build]
+description = "Build the project using goreleaser"
+run = "goreleaser build --clean --snapshot"
+
+[tasks.generate]
+description = "Generate code from proto files"
+dir = "schema"
+run = "buf generate --template buf.gen.api.yaml"
+
+[tasks."buf:lint"]
+description = "Lint proto files"
+run = "buf lint"
+
+[tasks."buf:format"]
+description = "Format proto files in place"
+run = "buf format --write"
+
+[tasks.install]
+description = "Install the plugin locally"
+run = "go install ./cmd/..."

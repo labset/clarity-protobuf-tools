@@ -1,0 +1,12 @@
+version: v2
+inputs:
+  - directory: protos
+
+plugins:
+  # Go SDK
+  - local: protoc-gen-go
+    out: ../api/go-sdk
+    opt: paths=source_relative
+  - local: protoc-gen-connect-go
+    out: ../api/go-sdk
+    opt: paths=source_relative
