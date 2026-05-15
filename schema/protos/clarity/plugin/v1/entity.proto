@@ -2,10 +2,10 @@ syntax = "proto3";
 
 package clarity.plugin.v1;
 
-option go_package = "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1;pluginV1";
-
-import "google/protobuf/timestamp.proto";
 import "clarity/plugin/v1/options.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1;pluginV1";
 
 message Entity {
   option (clarity.plugin.v1.message) = {role: ROLE_BASE};

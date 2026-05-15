@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package clarity.plugin.v1;
 
-option go_package = "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1;pluginV1";
-
 import "google/protobuf/descriptor.proto";
+
+option go_package = "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1;pluginV1";
 
 enum Role {
   ROLE_UNSPECIFIED = 0;
