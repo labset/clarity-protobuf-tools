@@ -12,16 +12,16 @@
 
 ## M2: Proto-to-PostgreSQL type mapping
 
-- **Status:** pending
+- **Status:** done
 - **Description:** Implement the type mapping layer that converts proto field descriptors to PostgreSQL column definitions, covering scalars, well-known types, enums, repeated fields, nested messages, maps, and oneofs.
 - **Acceptance Criteria:**
-  - [ ] All scalar proto types map to correct PostgreSQL types
-  - [ ] Well-known types (`Timestamp`, `Duration`, `Struct`, `Value`) map correctly
-  - [ ] Enums map to `TEXT` with `CHECK` constraint listing valid value names
-  - [ ] Repeated scalars map to array types
-  - [ ] Repeated messages, nested messages, and maps map to `JSONB`
-  - [ ] Oneof fields map to nullable columns per variant
-  - [ ] Unit tests cover all type mappings
+  - [x] All scalar proto types map to correct PostgreSQL types
+  - [x] Well-known types (`Timestamp`, `Duration`, `Struct`, `Value`) map correctly
+  - [x] Enums map to `TEXT` with `CHECK` constraint listing valid value names
+  - [x] Repeated scalars map to array types
+  - [x] Repeated messages, nested messages, and maps map to `JSONB`
+  - [x] Oneof fields map to nullable columns per variant
+  - [x] Unit tests cover all type mappings
 
 ## M3: Schema DDL generation
 
