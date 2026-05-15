@@ -37,16 +37,16 @@
 
 ## M4: CRUD query generation
 
-- **Status:** pending
+- **Status:** done
 - **Description:** Generate per-entity sqlc-annotated query files with insert, get by id, list, update, and delete operations.
 - **Acceptance Criteria:**
-  - [ ] Insert query includes all columns, with `id` passed as parameter
-  - [ ] Get by id query selects all columns filtered by `id`
-  - [ ] List query selects all columns
-  - [ ] Update query updates non-primary-key columns filtered by `id`, sets `updated_at`
-  - [ ] Delete query removes row by `id`
-  - [ ] Each query has correct sqlc annotation (`-- name: <Name> :one`, `:many`, `:exec`, etc.)
-  - [ ] One query file per entity at `internal/<provider>/<domain>/<version>/sql/queries/<message_name>.sql`
+  - [x] Insert query includes all columns, with `id` passed as parameter
+  - [x] Get by id query selects all columns filtered by `id`
+  - [x] List query selects all columns
+  - [x] Update query updates non-primary-key columns filtered by `id`, sets `updated_at`
+  - [x] Delete query removes row by `id`
+  - [x] Each query has correct sqlc annotation (`-- name: <Name> :one`, `:many`, `:exec`, etc.)
+  - [x] One query file per entity at `internal/<provider>/<domain>/<version>/sql/queries/<message_name>.sql`
 
 ## M5: sqlc config generation and plugin wiring
 

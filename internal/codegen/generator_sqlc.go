@@ -53,6 +53,19 @@ func (g *sqlcGenerator) Generate(plugin *protogen.Plugin) error {
 			"",
 		)
 		schemaFile.P(schemaContent)
+
+		for _, msg := range entityMessages {
+			queryContent, err := renderQueries(meta, msg)
+			if err != nil {
+				return err
+			}
+			queryFileName := toSnakeCase(string(msg.Desc.Name()))
+			queryFile := plugin.NewGeneratedFile(
+				fmt.Sprintf("%s/sql/queries/%s.sql", meta.outputDir(), queryFileName),
+				"",
+			)
+			queryFile.P(queryContent)
+		}
 	}
 
 	return nil
@@ -124,6 +137,66 @@ func renderSchema(meta packageMeta, messages []*protogen.Message) (string, error
 	var buf bytes.Buffer
 	if err := sqlcTemplates.ExecuteTemplate(&buf, "schema.sql.tmpl", data); err != nil {
 		return "", fmt.Errorf("executing schema template: %w", err)
+	}
+	return buf.String(), nil
+}
+
+// queryData is the template data for queries.sql.tmpl.
+type queryData struct {
+	Schema          string
+	Table           string
+	MessageName     string
+	AllColumns      string
+	AllPlaceholders string
+	UpdateSetClause string
+}
+
+func renderQueries(meta packageMeta, msg *protogen.Message) (string, error) {
+	tableName := toSnakeCase(string(msg.Desc.Name()))
+
+	var columnNames []string
+	for _, col := range entityColumns() {
+		columnNames = append(columnNames, col.Name)
+	}
+	for _, field := range msg.Fields {
+		if string(field.Desc.Name()) == "entity" {
+			continue
+		}
+		if field.Oneof != nil && !field.Desc.HasOptionalKeyword() {
+			columnNames = append(columnNames, string(field.Desc.Name()))
+		} else {
+			columnNames = append(columnNames, string(field.Desc.Name()))
+		}
+	}
+
+	placeholders := make([]string, len(columnNames))
+	for i := range columnNames {
+		placeholders[i] = fmt.Sprintf("$%d", i+1)
+	}
+
+	// Update sets all columns except id, with id as $1.
+	var setClauses []string
+	paramIdx := 2 // $1 is id in WHERE clause
+	for _, col := range columnNames {
+		if col == "id" {
+			continue
+		}
+		setClauses = append(setClauses, fmt.Sprintf("%s = $%d", col, paramIdx))
+		paramIdx++
+	}
+
+	data := queryData{
+		Schema:          meta.Schema,
+		Table:           tableName,
+		MessageName:     string(msg.Desc.Name()),
+		AllColumns:      strings.Join(columnNames, ", "),
+		AllPlaceholders: strings.Join(placeholders, ", "),
+		UpdateSetClause: strings.Join(setClauses, ", "),
+	}
+
+	var buf bytes.Buffer
+	if err := sqlcTemplates.ExecuteTemplate(&buf, "queries.sql.tmpl", data); err != nil {
+		return "", fmt.Errorf("executing queries template: %w", err)
 	}
 	return buf.String(), nil
 }

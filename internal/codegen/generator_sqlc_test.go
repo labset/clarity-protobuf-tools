@@ -2,6 +2,7 @@ package codegen
 
 import (
 	"bytes"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -45,8 +46,14 @@ func TestToSnakeCase(t *testing.T) {
 	}
 }
 
+func loadGolden(t *testing.T, name string) string {
+	t.Helper()
+	data, err := os.ReadFile("testdata/golden/sqlc/" + name)
+	require.NoError(t, err)
+	return string(data)
+}
+
 func TestRenderSchema(t *testing.T) {
-	// Template rendering test with mock data (no protogen dependency).
 	data := schemaData{
 		Schema: "acme_inventory",
 		Tables: []tableData{
@@ -63,14 +70,26 @@ func TestRenderSchema(t *testing.T) {
 		},
 	}
 
-	var buf = new(bytes.Buffer)
-	err := sqlcTemplates.ExecuteTemplate(buf, "schema.sql.tmpl", data)
+	var buf bytes.Buffer
+	err := sqlcTemplates.ExecuteTemplate(&buf, "schema.sql.tmpl", data)
 	require.NoError(t, err)
 
-	result := buf.String()
-	assert.Contains(t, result, "CREATE SCHEMA IF NOT EXISTS acme_inventory;")
-	assert.Contains(t, result, "CREATE TABLE acme_inventory.product (")
-	assert.Contains(t, result, "id UUID PRIMARY KEY NOT NULL")
-	assert.Contains(t, result, "name TEXT NOT NULL")
-	assert.Contains(t, result, "price BIGINT NOT NULL")
+	assert.Equal(t, loadGolden(t, "schema.sql"), buf.String())
+}
+
+func TestRenderQueries(t *testing.T) {
+	data := queryData{
+		Schema:          "acme_inventory",
+		Table:           "product",
+		MessageName:     "Product",
+		AllColumns:      "id, created_at, updated_at, name, price",
+		AllPlaceholders: "$1, $2, $3, $4, $5",
+		UpdateSetClause: "created_at = $2, updated_at = $3, name = $4, price = $5",
+	}
+
+	var buf bytes.Buffer
+	err := sqlcTemplates.ExecuteTemplate(&buf, "queries.sql.tmpl", data)
+	require.NoError(t, err)
+
+	assert.Equal(t, loadGolden(t, "queries_product.sql"), buf.String())
 }
