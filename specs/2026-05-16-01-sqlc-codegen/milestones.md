@@ -25,15 +25,15 @@
 
 ## M3: Schema DDL generation
 
-- **Status:** pending
+- **Status:** done
 - **Description:** Generate `schema.sql` with `CREATE SCHEMA` and `CREATE TABLE` statements, inlining `Entity` fields and mapping remaining message fields to columns.
 - **Acceptance Criteria:**
-  - [ ] Schema name derived as `<provider>_<domain>` from proto package
-  - [ ] Table name derived as snake_case of message name
-  - [ ] Entity fields inlined as `id UUID PRIMARY KEY`, `created_at TIMESTAMPTZ NOT NULL`, `updated_at TIMESTAMPTZ NOT NULL`
-  - [ ] Remaining message fields mapped to columns using M2 type mapping
-  - [ ] Multiple `ROLE_ENTITY` messages in a package produce tables in a single `schema.sql`
-  - [ ] Output written to `internal/<provider>/<domain>/<version>/sql/schema.sql`
+  - [x] Schema name derived as `<provider>_<domain>` from proto package
+  - [x] Table name derived as snake_case of message name
+  - [x] Entity fields inlined as `id UUID PRIMARY KEY`, `created_at TIMESTAMPTZ NOT NULL`, `updated_at TIMESTAMPTZ NOT NULL`
+  - [x] Remaining message fields mapped to columns using M2 type mapping
+  - [x] Multiple `ROLE_ENTITY` messages in a package produce tables in a single `schema.sql`
+  - [x] Output written to `internal/<provider>/<domain>/<version>/sql/schema.sql`
 
 ## M4: CRUD query generation
 
