@@ -54,33 +54,29 @@ func (g *sqlcGenerator) Generate(plugin *protogen.Plugin) error {
 		if err != nil {
 			return err
 		}
-
-		plugin.NewGeneratedFile(
-			fmt.Sprintf("%s/sql/schema.sql", outDir),
-			"",
-		).P(schemaContent)
+		if _, err := plugin.NewGeneratedFile(fmt.Sprintf("%s/sql/schema.sql", outDir), "").Write([]byte(schemaContent)); err != nil {
+			return err
+		}
 
 		for _, msg := range entityMessages {
+			queryFileName := toSnakeCase(string(msg.Desc.Name()))
+			path := fmt.Sprintf("%s/sql/queries/%s.sql", outDir, queryFileName)
 			queryContent, err := renderQueries(meta, msg)
 			if err != nil {
 				return err
 			}
-			queryFileName := toSnakeCase(string(msg.Desc.Name()))
-			plugin.NewGeneratedFile(
-				fmt.Sprintf("%s/sql/queries/%s.sql", outDir, queryFileName),
-				"",
-			).P(queryContent)
+			if _, err := plugin.NewGeneratedFile(path, "").Write([]byte(queryContent)); err != nil {
+				return err
+			}
 		}
 
 		configContent, err := renderConfig(meta)
 		if err != nil {
 			return err
 		}
-
-		plugin.NewGeneratedFile(
-			fmt.Sprintf("%s/sqlc.yaml", outDir),
-			"",
-		).P(configContent)
+		if _, err := plugin.NewGeneratedFile(fmt.Sprintf("%s/sqlc.yaml", outDir), "").Write([]byte(configContent)); err != nil {
+			return err
+		}
 	}
 
 	return nil

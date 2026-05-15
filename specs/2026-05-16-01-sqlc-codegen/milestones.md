@@ -57,4 +57,4 @@
   - [x] Config references `sql/schema.sql` and `sql/queries/` directory
   - [x] Config targets PostgreSQL with pgx engine
   - [x] Plugin accepts output directory flag
-  - [ ] End-to-end test: proto input produces valid schema, queries, and sqlc config that passes `sqlc compile`
+  - [x] End-to-end test: proto input produces valid schema, queries, and sqlc config that passes `sqlc compile`
