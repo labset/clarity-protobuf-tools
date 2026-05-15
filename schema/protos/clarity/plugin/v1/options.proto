@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package clarity.plugin.v1;
+
+option go_package = "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1;pluginV1";
+
+import "google/protobuf/descriptor.proto";
+
+enum Role {
+  ROLE_UNSPECIFIED = 0;
+  ROLE_BASE = 1;
+}
+
+message ClarityMessageOptions {
+  Role role = 1;
+}
+
+extend google.protobuf.MessageOptions {
+  ClarityMessageOptions message = 50001;
+}

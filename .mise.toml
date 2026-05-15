@@ -4,6 +4,10 @@ buf = "1.67.0"
 golangci-lint = "2.5.0"
 goreleaser = "2.12.7"
 
+#########
+# Go Tasks
+#########
+
 [tasks.deps]
 description = "Download Go module dependencies"
 run = "go mod download"
@@ -15,7 +19,6 @@ run = "golangci-lint run"
 [tasks."lint:fix"]
 description = "Run golangci-lint fix on the codebase"
 run = "golangci-lint run --fix"
-
 
 [tasks.format]
 description = "Run go format"
@@ -29,6 +32,10 @@ run = "goreleaser build --clean --snapshot"
 description = "Generate code from proto files"
 dir = "schema"
 run = "buf generate --template buf.gen.api.yaml"
+
+################
+# Proto Tasks
+################
 
 [tasks."buf:lint"]
 description = "Lint proto files"
