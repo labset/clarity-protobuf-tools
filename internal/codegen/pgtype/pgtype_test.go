@@ -3,6 +3,8 @@ package pgtype
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -13,10 +15,19 @@ import (
 func fieldDesc(t *testing.T, fds *descriptorpb.FileDescriptorProto) protoreflect.MessageDescriptor {
 	t.Helper()
 	fd, err := protodesc.NewFile(fds, new(protoregistry.Files))
-	if err != nil {
-		t.Fatalf("failed to create file descriptor: %v", err)
-	}
+	require.NoError(t, err)
 	return fd.Messages().Get(0)
+}
+
+func buildFileWithDep(t *testing.T, dep *descriptorpb.FileDescriptorProto, main *descriptorpb.FileDescriptorProto) protoreflect.MessageDescriptor {
+	t.Helper()
+	reg := new(protoregistry.Files)
+	depFD, err := protodesc.NewFile(dep, reg)
+	require.NoError(t, err)
+	reg.RegisterFile(depFD)
+	mainFD, err := protodesc.NewFile(main, reg)
+	require.NoError(t, err)
+	return mainFD.Messages().Get(0)
 }
 
 func TestMapField_Scalars(t *testing.T) {
@@ -62,12 +73,8 @@ func TestMapField_Scalars(t *testing.T) {
 				},
 			})
 			col := MapField(msg.Fields().Get(0))
-			if col.Type != tt.want {
-				t.Errorf("MapField() type = %q, want %q", col.Type, tt.want)
-			}
-			if col.Name != "field" {
-				t.Errorf("MapField() name = %q, want %q", col.Name, "field")
-			}
+			assert.Equal(t, tt.want, col.Type)
+			assert.Equal(t, "field", col.Name)
 		})
 	}
 }
@@ -102,28 +109,8 @@ func TestMapField_Enum(t *testing.T) {
 		},
 	})
 	col := MapField(msg.Fields().Get(0))
-	if col.Type != "TEXT" {
-		t.Errorf("MapField() type = %q, want TEXT", col.Type)
-	}
-	wantCheck := "status IN ('STATUS_UNSPECIFIED', 'STATUS_ACTIVE', 'STATUS_INACTIVE')"
-	if col.Check != wantCheck {
-		t.Errorf("MapField() check = %q, want %q", col.Check, wantCheck)
-	}
-}
-
-func buildFileWithDep(t *testing.T, dep *descriptorpb.FileDescriptorProto, main *descriptorpb.FileDescriptorProto) protoreflect.MessageDescriptor {
-	t.Helper()
-	reg := new(protoregistry.Files)
-	depFD, err := protodesc.NewFile(dep, reg)
-	if err != nil {
-		t.Fatalf("failed to create dep file descriptor: %v", err)
-	}
-	reg.RegisterFile(depFD)
-	mainFD, err := protodesc.NewFile(main, reg)
-	if err != nil {
-		t.Fatalf("failed to create main file descriptor: %v", err)
-	}
-	return mainFD.Messages().Get(0)
+	assert.Equal(t, "TEXT", col.Type)
+	assert.Equal(t, "status IN ('STATUS_UNSPECIFIED', 'STATUS_ACTIVE', 'STATUS_INACTIVE')", col.Check)
 }
 
 func TestMapField_WellKnownTypes(t *testing.T) {
@@ -170,9 +157,7 @@ func TestMapField_WellKnownTypes(t *testing.T) {
 			}
 			msg := buildFileWithDep(t, dep, main)
 			col := MapField(msg.Fields().Get(0))
-			if col.Type != tt.want {
-				t.Errorf("MapField() type = %q, want %q", col.Type, tt.want)
-			}
+			assert.Equal(t, tt.want, col.Type)
 		})
 	}
 }
@@ -207,9 +192,7 @@ func TestMapField_NestedMessage(t *testing.T) {
 	}
 	msg := buildFileWithDep(t, dep, main)
 	col := MapField(msg.Fields().Get(0))
-	if col.Type != "JSONB" {
-		t.Errorf("MapField() type = %q, want JSONB", col.Type)
-	}
+	assert.Equal(t, "JSONB", col.Type)
 }
 
 func TestMapField_RepeatedScalar(t *testing.T) {
@@ -232,9 +215,7 @@ func TestMapField_RepeatedScalar(t *testing.T) {
 		},
 	})
 	col := MapField(msg.Fields().Get(0))
-	if col.Type != "TEXT[]" {
-		t.Errorf("MapField() type = %q, want TEXT[]", col.Type)
-	}
+	assert.Equal(t, "TEXT[]", col.Type)
 }
 
 func TestMapField_RepeatedMessage(t *testing.T) {
@@ -268,9 +249,7 @@ func TestMapField_RepeatedMessage(t *testing.T) {
 	}
 	msg := buildFileWithDep(t, dep, main)
 	col := MapField(msg.Fields().Get(0))
-	if col.Type != "JSONB" {
-		t.Errorf("MapField() type = %q, want JSONB", col.Type)
-	}
+	assert.Equal(t, "JSONB", col.Type)
 }
 
 func TestMapField_Map(t *testing.T) {
@@ -314,9 +293,7 @@ func TestMapField_Map(t *testing.T) {
 		},
 	})
 	col := MapField(msg.Fields().Get(0))
-	if col.Type != "JSONB" {
-		t.Errorf("MapField() type = %q, want JSONB", col.Type)
-	}
+	assert.Equal(t, "JSONB", col.Type)
 }
 
 func TestColumnSQL(t *testing.T) {
@@ -344,10 +321,7 @@ func TestColumnSQL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := tt.col.ColumnSQL()
-			if got != tt.want {
-				t.Errorf("ColumnSQL() = %q, want %q", got, tt.want)
-			}
+			assert.Equal(t, tt.want, tt.col.ColumnSQL())
 		})
 	}
 }
