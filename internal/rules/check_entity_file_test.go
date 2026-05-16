@@ -24,6 +24,34 @@ func TestCheckEntityFile_Pass(t *testing.T) {
 	}.Run(t)
 }
 
+func TestCheckEntityFile_FailPackageFormat(t *testing.T) {
+	t.Parallel()
+	checktest.CheckTest{
+		Request: &checktest.RequestSpec{
+			Files: &checktest.ProtoFileSpec{
+				DirPaths:  []string{"testdata/entity_file/fail_package", "../../protos"},
+				FilePaths: []string{"models.proto"},
+			},
+			RuleIDs: []string{"CLARITY_ENTITY_FILE"},
+		},
+		Spec: &check.Spec{
+			Rules: All,
+		},
+		ExpectedAnnotations: []checktest.ExpectedAnnotation{
+			{
+				RuleID: "CLARITY_ENTITY_FILE",
+				FileLocation: &checktest.ExpectedFileLocation{
+					FileName:    "models.proto",
+					StartLine:   7,
+					StartColumn: 0,
+					EndLine:     11,
+					EndColumn:   1,
+				},
+			},
+		},
+	}.Run(t)
+}
+
 func TestCheckEntityFile_Fail(t *testing.T) {
 	t.Parallel()
 	checktest.CheckTest{

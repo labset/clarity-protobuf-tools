@@ -3,19 +3,18 @@ package rules
 import (
 	"context"
 	"path"
+	"strings"
 
 	"buf.build/go/bufplugin/check"
 	"buf.build/go/bufplugin/check/checkutil"
-	pluginV1 "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1"
-	"google.golang.org/protobuf/proto"
+	"github.com/labset/clarity-protobuf-tools/internal/clarity"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/descriptorpb"
 )
 
 var entityFileRuleSpec = &check.RuleSpec{
 	ID:      "CLARITY_ENTITY_FILE",
 	Default: true,
-	Purpose: "Checks that ROLE_ENTITY is only used on messages defined in models.proto files.",
+	Purpose: "Checks that ROLE_ENTITY is only used on messages defined in models.proto files under a <provider>.<domain>.<version> package.",
 	Type:    check.RuleTypeLint,
 	Handler: checkutil.NewMessageRuleHandler(checkEntityFile, checkutil.WithoutImports()),
 }
@@ -26,19 +25,7 @@ func checkEntityFile(
 	_ check.Request,
 	messageDescriptor protoreflect.MessageDescriptor,
 ) error {
-	opts, ok := messageDescriptor.Options().(*descriptorpb.MessageOptions)
-	if !ok {
-		return nil
-	}
-	if !proto.HasExtension(opts, pluginV1.E_Message) {
-		return nil
-	}
-	ext := proto.GetExtension(opts, pluginV1.E_Message)
-	clarityOpts, ok := ext.(*pluginV1.ClarityMessageOptions)
-	if !ok || clarityOpts == nil {
-		return nil
-	}
-	if clarityOpts.GetRole() != pluginV1.Role_ROLE_ENTITY {
+	if !clarity.IsEntity(messageDescriptor) {
 		return nil
 	}
 
@@ -49,6 +36,19 @@ func checkEntityFile(
 				"Message %q with ROLE_ENTITY must be defined in a models.proto file, got %q.",
 				messageDescriptor.FullName(),
 				fileName,
+			),
+			check.WithDescriptor(messageDescriptor),
+		)
+	}
+
+	pkg := string(messageDescriptor.ParentFile().Package())
+	parts := strings.Split(pkg, ".")
+	if len(parts) < 3 {
+		responseWriter.AddAnnotation(
+			check.WithMessagef(
+				"Message %q with ROLE_ENTITY must be in a <provider>.<domain>.<version> package, got %q.",
+				messageDescriptor.FullName(),
+				pkg,
 			),
 			check.WithDescriptor(messageDescriptor),
 		)

@@ -9,10 +9,9 @@ import (
 	"text/template"
 	"unicode"
 
-	pluginV1 "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1"
+	"github.com/labset/clarity-protobuf-tools/internal/clarity"
 	"github.com/labset/clarity-protobuf-tools/internal/codegen/pgtype"
 	"google.golang.org/protobuf/compiler/protogen"
-	"google.golang.org/protobuf/proto"
 )
 
 //go:embed templates/sqlc/*.tmpl
@@ -262,19 +261,7 @@ var managedColumns = map[string]bool{
 }
 
 func isEntityMessage(msg *protogen.Message) bool {
-	opts := msg.Desc.Options()
-	if opts == nil {
-		return false
-	}
-	if !proto.HasExtension(opts, pluginV1.E_Message) {
-		return false
-	}
-	ext := proto.GetExtension(opts, pluginV1.E_Message)
-	clarityOpts, ok := ext.(*pluginV1.ClarityMessageOptions)
-	if !ok || clarityOpts == nil {
-		return false
-	}
-	return clarityOpts.GetRole() == pluginV1.Role_ROLE_ENTITY
+	return clarity.IsEntity(msg.Desc)
 }
 
 func toSnakeCase(s string) string {
