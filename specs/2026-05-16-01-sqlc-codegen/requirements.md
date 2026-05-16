@@ -12,16 +12,16 @@ Proto messages annotated with `ROLE_ENTITY` must include a field `entity` of typ
 
 ### Functional
 
-- [ ] FR-1: Add `ROLE_ENTITY = 2` to the `Role` enum in `clarity/plugin/v1/options.proto`
-- [ ] FR-2: The `clarity-lint-plugin` validates that messages with `ROLE_ENTITY` have a field named `entity` of type `clarity.plugin.v1.Entity` at field number 1
-- [ ] FR-3: The `protoc-gen-clarity` plugin accepts an output directory flag and emits files to it
-- [ ] FR-4: Generate `internal/<provider>/<domain>/<version>/sql/schema.sql` containing `CREATE SCHEMA` and `CREATE TABLE` statements for all `ROLE_ENTITY` messages in a package
-- [ ] FR-5: Generate `internal/<provider>/<domain>/<version>/sql/queries/<message_name>.sql` with sqlc-annotated CRUD queries (insert, get by id, list, update, delete) per entity
-- [ ] FR-6: Generate `internal/<provider>/<domain>/<version>/sqlc.yaml` configured for PostgreSQL with pgx, referencing the schema and queries directory
-- [ ] FR-7: Derive the PostgreSQL schema name as `<provider>_<domain>` from proto package `<provider>.<domain>.<version>`
-- [ ] FR-8: Derive the table name as snake_case of the proto message name
-- [ ] FR-9: Inline `clarity.plugin.v1.Entity` fields as columns: `id UUID PRIMARY KEY`, `created_at TIMESTAMPTZ NOT NULL`, `updated_at TIMESTAMPTZ NOT NULL`
-- [ ] FR-10: Map proto scalar types to PostgreSQL types:
+- [x] FR-1: Add `ROLE_ENTITY = 2` to the `Role` enum in `clarity/plugin/v1/options.proto`
+- [x] FR-2: The `clarity-lint-plugin` validates that messages with `ROLE_ENTITY` have a field named `entity` of type `clarity.plugin.v1.Entity` at field number 1
+- [x] FR-3: The `protoc-gen-clarity` plugin accepts an output directory flag and emits files to it
+- [x] FR-4: Generate `internal/<provider>/<domain>/<version>/sql/schema.sql` containing `CREATE SCHEMA` and `CREATE TABLE` statements for all `ROLE_ENTITY` messages in a package
+- [x] FR-5: Generate `internal/<provider>/<domain>/<version>/sql/queries/<message_name>.sql` with sqlc-annotated CRUD queries (insert, get by id, list, update, delete) per entity
+- [x] FR-6: Generate `internal/<provider>/<domain>/<version>/sqlc.yaml` configured for PostgreSQL with pgx, referencing the schema and queries directory
+- [x] FR-7: Derive the PostgreSQL schema name as `<provider>_<domain>` from proto package `<provider>.<domain>.<version>`
+- [x] FR-8: Derive the table name as snake_case of the proto message name
+- [x] FR-9: Inline `clarity.plugin.v1.Entity` fields as columns: `id UUID PRIMARY KEY`, `created_at TIMESTAMPTZ NOT NULL`, `updated_at TIMESTAMPTZ NOT NULL`
+- [x] FR-10: Map proto scalar types to PostgreSQL types:
   - `string` -> `TEXT`
   - `bytes` -> `BYTEA`
   - `bool` -> `BOOLEAN`
@@ -31,19 +31,19 @@ Proto messages annotated with `ROLE_ENTITY` must include a field `entity` of typ
   - `uint64`, `fixed64` -> `BIGINT`
   - `float` -> `REAL`
   - `double` -> `DOUBLE PRECISION`
-- [ ] FR-11: Map well-known types:
+- [x] FR-11: Map well-known types:
   - `google.protobuf.Timestamp` -> `TIMESTAMPTZ`
   - `google.protobuf.Duration` -> `INTERVAL`
   - `google.protobuf.Struct` / `google.protobuf.Value` -> `JSONB`
-- [ ] FR-12: Map enums to `TEXT` with a `CHECK` constraint listing the valid proto enum value names
-- [ ] FR-13: Map `repeated <scalar>` to PostgreSQL array types (e.g. `TEXT[]`, `INTEGER[]`)
-- [ ] FR-14: Map `repeated <message>`, nested messages, and `map<K,V>` to `JSONB`
-- [ ] FR-15: Map `oneof` to nullable columns, one per variant
+- [x] FR-12: Map enums to `TEXT` with a `CHECK` constraint listing the valid proto enum value names
+- [x] FR-13: Map `repeated <scalar>` to PostgreSQL array types (e.g. `TEXT[]`, `INTEGER[]`)
+- [x] FR-14: Map `repeated <message>`, nested messages, and `map<K,V>` to `JSONB`
+- [x] FR-15: Map `oneof` to nullable columns, one per variant
 
 ### Non-Functional
 
-- [ ] NFR-1: UUIDs are generated at the application layer using `gofrs/uuid/v5` — no database-level UUID generation
-- [ ] NFR-2: Generated sqlc config targets PostgreSQL with the pgx driver
+- [x] NFR-1: UUIDs are generated at the application layer using `gofrs/uuid/v5` — no database-level UUID generation
+- [x] NFR-2: Generated sqlc config targets PostgreSQL with the pgx driver
 
 ### Deferred
 

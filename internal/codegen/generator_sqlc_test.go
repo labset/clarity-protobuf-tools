@@ -22,8 +22,6 @@ func loadGolden(t *testing.T, name string) string {
 	return string(data)
 }
 
-// collectFileDescriptors walks the global proto registry and collects
-// the file descriptor proto and all its transitive dependencies in topological order.
 func collectFileDescriptors(t *testing.T, paths ...string) []*descriptorpb.FileDescriptorProto {
 	t.Helper()
 	seen := make(map[string]bool)
@@ -65,14 +63,10 @@ func TestParsePackage_Invalid(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestSqlcGenerator_Generate(t *testing.T) {
-	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
-	)
-
-	productFile := &descriptorpb.FileDescriptorProto{
-		Name:    proto.String("acme/inventory/v1/product.proto"),
+func testProtoFile(t *testing.T) *descriptorpb.FileDescriptorProto {
+	t.Helper()
+	return &descriptorpb.FileDescriptorProto{
+		Name:    proto.String("acme/inventory/v1/models.proto"),
 		Package: proto.String("acme.inventory.v1"),
 		Syntax:  proto.String("proto3"),
 		Options: &descriptorpb.FileOptions{
@@ -105,12 +99,53 @@ func TestSqlcGenerator_Generate(t *testing.T) {
 					},
 				},
 			},
+			{
+				Name:    proto.String("Order"),
+				Options: entityMessageOptions(t),
+				Field: []*descriptorpb.FieldDescriptorProto{
+					{
+						Name:     proto.String("entity"),
+						Number:   proto.Int32(1),
+						Type:     descriptorpb.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+						TypeName: proto.String(".clarity.plugin.v1.Entity"),
+					},
+					{
+						Name:   proto.String("quantity"),
+						Number: proto.Int32(2),
+						Type:   descriptorpb.FieldDescriptorProto_TYPE_INT32.Enum(),
+					},
+					{
+						Name:       proto.String("billing_address"),
+						Number:     proto.Int32(3),
+						Type:       descriptorpb.FieldDescriptorProto_TYPE_STRING.Enum(),
+						OneofIndex: proto.Int32(0),
+					},
+					{
+						Name:       proto.String("shipping_address"),
+						Number:     proto.Int32(4),
+						Type:       descriptorpb.FieldDescriptorProto_TYPE_STRING.Enum(),
+						OneofIndex: proto.Int32(0),
+					},
+				},
+				OneofDecl: []*descriptorpb.OneofDescriptorProto{
+					{Name: proto.String("address")},
+				},
+			},
 		},
 	}
+}
+
+func TestSqlcGenerator_Generate(t *testing.T) {
+	deps := collectFileDescriptors(t,
+		"clarity/plugin/v1/options.proto",
+		"clarity/plugin/v1/entity.proto",
+	)
+
+	modelsFile := testProtoFile(t)
 
 	req := &pluginpb.CodeGeneratorRequest{
-		FileToGenerate: []string{"acme/inventory/v1/product.proto"},
-		ProtoFile:      append(deps, productFile),
+		FileToGenerate: []string{"acme/inventory/v1/models.proto"},
+		ProtoFile:      append(deps, modelsFile),
 	}
 
 	plugin, err := protogen.Options{}.New(req)
@@ -128,7 +163,44 @@ func TestSqlcGenerator_Generate(t *testing.T) {
 		files[f.GetName()] = f.GetContent()
 	}
 
+	// Verify exactly 4 files generated: schema + 2 queries + sqlc.yaml
+	assert.Len(t, files, 4)
+
+	// Schema contains both tables.
 	assert.Equal(t, loadGolden(t, "schema.sql"), files["internal/acme/inventory/v1/sql/schema.sql"])
+
+	// Per-entity query files.
 	assert.Equal(t, loadGolden(t, "queries_product.sql"), files["internal/acme/inventory/v1/sql/queries/product.sql"])
+	assert.Equal(t, loadGolden(t, "queries_order.sql"), files["internal/acme/inventory/v1/sql/queries/order.sql"])
+
+	// sqlc config.
 	assert.Equal(t, loadGolden(t, "sqlc.yaml"), files["internal/acme/inventory/v1/sqlc.yaml"])
+}
+
+func TestSqlcGenerator_Generate_OutputDir(t *testing.T) {
+	deps := collectFileDescriptors(t,
+		"clarity/plugin/v1/options.proto",
+		"clarity/plugin/v1/entity.proto",
+	)
+
+	modelsFile := testProtoFile(t)
+
+	req := &pluginpb.CodeGeneratorRequest{
+		FileToGenerate: []string{"acme/inventory/v1/models.proto"},
+		ProtoFile:      append(deps, modelsFile),
+	}
+
+	plugin, err := protogen.Options{}.New(req)
+	require.NoError(t, err)
+
+	gen := &sqlcGenerator{outputDir: "custom/out"}
+	err = gen.Generate(plugin)
+	require.NoError(t, err)
+
+	resp := plugin.Response()
+	require.NotNil(t, resp)
+
+	for _, f := range resp.File {
+		assert.Contains(t, f.GetName(), "custom/out/internal/acme/inventory/v1/")
+	}
 }

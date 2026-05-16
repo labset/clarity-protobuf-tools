@@ -173,11 +173,7 @@ func renderQueries(meta packageMeta, msg *protogen.Message) (string, error) {
 		if string(field.Desc.Name()) == "entity" {
 			continue
 		}
-		if field.Oneof != nil && !field.Desc.HasOptionalKeyword() {
-			columnNames = append(columnNames, string(field.Desc.Name()))
-		} else {
-			columnNames = append(columnNames, string(field.Desc.Name()))
-		}
+		columnNames = append(columnNames, string(field.Desc.Name()))
 	}
 
 	placeholders := make([]string, len(columnNames))
