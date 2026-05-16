@@ -8,8 +8,8 @@ before:
     - go test ./...
 
 builds:
-  - main: cmd/protoc-gen-echo/main.go
-    id: protoc-gen-echo
+  - main: cmd/protoc-gen-clarity/main.go
+    id: protoc-gen-clarity
     env:
       - CGO_ENABLED=0
     goos:
@@ -17,8 +17,8 @@ builds:
       - windows
       - darwin
 
-  - main: cmd/echo-lint-plugin/main.go
-    id: echo-lint-plugin
+  - main: cmd/clarity-lint-plugin/main.go
+    id: clarity-lint-plugin
     env:
       - CGO_ENABLED=0
     goos:

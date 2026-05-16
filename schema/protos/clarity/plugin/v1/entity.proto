@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package clarity.plugin.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1;pluginV1";
+
+message Entity {
+  string id = 1;
+  google.protobuf.Timestamp created_at = 2;
+  google.protobuf.Timestamp updated_at = 3;
+}
