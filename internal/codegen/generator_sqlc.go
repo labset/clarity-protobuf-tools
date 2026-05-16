@@ -29,8 +29,8 @@ type packageEntities struct {
 	messages []*protogen.Message
 }
 
-func (g *sqlcGenerator) Generate(plugin *protogen.Plugin) error {
-	// Aggregate entity messages across files by package.
+// collectPackageEntities scans plugin files for entity messages grouped by package.
+func collectPackageEntities(plugin *protogen.Plugin) ([]*packageEntities, error) {
 	pkgMap := make(map[string]*packageEntities)
 	var pkgOrder []string
 
@@ -47,7 +47,7 @@ func (g *sqlcGenerator) Generate(plugin *protogen.Plugin) error {
 		if !ok {
 			meta, err := parsePackage(pkg)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			pe = &packageEntities{meta: meta}
 			pkgMap[pkg] = pe
@@ -61,12 +61,23 @@ func (g *sqlcGenerator) Generate(plugin *protogen.Plugin) error {
 		}
 	}
 
-	// Emit files per package.
+	var result []*packageEntities
 	for _, pkg := range pkgOrder {
 		pe := pkgMap[pkg]
-		if len(pe.messages) == 0 {
-			continue
+		if len(pe.messages) > 0 {
+			result = append(result, pe)
 		}
+	}
+	return result, nil
+}
+
+func (g *sqlcGenerator) Generate(plugin *protogen.Plugin) error {
+	packages, err := collectPackageEntities(plugin)
+	if err != nil {
+		return err
+	}
+
+	for _, pe := range packages {
 
 		outDir := pe.meta.outputDir()
 		if g.outputDir != "" {
@@ -126,7 +137,7 @@ func parsePackage(pkg string) (packageMeta, error) {
 		Provider: parts[0],
 		Domain:   parts[1],
 		Version:  parts[2],
-		Schema:   parts[0] + "_" + parts[1],
+		Schema:   parts[0] + "_" + parts[1] + "_" + parts[2],
 	}, nil
 }
 
