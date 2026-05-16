@@ -10,6 +10,8 @@ func GeneratorForMode(raw string) (Generator, error) {
 	switch p.mode {
 	case "sqlc":
 		return &sqlcGenerator{outputDir: p.outputDir}, nil
+	case "atlas-sqlc":
+		return &atlasSqlcGenerator{sqlc: &sqlcGenerator{outputDir: p.outputDir}}, nil
 	default:
 		return nil, fmt.Errorf("unknown mode %q", p.mode)
 	}

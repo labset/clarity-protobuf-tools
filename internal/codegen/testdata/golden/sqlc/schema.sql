@@ -1,6 +1,6 @@
-CREATE SCHEMA IF NOT EXISTS acme_inventory;
+CREATE SCHEMA IF NOT EXISTS acme_inventory_v1;
 
-CREATE TABLE IF NOT EXISTS acme_inventory.product (
+CREATE TABLE IF NOT EXISTS acme_inventory_v1.product (
   id UUID PRIMARY KEY NOT NULL,
   created_at TIMESTAMPTZ NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL,
@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS acme_inventory.product (
   price BIGINT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS acme_inventory.order (
+CREATE TABLE IF NOT EXISTS acme_inventory_v1.order (
   id UUID PRIMARY KEY NOT NULL,
   created_at TIMESTAMPTZ NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL,

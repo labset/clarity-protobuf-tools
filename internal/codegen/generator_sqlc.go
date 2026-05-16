@@ -126,7 +126,7 @@ func parsePackage(pkg string) (packageMeta, error) {
 		Provider: parts[0],
 		Domain:   parts[1],
 		Version:  parts[2],
-		Schema:   parts[0] + "_" + parts[1],
+		Schema:   parts[0] + "_" + parts[1] + "_" + parts[2],
 	}, nil
 }
 

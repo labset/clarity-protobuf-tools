@@ -1,0 +1,10 @@
+env "local" {
+  src = [
+    "file://sql/baseline.sql",
+    "file://sql/schema.sql",
+  ]
+  dev = "docker://postgres/17-alpine/dev?search_path={{ .Schema }}"
+  migration {
+    dir = "file://migrations"
+  }
+}
