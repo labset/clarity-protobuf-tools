@@ -7,9 +7,9 @@ import (
 	"google.golang.org/protobuf/types/descriptorpb"
 )
 
-// MessageRole returns the clarity Role for a message descriptor, or ROLE_UNSPECIFIED
+// messageRole returns the clarity Role for a message descriptor, or ROLE_UNSPECIFIED
 // if the message has no clarity options.
-func MessageRole(md protoreflect.MessageDescriptor) pluginV1.Role {
+func messageRole(md protoreflect.MessageDescriptor) pluginV1.Role {
 	opts, ok := md.Options().(*descriptorpb.MessageOptions)
 	if !ok {
 		return pluginV1.Role_ROLE_UNSPECIFIED
@@ -27,5 +27,5 @@ func MessageRole(md protoreflect.MessageDescriptor) pluginV1.Role {
 
 // IsEntity returns true if the message has ROLE_ENTITY.
 func IsEntity(md protoreflect.MessageDescriptor) bool {
-	return MessageRole(md) == pluginV1.Role_ROLE_ENTITY
+	return messageRole(md) == pluginV1.Role_ROLE_ENTITY
 }
