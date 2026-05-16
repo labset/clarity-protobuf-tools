@@ -52,8 +52,16 @@ func TestAtlasSqlcGenerator_Generate(t *testing.T) {
 	assert.Contains(t, files, "internal/acme/inventory/v1/sql/queries/order.sql")
 
 	// Verify atlas-sqlc specific files.
-	assert.Equal(t, loadAtlasSqlcGolden(t, "atlas.hcl"), files["internal/acme/inventory/v1/atlas.hcl"])
-	assert.Equal(t, loadAtlasSqlcGolden(t, "baseline.sql"), files["internal/acme/inventory/v1/sql/baseline.sql"])
+	assert.Equal(
+		t,
+		loadAtlasSqlcGolden(t, "atlas.hcl"),
+		files["internal/acme/inventory/v1/atlas.hcl"],
+	)
+	assert.Equal(
+		t,
+		loadAtlasSqlcGolden(t, "baseline.sql"),
+		files["internal/acme/inventory/v1/sql/baseline.sql"],
+	)
 }
 
 func TestAtlasSqlcGenerator_ExistingSqlcModeUnchanged(t *testing.T) {

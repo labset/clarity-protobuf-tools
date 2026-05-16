@@ -12,7 +12,9 @@ import (
 //go:embed templates/atlas-sqlc/*.tmpl
 var atlasSqlcTemplateFS embed.FS
 
-var atlasSqlcTemplates = template.Must(template.ParseFS(atlasSqlcTemplateFS, "templates/atlas-sqlc/*.tmpl"))
+var atlasSqlcTemplates = template.Must(
+	template.ParseFS(atlasSqlcTemplateFS, "templates/atlas-sqlc/*.tmpl"),
+)
 
 type atlasSqlcGenerator struct {
 	sqlc *sqlcGenerator
