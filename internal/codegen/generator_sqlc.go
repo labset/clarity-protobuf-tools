@@ -8,8 +8,8 @@ import (
 	"text/template"
 	"unicode"
 
-	pluginV1 "github.com/labset/go-protoc-gen-plugin/api/clarity/plugin/v1"
-	"github.com/labset/go-protoc-gen-plugin/internal/codegen/pgtype"
+	pluginV1 "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1"
+	"github.com/labset/clarity-protobuf-tools/internal/codegen/pgtype"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 )
@@ -94,7 +94,10 @@ type packageMeta struct {
 func parsePackage(pkg string) (packageMeta, error) {
 	parts := strings.Split(pkg, ".")
 	if len(parts) < 3 {
-		return packageMeta{}, fmt.Errorf("expected package format <provider>.<domain>.<version>, got %q", pkg)
+		return packageMeta{}, fmt.Errorf(
+			"expected package format <provider>.<domain>.<version>, got %q",
+			pkg,
+		)
 	}
 	return packageMeta{
 		Provider: parts[0],

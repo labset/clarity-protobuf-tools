@@ -1,4 +1,4 @@
-module github.com/labset/go-protoc-gen-plugin
+module github.com/labset/clarity-protobuf-tools
 
 go 1.25.3
 

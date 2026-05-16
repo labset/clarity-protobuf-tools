@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	pluginV1 "github.com/labset/go-protoc-gen-plugin/api/clarity/plugin/v1"
+	pluginV1 "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/compiler/protogen"
@@ -159,7 +159,7 @@ func TestSqlcGenerator_Generate(t *testing.T) {
 	require.NotNil(t, resp)
 
 	files := make(map[string]string)
-	for _, f := range resp.File {
+	for _, f := range resp.GetFile() {
 		files[f.GetName()] = f.GetContent()
 	}
 
@@ -170,8 +170,16 @@ func TestSqlcGenerator_Generate(t *testing.T) {
 	assert.Equal(t, loadGolden(t, "schema.sql"), files["internal/acme/inventory/v1/sql/schema.sql"])
 
 	// Per-entity query files.
-	assert.Equal(t, loadGolden(t, "queries_product.sql"), files["internal/acme/inventory/v1/sql/queries/product.sql"])
-	assert.Equal(t, loadGolden(t, "queries_order.sql"), files["internal/acme/inventory/v1/sql/queries/order.sql"])
+	assert.Equal(
+		t,
+		loadGolden(t, "queries_product.sql"),
+		files["internal/acme/inventory/v1/sql/queries/product.sql"],
+	)
+	assert.Equal(
+		t,
+		loadGolden(t, "queries_order.sql"),
+		files["internal/acme/inventory/v1/sql/queries/order.sql"],
+	)
 
 	// sqlc config.
 	assert.Equal(t, loadGolden(t, "sqlc.yaml"), files["internal/acme/inventory/v1/sqlc.yaml"])
@@ -200,7 +208,7 @@ func TestSqlcGenerator_Generate_OutputDir(t *testing.T) {
 	resp := plugin.Response()
 	require.NotNil(t, resp)
 
-	for _, f := range resp.File {
+	for _, f := range resp.GetFile() {
 		assert.Contains(t, f.GetName(), "custom/out/internal/acme/inventory/v1/")
 	}
 }

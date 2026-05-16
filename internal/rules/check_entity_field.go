@@ -2,11 +2,10 @@ package rules
 
 import (
 	"context"
-	"fmt"
 
 	"buf.build/go/bufplugin/check"
 	"buf.build/go/bufplugin/check/checkutil"
-	pluginV1 "github.com/labset/go-protoc-gen-plugin/api/clarity/plugin/v1"
+	pluginV1 "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"
@@ -65,7 +64,8 @@ func checkEntityField(
 		)
 	}
 
-	if entityField.Kind() != protoreflect.MessageKind || entityField.Message().FullName() != "clarity.plugin.v1.Entity" {
+	if entityField.Kind() != protoreflect.MessageKind ||
+		entityField.Message().FullName() != "clarity.plugin.v1.Entity" {
 		responseWriter.AddAnnotation(
 			check.WithMessagef(
 				"Message %q field \"entity\" must be of type clarity.plugin.v1.Entity, got %s.",
@@ -86,5 +86,5 @@ func fieldTypeName(fd protoreflect.FieldDescriptor) string {
 	if fd.Kind() == protoreflect.EnumKind {
 		return string(fd.Enum().FullName())
 	}
-	return fmt.Sprintf("%s", fd.Kind())
+	return fd.Kind().String()
 }

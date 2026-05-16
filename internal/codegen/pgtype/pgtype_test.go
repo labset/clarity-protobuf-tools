@@ -19,7 +19,11 @@ func fieldDesc(t *testing.T, fds *descriptorpb.FileDescriptorProto) protoreflect
 	return fd.Messages().Get(0)
 }
 
-func buildFileWithDep(t *testing.T, dep *descriptorpb.FileDescriptorProto, main *descriptorpb.FileDescriptorProto) protoreflect.MessageDescriptor {
+func buildFileWithDep(
+	t *testing.T,
+	dep *descriptorpb.FileDescriptorProto,
+	main *descriptorpb.FileDescriptorProto,
+) protoreflect.MessageDescriptor {
 	t.Helper()
 	reg := new(protoregistry.Files)
 	depFD, err := protodesc.NewFile(dep, reg)
@@ -110,7 +114,11 @@ func TestMapField_Enum(t *testing.T) {
 	})
 	col := MapField(msg.Fields().Get(0))
 	assert.Equal(t, "TEXT", col.Type)
-	assert.Equal(t, "status IN ('STATUS_UNSPECIFIED', 'STATUS_ACTIVE', 'STATUS_INACTIVE')", col.Check)
+	assert.Equal(
+		t,
+		"status IN ('STATUS_UNSPECIFIED', 'STATUS_ACTIVE', 'STATUS_INACTIVE')",
+		col.Check,
+	)
 }
 
 func TestMapField_WellKnownTypes(t *testing.T) {
@@ -120,7 +128,12 @@ func TestMapField_WellKnownTypes(t *testing.T) {
 		depFile  string
 		want     string
 	}{
-		{"timestamp", ".google.protobuf.Timestamp", "google/protobuf/timestamp.proto", "TIMESTAMPTZ"},
+		{
+			"timestamp",
+			".google.protobuf.Timestamp",
+			"google/protobuf/timestamp.proto",
+			"TIMESTAMPTZ",
+		},
 		{"duration", ".google.protobuf.Duration", "google/protobuf/duration.proto", "INTERVAL"},
 		{"struct", ".google.protobuf.Struct", "google/protobuf/struct.proto", "JSONB"},
 		{"value", ".google.protobuf.Value", "google/protobuf/value.proto", "JSONB"},
