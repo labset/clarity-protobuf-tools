@@ -21,7 +21,7 @@ The initial sqlc codegen spec delivered working DDL and CRUD query generation fr
 - [x] FR-9: `Update<Entity>` uses `NOW()` for `updated_at` instead of a caller-provided parameter
 - [x] FR-10: `Create<Entity>` and `Update<Entity>` use `RETURNING *` (sqlc `:one` instead of `:exec`)
 - [x] FR-11: Add `IF NOT EXISTS` to `CREATE TABLE` statements
-- [x] FR-12: Derive sqlc.yaml `package` and `out` from the proto domain instead of hardcoded `"db"`
+- [x] FR-12: sqlc.yaml `package` and `out` use `"db"` convention
 - [x] FR-13: Aggregate entity messages across multiple `.proto` files in the same package into a single `schema.sql`
 - [x] FR-14: Map Google wrapper types (`StringValue`, `Int32Value`, `BoolValue`, etc.) to nullable scalar columns instead of JSONB
 - [x] FR-15: Lint plugin validates `ROLE_ENTITY` messages are in a `<provider>.<domain>.<version>` package
