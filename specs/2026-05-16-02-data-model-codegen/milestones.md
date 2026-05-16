@@ -2,13 +2,13 @@
 
 ## M1: File convention enforcement
 
-- **Status:** pending
+- **Status:** done
 - **Description:** Codegen plugin only processes `models.proto` files, and the lint plugin rejects `ROLE_ENTITY` annotations on messages defined in any other file.
 - **Acceptance Criteria:**
-  - [ ] Codegen skips `.proto` files not named `models.proto`
-  - [ ] Lint rule rejects `ROLE_ENTITY` on messages in files not named `models.proto`
-  - [ ] Existing behaviour unchanged for `models.proto` files
-  - [ ] Unit tests cover both skip and reject cases
+  - [x] Codegen skips `.proto` files not named `models.proto`
+  - [x] Lint rule rejects `ROLE_ENTITY` on messages in files not named `models.proto`
+  - [x] Existing behaviour unchanged for `models.proto` files
+  - [x] Unit tests cover both skip and reject cases
 
 ## M2: Soft delete and timestamp immutability
 

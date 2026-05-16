@@ -185,6 +185,32 @@ func TestSqlcGenerator_Generate(t *testing.T) {
 	assert.Equal(t, loadGolden(t, "sqlc.yaml"), files["internal/acme/inventory/v1/sqlc.yaml"])
 }
 
+func TestSqlcGenerator_Generate_SkipsNonModelsProto(t *testing.T) {
+	deps := collectFileDescriptors(t,
+		"clarity/plugin/v1/options.proto",
+		"clarity/plugin/v1/entity.proto",
+	)
+
+	nonModelsFile := testProtoFile(t)
+	nonModelsFile.Name = proto.String("acme/inventory/v1/events.proto")
+
+	req := &pluginpb.CodeGeneratorRequest{
+		FileToGenerate: []string{"acme/inventory/v1/events.proto"},
+		ProtoFile:      append(deps, nonModelsFile),
+	}
+
+	plugin, err := protogen.Options{}.New(req)
+	require.NoError(t, err)
+
+	gen := &sqlcGenerator{}
+	err = gen.Generate(plugin)
+	require.NoError(t, err)
+
+	resp := plugin.Response()
+	require.NotNil(t, resp)
+	assert.Empty(t, resp.GetFile(), "non-models.proto files should produce no output")
+}
+
 func TestSqlcGenerator_Generate_OutputDir(t *testing.T) {
 	deps := collectFileDescriptors(t,
 		"clarity/plugin/v1/options.proto",

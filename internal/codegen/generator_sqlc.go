@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"path"
 	"strings"
 	"text/template"
 	"unicode"
@@ -26,6 +27,9 @@ type sqlcGenerator struct {
 func (g *sqlcGenerator) Generate(plugin *protogen.Plugin) error {
 	for _, file := range plugin.Files {
 		if !file.Generate {
+			continue
+		}
+		if path.Base(file.Desc.Path()) != "models.proto" {
 			continue
 		}
 
