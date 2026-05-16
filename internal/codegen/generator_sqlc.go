@@ -70,7 +70,7 @@ func (g *sqlcGenerator) Generate(plugin *protogen.Plugin) error {
 			}
 		}
 
-		configContent, err := renderConfig(meta)
+		configContent, err := renderConfig()
 		if err != nil {
 			return err
 		}
@@ -211,15 +211,9 @@ func renderQueries(meta packageMeta, msg *protogen.Message) (string, error) {
 	return buf.String(), nil
 }
 
-// configData is the template data for sqlc.yaml.tmpl.
-type configData struct {
-	Package string
-}
-
-func renderConfig(meta packageMeta) (string, error) {
-	data := configData{Package: meta.Version}
+func renderConfig() (string, error) {
 	var buf bytes.Buffer
-	if err := sqlcTemplates.ExecuteTemplate(&buf, "sqlc.yaml.tmpl", data); err != nil {
+	if err := sqlcTemplates.ExecuteTemplate(&buf, "sqlc.yaml.tmpl", nil); err != nil {
 		return "", fmt.Errorf("executing sqlc config template: %w", err)
 	}
 	return buf.String(), nil

@@ -5,6 +5,11 @@ sql:
     schema: "sql/schema.sql"
     gen:
       go:
-        package: "v1"
-        out: "."
+        package: "db"
+        out: "db"
         sql_package: "pgx/v5"
+        overrides:
+          - db_type: "uuid"
+            go_type:
+              import: "github.com/gofrs/uuid/v5"
+              type: "UUID"
