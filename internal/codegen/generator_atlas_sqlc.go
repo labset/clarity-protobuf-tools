@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
-	"path"
 	"text/template"
 
 	"google.golang.org/protobuf/compiler/protogen"
@@ -24,43 +23,12 @@ func (g *atlasSqlcGenerator) Generate(plugin *protogen.Plugin) error {
 		return err
 	}
 
-	// Collect packages that produced output.
-	pkgMap := make(map[string]*packageEntities)
-	var pkgOrder []string
-
-	for _, file := range plugin.Files {
-		if !file.Generate {
-			continue
-		}
-		if path.Base(file.Desc.Path()) != "models.proto" {
-			continue
-		}
-
-		pkg := string(file.Desc.Package())
-		pe, ok := pkgMap[pkg]
-		if !ok {
-			meta, err := parsePackage(pkg)
-			if err != nil {
-				return err
-			}
-			pe = &packageEntities{meta: meta}
-			pkgMap[pkg] = pe
-			pkgOrder = append(pkgOrder, pkg)
-		}
-
-		for _, msg := range file.Messages {
-			if isEntityMessage(msg) {
-				pe.messages = append(pe.messages, msg)
-			}
-		}
+	packages, err := collectPackageEntities(plugin)
+	if err != nil {
+		return err
 	}
 
-	for _, pkg := range pkgOrder {
-		pe := pkgMap[pkg]
-		if len(pe.messages) == 0 {
-			continue
-		}
-
+	for _, pe := range packages {
 		outDir := pe.meta.outputDir()
 		if g.sqlc.outputDir != "" {
 			outDir = fmt.Sprintf("%s/%s", g.sqlc.outputDir, outDir)
