@@ -1,7 +1,7 @@
 -- name: GetProduct :one
 SELECT id, created_at, updated_at, deleted_at, name, price
 FROM acme_inventory.product
-WHERE id = $1 AND deleted_at IS NULL;
+WHERE id = @id AND deleted_at IS NULL;
 
 -- name: ListProducts :many
 SELECT id, created_at, updated_at, deleted_at, name, price
@@ -10,23 +10,23 @@ WHERE deleted_at IS NULL;
 
 -- name: CreateProduct :one
 INSERT INTO acme_inventory.product (
-  id, created_at, updated_at, deleted_at, name, price
+  id, created_at, updated_at, name, price
 ) VALUES (
-  $1, $2, $3, $4, $5, $6
+  @id, @created_at, @updated_at, @name, @price
 )
 RETURNING *;
 
 -- name: UpdateProduct :one
 UPDATE acme_inventory.product
-SET name = $2, price = $3, updated_at = NOW()
-WHERE id = $1
+SET name = @name, price = @price, updated_at = NOW()
+WHERE id = @id AND deleted_at IS NULL
 RETURNING *;
 
 -- name: SoftDeleteProduct :exec
 UPDATE acme_inventory.product
 SET deleted_at = NOW()
-WHERE id = $1;
+WHERE id = @id AND deleted_at IS NULL;
 
 -- name: DeleteProduct :exec
 DELETE FROM acme_inventory.product
-WHERE id = $1;
+WHERE id = @id;

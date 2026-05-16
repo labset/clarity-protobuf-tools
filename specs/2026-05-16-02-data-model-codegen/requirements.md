@@ -24,11 +24,17 @@ The initial sqlc codegen spec delivered working DDL and CRUD query generation fr
 - [x] FR-12: Derive sqlc.yaml `package` and `out` from the proto domain instead of hardcoded `"db"`
 - [x] FR-13: Aggregate entity messages across multiple `.proto` files in the same package into a single `schema.sql`
 - [x] FR-14: Map Google wrapper types (`StringValue`, `Int32Value`, `BoolValue`, etc.) to nullable scalar columns instead of JSONB
+- [x] FR-15: Lint plugin validates `ROLE_ENTITY` messages are in a `<provider>.<domain>.<version>` package
+- [x] FR-16: Extract shared option extraction logic into `internal/clarity` package
+- [x] FR-17: Exclude `deleted_at` from INSERT columns — always defaults to `NULL` on creation
+- [x] FR-18: `Update<Entity>` and `SoftDelete<Entity>` guard with `WHERE deleted_at IS NULL` — prevent operating on soft-deleted rows
+- [x] FR-19: Use sqlc named args (`@column_name`) instead of positional parameters (`$1`, `$2`)
 
 ### Non-Functional
 
 - [x] NFR-1: All generated SQL must pass `sqlc compile` validation
 - [x] NFR-2: Golden file tests updated for all changed output
+- [x] NFR-3: Full test coverage for `CLARITY_ENTITY_FIELD` lint rule (pass, missing field, wrong number, wrong type)
 
 ### Deferred
 

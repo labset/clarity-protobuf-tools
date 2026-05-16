@@ -184,38 +184,48 @@ type queryData struct {
 	Table           string
 	MessageName     string
 	AllColumns      string
-	AllPlaceholders string
+	InsertColumns   string
+	InsertNamedArgs string
 	UpdateSetClause string
+}
+
+// insertColumns are columns excluded from INSERT (auto-managed).
+var insertExcluded = map[string]bool{
+	"deleted_at": true,
 }
 
 func renderQueries(meta packageMeta, msg *protogen.Message) (string, error) {
 	tableName := toSnakeCase(string(msg.Desc.Name()))
 
-	var columnNames []string
+	var allColumns []string
 	for _, col := range entityColumns() {
-		columnNames = append(columnNames, col.Name)
+		allColumns = append(allColumns, col.Name)
 	}
 	for _, field := range msg.Fields {
 		if string(field.Desc.Name()) == "entity" {
 			continue
 		}
-		columnNames = append(columnNames, string(field.Desc.Name()))
+		allColumns = append(allColumns, string(field.Desc.Name()))
 	}
 
-	placeholders := make([]string, len(columnNames))
-	for i := range columnNames {
-		placeholders[i] = fmt.Sprintf("$%d", i+1)
+	// Insert excludes auto-managed columns.
+	var insertCols []string
+	var insertArgs []string
+	for _, col := range allColumns {
+		if insertExcluded[col] {
+			continue
+		}
+		insertCols = append(insertCols, col)
+		insertArgs = append(insertArgs, fmt.Sprintf("@%s", col))
 	}
 
-	// Update sets user-provided columns (excludes managed columns), with id as $1.
+	// Update sets user-provided columns (excludes managed columns).
 	var setClauses []string
-	paramIdx := 2 // $1 is id in WHERE clause
-	for _, col := range columnNames {
+	for _, col := range allColumns {
 		if managedColumns[col] {
 			continue
 		}
-		setClauses = append(setClauses, fmt.Sprintf("%s = $%d", col, paramIdx))
-		paramIdx++
+		setClauses = append(setClauses, fmt.Sprintf("%s = @%s", col, col))
 	}
 	setClauses = append(setClauses, "updated_at = NOW()")
 
@@ -223,8 +233,9 @@ func renderQueries(meta packageMeta, msg *protogen.Message) (string, error) {
 		Schema:          meta.Schema,
 		Table:           tableName,
 		MessageName:     string(msg.Desc.Name()),
-		AllColumns:      strings.Join(columnNames, ", "),
-		AllPlaceholders: strings.Join(placeholders, ", "),
+		AllColumns:      strings.Join(allColumns, ", "),
+		InsertColumns:   strings.Join(insertCols, ", "),
+		InsertNamedArgs: strings.Join(insertArgs, ", "),
 		UpdateSetClause: strings.Join(setClauses, ", "),
 	}
 
