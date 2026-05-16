@@ -185,6 +185,138 @@ func TestSqlcGenerator_Generate(t *testing.T) {
 	assert.Equal(t, loadGolden(t, "sqlc.yaml"), files["internal/acme/inventory/v1/sqlc.yaml"])
 }
 
+func TestSqlcGenerator_Generate_SkipsNonModelsProto(t *testing.T) {
+	deps := collectFileDescriptors(t,
+		"clarity/plugin/v1/options.proto",
+		"clarity/plugin/v1/entity.proto",
+	)
+
+	nonModelsFile := testProtoFile(t)
+	nonModelsFile.Name = proto.String("acme/inventory/v1/events.proto")
+
+	req := &pluginpb.CodeGeneratorRequest{
+		FileToGenerate: []string{"acme/inventory/v1/events.proto"},
+		ProtoFile:      append(deps, nonModelsFile),
+	}
+
+	plugin, err := protogen.Options{}.New(req)
+	require.NoError(t, err)
+
+	gen := &sqlcGenerator{}
+	err = gen.Generate(plugin)
+	require.NoError(t, err)
+
+	resp := plugin.Response()
+	require.NotNil(t, resp)
+	assert.Empty(t, resp.GetFile(), "non-models.proto files should produce no output")
+}
+
+func TestSqlcGenerator_Generate_MultiplePackages(t *testing.T) {
+	deps := collectFileDescriptors(t,
+		"clarity/plugin/v1/options.proto",
+		"clarity/plugin/v1/entity.proto",
+	)
+
+	// Package 1: inventory.
+	file1 := &descriptorpb.FileDescriptorProto{
+		Name:    proto.String("acme/inventory/v1/models.proto"),
+		Package: proto.String("acme.inventory.v1"),
+		Syntax:  proto.String("proto3"),
+		Options: &descriptorpb.FileOptions{
+			GoPackage: proto.String("github.com/acme/inventory/v1;inventoryv1"),
+		},
+		Dependency: []string{
+			"clarity/plugin/v1/options.proto",
+			"clarity/plugin/v1/entity.proto",
+		},
+		MessageType: []*descriptorpb.DescriptorProto{
+			{
+				Name:    proto.String("Product"),
+				Options: entityMessageOptions(t),
+				Field: []*descriptorpb.FieldDescriptorProto{
+					{
+						Name:     proto.String("entity"),
+						Number:   proto.Int32(1),
+						Type:     descriptorpb.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+						TypeName: proto.String(".clarity.plugin.v1.Entity"),
+					},
+					{
+						Name:   proto.String("name"),
+						Number: proto.Int32(2),
+						Type:   descriptorpb.FieldDescriptorProto_TYPE_STRING.Enum(),
+					},
+				},
+			},
+		},
+	}
+
+	// Package 2: billing.
+	file2 := &descriptorpb.FileDescriptorProto{
+		Name:    proto.String("acme/billing/v1/models.proto"),
+		Package: proto.String("acme.billing.v1"),
+		Syntax:  proto.String("proto3"),
+		Options: &descriptorpb.FileOptions{
+			GoPackage: proto.String("github.com/acme/billing/v1;billingv1"),
+		},
+		Dependency: []string{
+			"clarity/plugin/v1/options.proto",
+			"clarity/plugin/v1/entity.proto",
+		},
+		MessageType: []*descriptorpb.DescriptorProto{
+			{
+				Name:    proto.String("Invoice"),
+				Options: entityMessageOptions(t),
+				Field: []*descriptorpb.FieldDescriptorProto{
+					{
+						Name:     proto.String("entity"),
+						Number:   proto.Int32(1),
+						Type:     descriptorpb.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+						TypeName: proto.String(".clarity.plugin.v1.Entity"),
+					},
+					{
+						Name:   proto.String("amount"),
+						Number: proto.Int32(2),
+						Type:   descriptorpb.FieldDescriptorProto_TYPE_INT64.Enum(),
+					},
+				},
+			},
+		},
+	}
+
+	req := &pluginpb.CodeGeneratorRequest{
+		FileToGenerate: []string{
+			"acme/inventory/v1/models.proto",
+			"acme/billing/v1/models.proto",
+		},
+		ProtoFile: append(deps, file1, file2),
+	}
+
+	plugin, err := protogen.Options{}.New(req)
+	require.NoError(t, err)
+
+	gen := &sqlcGenerator{}
+	err = gen.Generate(plugin)
+	require.NoError(t, err)
+
+	resp := plugin.Response()
+	require.NotNil(t, resp)
+
+	files := make(map[string]string)
+	for _, f := range resp.GetFile() {
+		files[f.GetName()] = f.GetContent()
+	}
+
+	// Each package gets its own schema.sql and sqlc.yaml.
+	assert.Contains(t, files, "internal/acme/inventory/v1/sql/schema.sql")
+	assert.Contains(t, files, "internal/acme/inventory/v1/sqlc.yaml")
+	assert.Contains(t, files, "internal/acme/billing/v1/sql/schema.sql")
+	assert.Contains(t, files, "internal/acme/billing/v1/sqlc.yaml")
+
+	// Each package gets its own query files.
+	assert.Contains(t, files, "internal/acme/inventory/v1/sql/queries/product.sql")
+	assert.Contains(t, files, "internal/acme/billing/v1/sql/queries/invoice.sql")
+}
+
 func TestSqlcGenerator_Generate_OutputDir(t *testing.T) {
 	deps := collectFileDescriptors(t,
 		"clarity/plugin/v1/options.proto",

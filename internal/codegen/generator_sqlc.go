@@ -4,14 +4,14 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"path"
 	"strings"
 	"text/template"
 	"unicode"
 
-	pluginV1 "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1"
+	"github.com/labset/clarity-protobuf-tools/internal/clarity"
 	"github.com/labset/clarity-protobuf-tools/internal/codegen/pgtype"
 	"google.golang.org/protobuf/compiler/protogen"
-	"google.golang.org/protobuf/proto"
 )
 
 //go:embed templates/sqlc/*.tmpl
@@ -23,34 +23,57 @@ type sqlcGenerator struct {
 	outputDir string
 }
 
+// packageEntities groups entity messages and metadata by package.
+type packageEntities struct {
+	meta     packageMeta
+	messages []*protogen.Message
+}
+
 func (g *sqlcGenerator) Generate(plugin *protogen.Plugin) error {
+	// Aggregate entity messages across files by package.
+	pkgMap := make(map[string]*packageEntities)
+	var pkgOrder []string
+
 	for _, file := range plugin.Files {
 		if !file.Generate {
 			continue
 		}
-
-		meta, err := parsePackage(string(file.Desc.Package()))
-		if err != nil {
-			return err
-		}
-
-		var entityMessages []*protogen.Message
-		for _, msg := range file.Messages {
-			if isEntityMessage(msg) {
-				entityMessages = append(entityMessages, msg)
-			}
-		}
-
-		if len(entityMessages) == 0 {
+		if path.Base(file.Desc.Path()) != "models.proto" {
 			continue
 		}
 
-		outDir := meta.outputDir()
+		pkg := string(file.Desc.Package())
+		pe, ok := pkgMap[pkg]
+		if !ok {
+			meta, err := parsePackage(pkg)
+			if err != nil {
+				return err
+			}
+			pe = &packageEntities{meta: meta}
+			pkgMap[pkg] = pe
+			pkgOrder = append(pkgOrder, pkg)
+		}
+
+		for _, msg := range file.Messages {
+			if isEntityMessage(msg) {
+				pe.messages = append(pe.messages, msg)
+			}
+		}
+	}
+
+	// Emit files per package.
+	for _, pkg := range pkgOrder {
+		pe := pkgMap[pkg]
+		if len(pe.messages) == 0 {
+			continue
+		}
+
+		outDir := pe.meta.outputDir()
 		if g.outputDir != "" {
 			outDir = fmt.Sprintf("%s/%s", g.outputDir, outDir)
 		}
 
-		schemaContent, err := renderSchema(meta, entityMessages)
+		schemaContent, err := renderSchema(pe.meta, pe.messages)
 		if err != nil {
 			return err
 		}
@@ -58,19 +81,19 @@ func (g *sqlcGenerator) Generate(plugin *protogen.Plugin) error {
 			return err
 		}
 
-		for _, msg := range entityMessages {
+		for _, msg := range pe.messages {
 			queryFileName := toSnakeCase(string(msg.Desc.Name()))
-			path := fmt.Sprintf("%s/sql/queries/%s.sql", outDir, queryFileName)
-			queryContent, err := renderQueries(meta, msg)
+			p := fmt.Sprintf("%s/sql/queries/%s.sql", outDir, queryFileName)
+			queryContent, err := renderQueries(pe.meta, msg)
 			if err != nil {
 				return err
 			}
-			if _, err := plugin.NewGeneratedFile(path, "").Write([]byte(queryContent)); err != nil {
+			if _, err := plugin.NewGeneratedFile(p, "").Write([]byte(queryContent)); err != nil {
 				return err
 			}
 		}
 
-		configContent, err := renderConfig()
+		configContent, err := renderConfig(pe.meta)
 		if err != nil {
 			return err
 		}
@@ -161,46 +184,58 @@ type queryData struct {
 	Table           string
 	MessageName     string
 	AllColumns      string
-	AllPlaceholders string
+	InsertColumns   string
+	InsertNamedArgs string
 	UpdateSetClause string
+}
+
+// insertColumns are columns excluded from INSERT (auto-managed).
+var insertExcluded = map[string]bool{
+	"deleted_at": true,
 }
 
 func renderQueries(meta packageMeta, msg *protogen.Message) (string, error) {
 	tableName := toSnakeCase(string(msg.Desc.Name()))
 
-	var columnNames []string
+	var allColumns []string
 	for _, col := range entityColumns() {
-		columnNames = append(columnNames, col.Name)
+		allColumns = append(allColumns, col.Name)
 	}
 	for _, field := range msg.Fields {
 		if string(field.Desc.Name()) == "entity" {
 			continue
 		}
-		columnNames = append(columnNames, string(field.Desc.Name()))
+		allColumns = append(allColumns, string(field.Desc.Name()))
 	}
 
-	placeholders := make([]string, len(columnNames))
-	for i := range columnNames {
-		placeholders[i] = fmt.Sprintf("$%d", i+1)
-	}
-
-	// Update sets all columns except id, with id as $1.
-	var setClauses []string
-	paramIdx := 2 // $1 is id in WHERE clause
-	for _, col := range columnNames {
-		if col == "id" {
+	// Insert excludes auto-managed columns.
+	var insertCols []string
+	var insertArgs []string
+	for _, col := range allColumns {
+		if insertExcluded[col] {
 			continue
 		}
-		setClauses = append(setClauses, fmt.Sprintf("%s = $%d", col, paramIdx))
-		paramIdx++
+		insertCols = append(insertCols, col)
+		insertArgs = append(insertArgs, fmt.Sprintf("@%s", col))
 	}
+
+	// Update sets user-provided columns (excludes managed columns).
+	var setClauses []string
+	for _, col := range allColumns {
+		if managedColumns[col] {
+			continue
+		}
+		setClauses = append(setClauses, fmt.Sprintf("%s = @%s", col, col))
+	}
+	setClauses = append(setClauses, "updated_at = NOW()")
 
 	data := queryData{
 		Schema:          meta.Schema,
 		Table:           tableName,
 		MessageName:     string(msg.Desc.Name()),
-		AllColumns:      strings.Join(columnNames, ", "),
-		AllPlaceholders: strings.Join(placeholders, ", "),
+		AllColumns:      strings.Join(allColumns, ", "),
+		InsertColumns:   strings.Join(insertCols, ", "),
+		InsertNamedArgs: strings.Join(insertArgs, ", "),
 		UpdateSetClause: strings.Join(setClauses, ", "),
 	}
 
@@ -211,9 +246,9 @@ func renderQueries(meta packageMeta, msg *protogen.Message) (string, error) {
 	return buf.String(), nil
 }
 
-func renderConfig() (string, error) {
+func renderConfig(meta packageMeta) (string, error) {
 	var buf bytes.Buffer
-	if err := sqlcTemplates.ExecuteTemplate(&buf, "sqlc.yaml.tmpl", nil); err != nil {
+	if err := sqlcTemplates.ExecuteTemplate(&buf, "sqlc.yaml.tmpl", meta); err != nil {
 		return "", fmt.Errorf("executing sqlc config template: %w", err)
 	}
 	return buf.String(), nil
@@ -224,23 +259,20 @@ func entityColumns() []pgtype.Column {
 		{Name: "id", Type: "UUID PRIMARY KEY"},
 		{Name: "created_at", Type: "TIMESTAMPTZ"},
 		{Name: "updated_at", Type: "TIMESTAMPTZ"},
+		{Name: "deleted_at", Type: "TIMESTAMPTZ", Nullable: true},
 	}
 }
 
+// managedColumns are columns excluded from UPDATE SET clauses.
+var managedColumns = map[string]bool{
+	"id":         true,
+	"created_at": true,
+	"updated_at": true,
+	"deleted_at": true,
+}
+
 func isEntityMessage(msg *protogen.Message) bool {
-	opts := msg.Desc.Options()
-	if opts == nil {
-		return false
-	}
-	if !proto.HasExtension(opts, pluginV1.E_Message) {
-		return false
-	}
-	ext := proto.GetExtension(opts, pluginV1.E_Message)
-	clarityOpts, ok := ext.(*pluginV1.ClarityMessageOptions)
-	if !ok || clarityOpts == nil {
-		return false
-	}
-	return clarityOpts.GetRole() == pluginV1.Role_ROLE_ENTITY
+	return clarity.IsEntity(msg.Desc)
 }
 
 func toSnakeCase(s string) string {

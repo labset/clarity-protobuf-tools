@@ -5,10 +5,8 @@ import (
 
 	"buf.build/go/bufplugin/check"
 	"buf.build/go/bufplugin/check/checkutil"
-	pluginV1 "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1"
-	"google.golang.org/protobuf/proto"
+	"github.com/labset/clarity-protobuf-tools/internal/clarity"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/descriptorpb"
 )
 
 var entityFieldRuleSpec = &check.RuleSpec{
@@ -25,19 +23,7 @@ func checkEntityField(
 	_ check.Request,
 	messageDescriptor protoreflect.MessageDescriptor,
 ) error {
-	opts, ok := messageDescriptor.Options().(*descriptorpb.MessageOptions)
-	if !ok {
-		return nil
-	}
-	if !proto.HasExtension(opts, pluginV1.E_Message) {
-		return nil
-	}
-	ext := proto.GetExtension(opts, pluginV1.E_Message)
-	clarityOpts, ok := ext.(*pluginV1.ClarityMessageOptions)
-	if !ok || clarityOpts == nil {
-		return nil
-	}
-	if clarityOpts.GetRole() != pluginV1.Role_ROLE_ENTITY {
+	if !clarity.IsEntity(messageDescriptor) {
 		return nil
 	}
 

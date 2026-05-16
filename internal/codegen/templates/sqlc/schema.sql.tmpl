@@ -1,6 +1,6 @@
 CREATE SCHEMA IF NOT EXISTS {{ .Schema }};
 {{ range .Tables }}
-CREATE TABLE {{ $.Schema }}.{{ .Name }} (
+CREATE TABLE IF NOT EXISTS {{ $.Schema }}.{{ .Name }} (
 {{- range $i, $col := .Columns }}
 {{- if $i }},{{ end }}
   {{ $col }}

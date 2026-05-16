@@ -176,6 +176,60 @@ func TestMapField_WellKnownTypes(t *testing.T) {
 	}
 }
 
+func TestMapField_WrapperTypes(t *testing.T) {
+	tests := []struct {
+		name     string
+		typeName string
+		wantType string
+	}{
+		{"StringValue", ".google.protobuf.StringValue", "TEXT"},
+		{"BytesValue", ".google.protobuf.BytesValue", "BYTEA"},
+		{"BoolValue", ".google.protobuf.BoolValue", "BOOLEAN"},
+		{"Int32Value", ".google.protobuf.Int32Value", "INTEGER"},
+		{"UInt32Value", ".google.protobuf.UInt32Value", "INTEGER"},
+		{"Int64Value", ".google.protobuf.Int64Value", "BIGINT"},
+		{"UInt64Value", ".google.protobuf.UInt64Value", "BIGINT"},
+		{"FloatValue", ".google.protobuf.FloatValue", "REAL"},
+		{"DoubleValue", ".google.protobuf.DoubleValue", "DOUBLE PRECISION"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dep := &descriptorpb.FileDescriptorProto{
+				Name:    proto.String("google/protobuf/wrappers.proto"),
+				Package: proto.String("google.protobuf"),
+				Syntax:  proto.String("proto3"),
+				MessageType: []*descriptorpb.DescriptorProto{
+					{Name: proto.String(tt.typeName[len(".google.protobuf."):])},
+				},
+			}
+			main := &descriptorpb.FileDescriptorProto{
+				Name:       proto.String("test.proto"),
+				Package:    proto.String("test"),
+				Syntax:     proto.String("proto3"),
+				Dependency: []string{"google/protobuf/wrappers.proto"},
+				MessageType: []*descriptorpb.DescriptorProto{
+					{
+						Name: proto.String("TestMessage"),
+						Field: []*descriptorpb.FieldDescriptorProto{
+							{
+								Name:     proto.String("field"),
+								Number:   proto.Int32(1),
+								Type:     descriptorpb.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+								TypeName: proto.String(tt.typeName),
+							},
+						},
+					},
+				},
+			}
+			msg := buildFileWithDep(t, dep, main)
+			col := MapField(msg.Fields().Get(0))
+			assert.Equal(t, tt.wantType, col.Type)
+			assert.True(t, col.Nullable, "wrapper types should be nullable")
+		})
+	}
+}
+
 func TestMapField_NestedMessage(t *testing.T) {
 	dep := &descriptorpb.FileDescriptorProto{
 		Name:    proto.String("other.proto"),

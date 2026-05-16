@@ -1,24 +1,32 @@
 -- name: Get{{ .MessageName }} :one
 SELECT {{ .AllColumns }}
 FROM {{ .Schema }}.{{ .Table }}
-WHERE id = $1;
+WHERE id = @id AND deleted_at IS NULL;
 
 -- name: List{{ .MessageName }}s :many
 SELECT {{ .AllColumns }}
-FROM {{ .Schema }}.{{ .Table }};
+FROM {{ .Schema }}.{{ .Table }}
+WHERE deleted_at IS NULL;
 
--- name: Create{{ .MessageName }} :exec
+-- name: Create{{ .MessageName }} :one
 INSERT INTO {{ .Schema }}.{{ .Table }} (
-  {{ .AllColumns }}
+  {{ .InsertColumns }}
 ) VALUES (
-  {{ .AllPlaceholders }}
-);
+  {{ .InsertNamedArgs }}
+)
+RETURNING *;
 
--- name: Update{{ .MessageName }} :exec
+-- name: Update{{ .MessageName }} :one
 UPDATE {{ .Schema }}.{{ .Table }}
 SET {{ .UpdateSetClause }}
-WHERE id = $1;
+WHERE id = @id AND deleted_at IS NULL
+RETURNING *;
+
+-- name: SoftDelete{{ .MessageName }} :exec
+UPDATE {{ .Schema }}.{{ .Table }}
+SET deleted_at = NOW()
+WHERE id = @id AND deleted_at IS NULL;
 
 -- name: Delete{{ .MessageName }} :exec
 DELETE FROM {{ .Schema }}.{{ .Table }}
-WHERE id = $1;
+WHERE id = @id;

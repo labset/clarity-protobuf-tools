@@ -83,6 +83,24 @@ func messageColumn(fd protoreflect.FieldDescriptor) Column {
 		return Column{Name: name, Type: "INTERVAL"}
 	case "google.protobuf.Struct", "google.protobuf.Value":
 		return Column{Name: name, Type: "JSONB"}
+	case "google.protobuf.StringValue":
+		return Column{Name: name, Type: "TEXT", Nullable: true}
+	case "google.protobuf.BytesValue":
+		return Column{Name: name, Type: "BYTEA", Nullable: true}
+	case "google.protobuf.BoolValue":
+		return Column{Name: name, Type: "BOOLEAN", Nullable: true}
+	case "google.protobuf.Int32Value":
+		return Column{Name: name, Type: "INTEGER", Nullable: true}
+	case "google.protobuf.UInt32Value":
+		return Column{Name: name, Type: "INTEGER", Nullable: true}
+	case "google.protobuf.Int64Value":
+		return Column{Name: name, Type: "BIGINT", Nullable: true}
+	case "google.protobuf.UInt64Value":
+		return Column{Name: name, Type: "BIGINT", Nullable: true}
+	case "google.protobuf.FloatValue":
+		return Column{Name: name, Type: "REAL", Nullable: true}
+	case "google.protobuf.DoubleValue":
+		return Column{Name: name, Type: "DOUBLE PRECISION", Nullable: true}
 	default:
 		return Column{Name: name, Type: "JSONB"}
 	}
