@@ -5,5 +5,5 @@ inputs:
 plugins:
   # Go SDK
   - local: protoc-gen-go
-    out: ../api
+    out: api
     opt: paths=source_relative
