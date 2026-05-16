@@ -24,7 +24,17 @@ type sqlcGenerator struct {
 	outputDir string
 }
 
+// packageEntities groups entity messages and metadata by package.
+type packageEntities struct {
+	meta     packageMeta
+	messages []*protogen.Message
+}
+
 func (g *sqlcGenerator) Generate(plugin *protogen.Plugin) error {
+	// Aggregate entity messages across files by package.
+	pkgMap := make(map[string]*packageEntities)
+	var pkgOrder []string
+
 	for _, file := range plugin.Files {
 		if !file.Generate {
 			continue
@@ -33,28 +43,38 @@ func (g *sqlcGenerator) Generate(plugin *protogen.Plugin) error {
 			continue
 		}
 
-		meta, err := parsePackage(string(file.Desc.Package()))
-		if err != nil {
-			return err
+		pkg := string(file.Desc.Package())
+		pe, ok := pkgMap[pkg]
+		if !ok {
+			meta, err := parsePackage(pkg)
+			if err != nil {
+				return err
+			}
+			pe = &packageEntities{meta: meta}
+			pkgMap[pkg] = pe
+			pkgOrder = append(pkgOrder, pkg)
 		}
 
-		var entityMessages []*protogen.Message
 		for _, msg := range file.Messages {
 			if isEntityMessage(msg) {
-				entityMessages = append(entityMessages, msg)
+				pe.messages = append(pe.messages, msg)
 			}
 		}
+	}
 
-		if len(entityMessages) == 0 {
+	// Emit files per package.
+	for _, pkg := range pkgOrder {
+		pe := pkgMap[pkg]
+		if len(pe.messages) == 0 {
 			continue
 		}
 
-		outDir := meta.outputDir()
+		outDir := pe.meta.outputDir()
 		if g.outputDir != "" {
 			outDir = fmt.Sprintf("%s/%s", g.outputDir, outDir)
 		}
 
-		schemaContent, err := renderSchema(meta, entityMessages)
+		schemaContent, err := renderSchema(pe.meta, pe.messages)
 		if err != nil {
 			return err
 		}
@@ -62,19 +82,19 @@ func (g *sqlcGenerator) Generate(plugin *protogen.Plugin) error {
 			return err
 		}
 
-		for _, msg := range entityMessages {
+		for _, msg := range pe.messages {
 			queryFileName := toSnakeCase(string(msg.Desc.Name()))
-			path := fmt.Sprintf("%s/sql/queries/%s.sql", outDir, queryFileName)
-			queryContent, err := renderQueries(meta, msg)
+			p := fmt.Sprintf("%s/sql/queries/%s.sql", outDir, queryFileName)
+			queryContent, err := renderQueries(pe.meta, msg)
 			if err != nil {
 				return err
 			}
-			if _, err := plugin.NewGeneratedFile(path, "").Write([]byte(queryContent)); err != nil {
+			if _, err := plugin.NewGeneratedFile(p, "").Write([]byte(queryContent)); err != nil {
 				return err
 			}
 		}
 
-		configContent, err := renderConfig()
+		configContent, err := renderConfig(pe.meta)
 		if err != nil {
 			return err
 		}
@@ -188,16 +208,17 @@ func renderQueries(meta packageMeta, msg *protogen.Message) (string, error) {
 		placeholders[i] = fmt.Sprintf("$%d", i+1)
 	}
 
-	// Update sets all columns except id, with id as $1.
+	// Update sets user-provided columns (excludes managed columns), with id as $1.
 	var setClauses []string
 	paramIdx := 2 // $1 is id in WHERE clause
 	for _, col := range columnNames {
-		if col == "id" {
+		if managedColumns[col] {
 			continue
 		}
 		setClauses = append(setClauses, fmt.Sprintf("%s = $%d", col, paramIdx))
 		paramIdx++
 	}
+	setClauses = append(setClauses, "updated_at = NOW()")
 
 	data := queryData{
 		Schema:          meta.Schema,
@@ -215,9 +236,9 @@ func renderQueries(meta packageMeta, msg *protogen.Message) (string, error) {
 	return buf.String(), nil
 }
 
-func renderConfig() (string, error) {
+func renderConfig(meta packageMeta) (string, error) {
 	var buf bytes.Buffer
-	if err := sqlcTemplates.ExecuteTemplate(&buf, "sqlc.yaml.tmpl", nil); err != nil {
+	if err := sqlcTemplates.ExecuteTemplate(&buf, "sqlc.yaml.tmpl", meta); err != nil {
 		return "", fmt.Errorf("executing sqlc config template: %w", err)
 	}
 	return buf.String(), nil
@@ -228,7 +249,16 @@ func entityColumns() []pgtype.Column {
 		{Name: "id", Type: "UUID PRIMARY KEY"},
 		{Name: "created_at", Type: "TIMESTAMPTZ"},
 		{Name: "updated_at", Type: "TIMESTAMPTZ"},
+		{Name: "deleted_at", Type: "TIMESTAMPTZ", Nullable: true},
 	}
+}
+
+// managedColumns are columns excluded from UPDATE SET clauses.
+var managedColumns = map[string]bool{
+	"id":         true,
+	"created_at": true,
+	"updated_at": true,
+	"deleted_at": true,
 }
 
 func isEntityMessage(msg *protogen.Message) bool {

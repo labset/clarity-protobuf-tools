@@ -1,22 +1,30 @@
 -- name: GetOrder :one
-SELECT id, created_at, updated_at, quantity, billing_address, shipping_address
+SELECT id, created_at, updated_at, deleted_at, quantity, billing_address, shipping_address
 FROM acme_inventory.order
-WHERE id = $1;
+WHERE id = $1 AND deleted_at IS NULL;
 
 -- name: ListOrders :many
-SELECT id, created_at, updated_at, quantity, billing_address, shipping_address
-FROM acme_inventory.order;
+SELECT id, created_at, updated_at, deleted_at, quantity, billing_address, shipping_address
+FROM acme_inventory.order
+WHERE deleted_at IS NULL;
 
--- name: CreateOrder :exec
+-- name: CreateOrder :one
 INSERT INTO acme_inventory.order (
-  id, created_at, updated_at, quantity, billing_address, shipping_address
+  id, created_at, updated_at, deleted_at, quantity, billing_address, shipping_address
 ) VALUES (
-  $1, $2, $3, $4, $5, $6
-);
+  $1, $2, $3, $4, $5, $6, $7
+)
+RETURNING *;
 
--- name: UpdateOrder :exec
+-- name: UpdateOrder :one
 UPDATE acme_inventory.order
-SET created_at = $2, updated_at = $3, quantity = $4, billing_address = $5, shipping_address = $6
+SET quantity = $2, billing_address = $3, shipping_address = $4, updated_at = NOW()
+WHERE id = $1
+RETURNING *;
+
+-- name: SoftDeleteOrder :exec
+UPDATE acme_inventory.order
+SET deleted_at = NOW()
 WHERE id = $1;
 
 -- name: DeleteOrder :exec
