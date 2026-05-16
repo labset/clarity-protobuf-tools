@@ -12,7 +12,7 @@ Proto messages annotated with `ROLE_ENTITY` must include a field `entity` of typ
 
 ### Functional
 
-- [x] FR-1: Add `ROLE_ENTITY = 2` to the `Role` enum in `clarity/plugin/v1/options.proto`
+- [x] FR-1: Add `ROLE_ENTITY` to the `Role` enum in `clarity/plugin/v1/options.proto`
 - [x] FR-2: The `clarity-lint-plugin` validates that messages with `ROLE_ENTITY` have a field named `entity` of type `clarity.plugin.v1.Entity` at field number 1
 - [x] FR-3: The `protoc-gen-clarity` plugin accepts an output directory flag and emits files to it
 - [x] FR-4: Generate `internal/<provider>/<domain>/<version>/sql/schema.sql` containing `CREATE SCHEMA` and `CREATE TABLE` statements for all `ROLE_ENTITY` messages in a package

@@ -2,14 +2,11 @@ syntax = "proto3";
 
 package clarity.plugin.v1;
 
-import "clarity/plugin/v1/options.proto";
 import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1;pluginV1";
 
 message Entity {
-  option (clarity.plugin.v1.message) = {role: ROLE_BASE};
-
   string id = 1;
   google.protobuf.Timestamp created_at = 2;
   google.protobuf.Timestamp updated_at = 3;

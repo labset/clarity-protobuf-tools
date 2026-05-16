@@ -5,7 +5,7 @@
 - **Status:** done
 - **Description:** Add `ROLE_ENTITY` to the `Role` enum and update the lint plugin to validate that `ROLE_ENTITY` messages have an `entity` field of type `clarity.plugin.v1.Entity` at field number 1.
 - **Acceptance Criteria:**
-  - [x] `ROLE_ENTITY = 2` added to `Role` enum in `options.proto`
+  - [x] `ROLE_ENTITY` added to `Role` enum in `options.proto`
   - [x] Lint plugin rejects `ROLE_ENTITY` messages missing the `entity` field
   - [x] Lint plugin rejects `ROLE_ENTITY` messages where `entity` is not at field number 1
   - [x] Lint plugin rejects `ROLE_ENTITY` messages where `entity` is not of type `clarity.plugin.v1.Entity`

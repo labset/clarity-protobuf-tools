@@ -8,8 +8,7 @@ option go_package = "github.com/labset/clarity-protobuf-tools/api/clarity/plugin
 
 enum Role {
   ROLE_UNSPECIFIED = 0;
-  ROLE_BASE = 1;
-  ROLE_ENTITY = 2;
+  ROLE_ENTITY = 1;
 }
 
 message ClarityMessageOptions {
