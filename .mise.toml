@@ -30,7 +30,6 @@ run = "goreleaser build --clean --snapshot"
 
 [tasks.generate]
 description = "Generate code from proto files"
-dir = "schema"
 run = "buf generate --template buf.gen.api.yaml"
 
 ################
@@ -39,12 +38,10 @@ run = "buf generate --template buf.gen.api.yaml"
 
 [tasks."buf:lint"]
 description = "Lint proto files"
-dir = "schema"
 run = "buf lint"
 
 [tasks."buf:format"]
 description = "Format proto files in place"
-dir = "schema"
 run = "buf format --write"
 
 [tasks.install]
