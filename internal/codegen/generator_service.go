@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"strings"
 	"text/template"
-	"unicode"
 
 	pluginV1 "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1"
 	"github.com/labset/clarity-protobuf-tools/internal/clarity"
 	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/types/descriptorpb"
 )
 
 //go:embed templates/service/*.tmpl
@@ -21,9 +21,6 @@ var serviceTemplates = template.Must(
 		"lower":      strings.ToLower,
 		"snakeCase":  toSnakeCase,
 		"trimPrefix": strings.TrimPrefix,
-		"add": func(a, b int) int {
-			return a + b
-		},
 	}).ParseFS(serviceTemplateFS, "templates/service/*.tmpl"),
 )
 
@@ -32,12 +29,13 @@ type serviceGenerator struct {
 }
 
 type serviceEntityData struct {
-	Syntax    string
-	Package   string
-	GoPackage string
-	Model     string
-	ModelFile string
-	Ops       []pluginV1.Operation
+	Syntax       string
+	Package      string
+	GoPackage    string
+	Model        string
+	ModelFile    string
+	ImportPrefix string
+	Ops          []pluginV1.Operation
 }
 
 type rpcFileData struct {
@@ -47,18 +45,44 @@ type rpcFileData struct {
 	Model     string
 	ModelFile string
 	Op        pluginV1.Operation
-	Fields    []serviceField
 }
 
-type serviceField struct {
-	Name     string
-	Type     string
-	Number   int
-	Optional bool
+// servicePackageEntities extends packageEntities with service-specific metadata.
+type servicePackageEntities struct {
+	*packageEntities
+	goPackage string
+}
+
+func collectServiceEntities(plugin *protogen.Plugin) ([]*servicePackageEntities, error) {
+	packages, err := collectPackageEntities(plugin)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []*servicePackageEntities
+	for _, pe := range packages {
+		goPackage := ""
+		for _, file := range plugin.Files {
+			if !file.Generate {
+				continue
+			}
+			if string(
+				file.Desc.Package(),
+			) == pe.meta.Provider+"."+pe.meta.Domain+"."+pe.meta.Version {
+				goPackage = file.Desc.Options().(*descriptorpb.FileOptions).GetGoPackage()
+				break
+			}
+		}
+		result = append(result, &servicePackageEntities{
+			packageEntities: pe,
+			goPackage:       goPackage,
+		})
+	}
+	return result, nil
 }
 
 func (g *serviceGenerator) Generate(plugin *protogen.Plugin) error {
-	packages, err := collectPackageEntities(plugin)
+	packages, err := collectServiceEntities(plugin)
 	if err != nil {
 		return err
 	}
@@ -69,6 +93,11 @@ func (g *serviceGenerator) Generate(plugin *protogen.Plugin) error {
 			outDir = fmt.Sprintf("%s/%s", g.outputDir, outDir)
 		}
 
+		protoPackage := pe.meta.Provider + "." + pe.meta.Domain + "." + pe.meta.Version
+		importPrefix := fmt.Sprintf(
+			"%s/%s/%s", pe.meta.Provider, pe.meta.Domain, pe.meta.Version,
+		)
+
 		for _, msg := range pe.messages {
 			ops := clarity.Operations(msg.Desc)
 			if len(ops) == 0 {
@@ -77,23 +106,18 @@ func (g *serviceGenerator) Generate(plugin *protogen.Plugin) error {
 
 			modelName := string(msg.Desc.Name())
 			modelSnake := toSnakeCase(modelName)
-			modelFile := "models.proto"
-
-			protoPackage := string(pe.meta.Provider) + "." + pe.meta.Domain + "." + pe.meta.Version
-			goPackage := fmt.Sprintf("github.com/labset/clarity-protobuf-tools/api/%s/%s/%s;%s%s",
-				pe.meta.Provider, pe.meta.Domain, pe.meta.Version,
-				pe.meta.Domain, capitalize(pe.meta.Version))
+			modelImport := fmt.Sprintf("%s/models.proto", importPrefix)
 
 			entityData := serviceEntityData{
-				Syntax:    "proto3",
-				Package:   protoPackage,
-				GoPackage: goPackage,
-				Model:     modelName,
-				ModelFile: modelFile,
-				Ops:       ops,
+				Syntax:       "proto3",
+				Package:      protoPackage,
+				GoPackage:    pe.goPackage,
+				Model:        modelName,
+				ModelFile:    modelImport,
+				ImportPrefix: importPrefix,
+				Ops:          ops,
 			}
 
-			// Generate service_<model>.proto
 			serviceContent, err := renderServiceProto(entityData)
 			if err != nil {
 				return err
@@ -103,16 +127,14 @@ func (g *serviceGenerator) Generate(plugin *protogen.Plugin) error {
 				return err
 			}
 
-			// Generate rpc_<op>_<model>.proto per operation
 			for _, op := range ops {
 				rpcData := rpcFileData{
 					Syntax:    "proto3",
 					Package:   protoPackage,
-					GoPackage: goPackage,
+					GoPackage: pe.goPackage,
 					Model:     modelName,
-					ModelFile: modelFile,
+					ModelFile: modelImport,
 					Op:        op,
-					Fields:    extractMutableFields(msg),
 				}
 
 				rpcContent, err := renderRPCProto(rpcData)
@@ -131,32 +153,6 @@ func (g *serviceGenerator) Generate(plugin *protogen.Plugin) error {
 	return nil
 }
 
-func extractMutableFields(msg *protogen.Message) []serviceField {
-	var fields []serviceField
-	number := 1
-	for _, field := range msg.Fields {
-		if string(field.Desc.Name()) == "entity" {
-			continue
-		}
-		f := serviceField{
-			Name:     string(field.Desc.Name()),
-			Type:     protoFieldType(field),
-			Number:   number,
-			Optional: field.Desc.HasOptionalKeyword(),
-		}
-		fields = append(fields, f)
-		number++
-	}
-	return fields
-}
-
-func protoFieldType(field *protogen.Field) string {
-	if field.Message != nil {
-		return string(field.Message.Desc.FullName())
-	}
-	return field.Desc.Kind().String()
-}
-
 func renderServiceProto(data serviceEntityData) (string, error) {
 	var buf bytes.Buffer
 	if err := serviceTemplates.ExecuteTemplate(&buf, "service.proto.tmpl", data); err != nil {
@@ -171,13 +167,4 @@ func renderRPCProto(data rpcFileData) (string, error) {
 		return "", fmt.Errorf("executing rpc template: %w", err)
 	}
 	return buf.String(), nil
-}
-
-func capitalize(s string) string {
-	if s == "" {
-		return s
-	}
-	runes := []rune(s)
-	runes[0] = unicode.ToUpper(runes[0])
-	return string(runes)
 }

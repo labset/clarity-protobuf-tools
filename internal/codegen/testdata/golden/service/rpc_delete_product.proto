@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package acme.inventory.v1;
+
+option go_package = "github.com/acme/inventory/v1;inventoryv1";
+
+import "acme/inventory/v1/models.proto";
+import "buf/validate/validate.proto";
+
+message DeleteProductRequest {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message DeleteProductResponse {}

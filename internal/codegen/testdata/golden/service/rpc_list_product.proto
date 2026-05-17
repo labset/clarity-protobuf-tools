@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package acme.inventory.v1;
+
+option go_package = "github.com/acme/inventory/v1;inventoryv1";
+
+import "acme/inventory/v1/models.proto";
+
+message ListProductsRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message ListProductsResponse {
+  repeated Product items = 1;
+  string next_page_token = 2;
+}

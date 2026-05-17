@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package acme.inventory.v1;
+
+option go_package = "github.com/acme/inventory/v1;inventoryv1";
+
+import "acme/inventory/v1/models.proto";
+import "google/protobuf/field_mask.proto";
+
+message UpdateProductRequest {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  Product item = 2;
+  google.protobuf.FieldMask update_mask = 3;
+}
+
+message UpdateProductResponse {
+  Product item = 1;
+}

@@ -6,7 +6,7 @@ option go_package = "{{ .GoPackage }}";
 
 import "{{ .ModelFile }}";
 {{- range .Ops }}
-import "rpc_{{ lower (trimPrefix .String "OPERATION_") }}_{{ snakeCase $.Model }}.proto";
+import "{{ $.ImportPrefix }}/rpc_{{ lower (trimPrefix .String "OPERATION_") }}_{{ snakeCase $.Model }}.proto";
 {{- end }}
 
 service {{ .Model }}Service {
