@@ -14,6 +14,8 @@ func GeneratorForMode(raw string) (Generator, error) {
 		return &atlasSqlcGenerator{sqlc: &sqlcGenerator{outputDir: p.outputDir}}, nil
 	case "service":
 		return &serviceGenerator{outputDir: p.outputDir}, nil
+	case "connect-crud":
+		return &connectCrudGenerator{outputDir: p.outputDir, goModule: p.goModule}, nil
 	default:
 		return nil, fmt.Errorf("unknown mode %q", p.mode)
 	}
@@ -23,6 +25,7 @@ func GeneratorForMode(raw string) (Generator, error) {
 type params struct {
 	mode      string
 	outputDir string
+	goModule  string
 }
 
 func parseParams(raw string) params {
@@ -39,6 +42,8 @@ func parseParams(raw string) params {
 			p.mode = strings.TrimSpace(value)
 		case "output_dir":
 			p.outputDir = strings.TrimSpace(value)
+		case "go_module":
+			p.goModule = strings.TrimSpace(value)
 		}
 	}
 
