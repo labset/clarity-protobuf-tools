@@ -1,0 +1,56 @@
+package {{ .Package }}
+
+import (
+	"github.com/gofrs/uuid/v5"
+	"github.com/jackc/pgx/v5/pgtype"
+	"google.golang.org/protobuf/types/known/timestamppb"
+
+	pluginv1 "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1"
+	"{{ .StoreImport }}"
+	{{ .ProtoAlias }} "{{ .ProtoImport }}"
+)
+
+func {{ .ModelLower }}ToProto(row db.{{ .DBPrefix }}{{ .Model }}) *{{ .ProtoAlias }}.{{ .Model }} {
+	return &{{ .ProtoAlias }}.{{ .Model }}{
+		Entity: &pluginv1.Entity{
+			Id:        row.ID.String(),
+			CreatedAt: timestamppb.New(row.CreatedAt.Time),
+			UpdatedAt: timestamppb.New(row.UpdatedAt.Time),
+		},
+{{- range .Fields }}
+{{- if .IsEnum }}
+		{{ .ProtoName }}: {{ $.ProtoAlias }}.{{ .EnumType }}({{ $.ProtoAlias }}.{{ .EnumType }}_value[row.{{ .SQLCName }}]),
+{{- else }}
+		{{ .ProtoName }}: row.{{ .SQLCName }},
+{{- end }}
+{{- end }}
+	}
+}
+
+func {{ .ModelLower }}FromCreate(msg *{{ .ProtoAlias }}.{{ .Model }}, id uuid.UUID, now pgtype.Timestamptz) db.Create{{ .Model }}Params {
+	return db.Create{{ .Model }}Params{
+		ID:        id,
+		CreatedAt: now,
+		UpdatedAt: now,
+{{- range .Fields }}
+{{- if .IsEnum }}
+		{{ .SQLCName }}: msg.Get{{ .ProtoName }}().String(),
+{{- else }}
+		{{ .SQLCName }}: msg.Get{{ .ProtoName }}(),
+{{- end }}
+{{- end }}
+	}
+}
+
+func {{ .ModelLower }}FromUpdate(msg *{{ .ProtoAlias }}.{{ .Model }}, id uuid.UUID) db.Update{{ .Model }}Params {
+	return db.Update{{ .Model }}Params{
+		ID: id,
+{{- range .Fields }}
+{{- if .IsEnum }}
+		{{ .SQLCName }}: msg.Get{{ .ProtoName }}().String(),
+{{- else }}
+		{{ .SQLCName }}: msg.Get{{ .ProtoName }}(),
+{{- end }}
+{{- end }}
+	}
+}

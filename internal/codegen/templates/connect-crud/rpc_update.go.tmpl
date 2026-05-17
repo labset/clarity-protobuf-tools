@@ -1,0 +1,58 @@
+package {{ .Package }}
+
+import (
+	"context"
+	"errors"
+
+	"connectrpc.com/connect"
+	"github.com/gofrs/uuid/v5"
+	"github.com/jackc/pgx/v5"
+
+	{{ .ProtoAlias }} "{{ .ProtoImport }}"
+)
+
+func (h *{{ .ModelLower }}Handler) Update{{ .Model }}(
+	ctx context.Context,
+	req *connect.Request[{{ .ProtoAlias }}.Update{{ .Model }}Request],
+) (*connect.Response[{{ .ProtoAlias }}.Update{{ .Model }}Response], error) {
+	id, err := uuid.FromString(req.Msg.GetId())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	}
+
+	current, err := h.store.Get{{ .Model }}(ctx, id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, connect.NewError(connect.CodeNotFound, err)
+		}
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	item := req.Msg.GetItem()
+	mask := req.Msg.GetUpdateMask()
+	params := {{ .ModelLower }}FromUpdate(item, id)
+
+	if mask != nil && len(mask.GetPaths()) > 0 {
+		allowed := make(map[string]bool)
+		for _, p := range mask.GetPaths() {
+			allowed[p] = true
+		}
+{{- range .Fields }}
+		if !allowed["{{ snakeCase .ProtoName }}"] {
+			params.{{ .SQLCName }} = current.{{ .SQLCName }}
+		}
+{{- end }}
+	}
+
+	row, err := h.store.Update{{ .Model }}(ctx, params)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, connect.NewError(connect.CodeNotFound, err)
+		}
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return connect.NewResponse(&{{ .ProtoAlias }}.Update{{ .Model }}Response{
+		Item: {{ .ModelLower }}ToProto(row),
+	}), nil
+}

@@ -1,0 +1,29 @@
+package {{ .Package }}
+
+import (
+	"net/http"
+
+	"connectrpc.com/connect"
+	"github.com/jackc/pgx/v5/pgxpool"
+
+	"{{ .StoreImport }}"
+	{{ .ConnectAlias }} "{{ .ConnectImport }}"
+)
+
+// {{ .Model }}Deps holds the dependencies for the {{ .Model }}Service handler.
+type {{ .Model }}Deps struct {
+	Pool *pgxpool.Pool
+}
+
+type {{ .ModelLower }}Handler struct {
+	{{ .ConnectAlias }}.Unimplemented{{ .Model }}ServiceHandler
+	store *db.Queries
+}
+
+// New{{ .Model }}ServiceHandler creates a Connect handler for {{ .Model }}Service.
+func New{{ .Model }}ServiceHandler(deps {{ .Model }}Deps, opts ...connect.HandlerOption) (string, http.Handler) {
+	h := &{{ .ModelLower }}Handler{
+		store: db.New(deps.Pool),
+	}
+	return {{ .ConnectAlias }}.New{{ .Model }}ServiceHandler(h, opts...)
+}

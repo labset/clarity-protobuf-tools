@@ -8,6 +8,14 @@ SELECT {{ .AllColumns }}
 FROM {{ .Schema }}.{{ .Table }}
 WHERE deleted_at IS NULL;
 
+-- name: List{{ .MessageName }}sPaginated :many
+SELECT {{ .AllColumns }}
+FROM {{ .Schema }}.{{ .Table }}
+WHERE deleted_at IS NULL
+  AND (@cursor::uuid = '00000000-0000-0000-0000-000000000000'::uuid OR id > @cursor)
+ORDER BY id
+LIMIT @page_size;
+
 -- name: Create{{ .MessageName }} :one
 INSERT INTO {{ .Schema }}.{{ .Table }} (
   {{ .InsertColumns }}
@@ -22,7 +30,7 @@ SET {{ .UpdateSetClause }}
 WHERE id = @id AND deleted_at IS NULL
 RETURNING *;
 
--- name: SoftDelete{{ .MessageName }} :exec
+-- name: SoftDelete{{ .MessageName }} :execrows
 UPDATE {{ .Schema }}.{{ .Table }}
 SET deleted_at = NOW()
 WHERE id = @id AND deleted_at IS NULL;

@@ -88,7 +88,8 @@ func (g *sqlcGenerator) Generate(plugin *protogen.Plugin) error {
 		if err != nil {
 			return err
 		}
-		if _, err := plugin.NewGeneratedFile(fmt.Sprintf("%s/sql/schema.sql", outDir), "").Write([]byte(schemaContent)); err != nil {
+		if _, err := plugin.NewGeneratedFile(fmt.Sprintf("%s/sql/schema.sql", outDir), "").
+			Write([]byte(schemaContent)); err != nil {
 			return err
 		}
 
@@ -108,7 +109,8 @@ func (g *sqlcGenerator) Generate(plugin *protogen.Plugin) error {
 		if err != nil {
 			return err
 		}
-		if _, err := plugin.NewGeneratedFile(fmt.Sprintf("%s/sqlc.yaml", outDir), "").Write([]byte(configContent)); err != nil {
+		if _, err := plugin.NewGeneratedFile(fmt.Sprintf("%s/sqlc.yaml", outDir), "").
+			Write([]byte(configContent)); err != nil {
 			return err
 		}
 	}

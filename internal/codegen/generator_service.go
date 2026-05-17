@@ -126,7 +126,8 @@ func (g *serviceGenerator) Generate(plugin *protogen.Plugin) error {
 				return err
 			}
 			servicePath := fmt.Sprintf("%s/service_%s.proto", outDir, modelSnake)
-			if _, err := plugin.NewGeneratedFile(servicePath, "").Write([]byte(serviceContent)); err != nil {
+			if _, err := plugin.NewGeneratedFile(servicePath, "").
+				Write([]byte(serviceContent)); err != nil {
 				return err
 			}
 
@@ -146,7 +147,8 @@ func (g *serviceGenerator) Generate(plugin *protogen.Plugin) error {
 				}
 				opName := strings.ToLower(strings.TrimPrefix(op.String(), "OPERATION_"))
 				rpcPath := fmt.Sprintf("%s/rpc_%s_%s.proto", outDir, opName, modelSnake)
-				if _, err := plugin.NewGeneratedFile(rpcPath, "").Write([]byte(rpcContent)); err != nil {
+				if _, err := plugin.NewGeneratedFile(rpcPath, "").
+					Write([]byte(rpcContent)); err != nil {
 					return err
 				}
 			}
