@@ -1,0 +1,27 @@
+package api
+
+import (
+	"context"
+
+	"connectrpc.com/connect"
+	"github.com/gofrs/uuid/v5"
+
+	inventoryv1 "github.com/acme/inventory/v1"
+)
+
+func (h *productHandler) DeleteProduct(
+	ctx context.Context,
+	req *connect.Request[inventoryv1.DeleteProductRequest],
+) (*connect.Response[inventoryv1.DeleteProductResponse], error) {
+	id, err := uuid.FromString(req.Msg.GetId())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	}
+
+	err = h.store.SoftDeleteProduct(ctx, id)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return connect.NewResponse(&inventoryv1.DeleteProductResponse{}), nil
+}

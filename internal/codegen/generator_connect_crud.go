@@ -7,8 +7,11 @@ import (
 	"strings"
 	"text/template"
 
+	"unicode"
+
 	"github.com/labset/clarity-protobuf-tools/internal/clarity"
 	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 //go:embed templates/connect-crud/*.tmpl
@@ -35,6 +38,39 @@ type handlerData struct {
 	ConnectImport string
 	ConnectAlias  string
 	ProtoAlias    string
+}
+
+type mapperData struct {
+	Package     string
+	Model       string
+	ModelLower  string
+	StoreImport string
+	ProtoImport string
+	ProtoAlias  string
+	Fields      []mapperField
+}
+
+type mapperField struct {
+	ProtoName string // PascalCase, e.g. "Name"
+	SQLCName  string // PascalCase SQLC column name, e.g. "Name"
+	Kind      string // "string", "int32", "int64", "bool", "float32", "float64", "bytes"
+}
+
+type rpcData struct {
+	Package     string
+	Model       string
+	ModelLower  string
+	StoreImport string
+	ProtoImport string
+	ProtoAlias  string
+}
+
+var opTemplateMap = map[string]string{
+	"OPERATION_CREATE": "rpc_create.go.tmpl",
+	"OPERATION_GET":    "rpc_get.go.tmpl",
+	"OPERATION_LIST":   "rpc_list.go.tmpl",
+	"OPERATION_UPDATE": "rpc_update.go.tmpl",
+	"OPERATION_DELETE": "rpc_delete.go.tmpl",
 }
 
 func (g *connectCrudGenerator) Generate(plugin *protogen.Plugin) error {
@@ -84,6 +120,51 @@ func (g *connectCrudGenerator) Generate(plugin *protogen.Plugin) error {
 			if _, err := plugin.NewGeneratedFile(filePath, "").Write([]byte(content)); err != nil {
 				return err
 			}
+
+			fields := extractMapperFields(msg)
+			mapData := mapperData{
+				Package:     "api",
+				Model:       modelName,
+				ModelLower:  strings.ToLower(modelName[:1]) + modelName[1:],
+				StoreImport: storeImport,
+				ProtoImport: protoImport,
+				ProtoAlias:  protoAlias,
+				Fields:      fields,
+			}
+
+			mapperContent, err := renderMapper(mapData)
+			if err != nil {
+				return err
+			}
+			mapperPath := fmt.Sprintf("%s/mapper_%s.go", outDir, modelSnake)
+			if _, err := plugin.NewGeneratedFile(mapperPath, "").Write([]byte(mapperContent)); err != nil {
+				return err
+			}
+
+			rpc := rpcData{
+				Package:     "api",
+				Model:       modelName,
+				ModelLower:  strings.ToLower(modelName[:1]) + modelName[1:],
+				StoreImport: storeImport,
+				ProtoImport: protoImport,
+				ProtoAlias:  protoAlias,
+			}
+
+			for _, op := range ops {
+				tmplName, ok := opTemplateMap[op.String()]
+				if !ok {
+					continue
+				}
+				rpcContent, err := renderRPC(tmplName, rpc)
+				if err != nil {
+					return err
+				}
+				opName := strings.ToLower(strings.TrimPrefix(op.String(), "OPERATION_"))
+				rpcPath := fmt.Sprintf("%s/rpc_%s_%s.go", outDir, opName, modelSnake)
+				if _, err := plugin.NewGeneratedFile(rpcPath, "").Write([]byte(rpcContent)); err != nil {
+					return err
+				}
+			}
 		}
 	}
 
@@ -117,4 +198,77 @@ func renderHandler(data handlerData) (string, error) {
 		return "", fmt.Errorf("executing handler template: %w", err)
 	}
 	return buf.String(), nil
+}
+
+func renderRPC(tmplName string, data rpcData) (string, error) {
+	var buf bytes.Buffer
+	if err := connectCrudTemplates.ExecuteTemplate(&buf, tmplName, data); err != nil {
+		return "", fmt.Errorf("executing %s template: %w", tmplName, err)
+	}
+	return buf.String(), nil
+}
+
+func renderMapper(data mapperData) (string, error) {
+	var buf bytes.Buffer
+	if err := connectCrudTemplates.ExecuteTemplate(&buf, "mapper.go.tmpl", data); err != nil {
+		return "", fmt.Errorf("executing mapper template: %w", err)
+	}
+	return buf.String(), nil
+}
+
+// extractMapperFields extracts non-entity fields from a proto message for mapper generation.
+func extractMapperFields(msg *protogen.Message) []mapperField {
+	var fields []mapperField
+	for _, field := range msg.Fields {
+		if string(field.Desc.Name()) == "entity" {
+			continue
+		}
+		fields = append(fields, mapperField{
+			ProtoName: toPascalCase(string(field.Desc.Name())),
+			SQLCName:  toPascalCase(string(field.Desc.Name())),
+			Kind:      protoKindToMapperKind(field.Desc),
+		})
+	}
+	return fields
+}
+
+func protoKindToMapperKind(fd protoreflect.FieldDescriptor) string {
+	switch fd.Kind() {
+	case protoreflect.BoolKind:
+		return "bool"
+	case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
+		return "int32"
+	case protoreflect.Uint32Kind, protoreflect.Fixed32Kind:
+		return "int32"
+	case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
+		return "int64"
+	case protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
+		return "int64"
+	case protoreflect.FloatKind:
+		return "float32"
+	case protoreflect.DoubleKind:
+		return "float64"
+	case protoreflect.BytesKind:
+		return "bytes"
+	default:
+		return "string"
+	}
+}
+
+func toPascalCase(s string) string {
+	var b strings.Builder
+	upper := true
+	for _, r := range s {
+		if r == '_' {
+			upper = true
+			continue
+		}
+		if upper {
+			b.WriteRune(unicode.ToUpper(r))
+			upper = false
+		} else {
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
 }

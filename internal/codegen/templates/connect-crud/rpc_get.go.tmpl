@@ -1,0 +1,34 @@
+package {{ .Package }}
+
+import (
+	"context"
+	"errors"
+
+	"connectrpc.com/connect"
+	"github.com/gofrs/uuid/v5"
+	"github.com/jackc/pgx/v5"
+
+	{{ .ProtoAlias }} "{{ .ProtoImport }}"
+)
+
+func (h *{{ .ModelLower }}Handler) Get{{ .Model }}(
+	ctx context.Context,
+	req *connect.Request[{{ .ProtoAlias }}.Get{{ .Model }}Request],
+) (*connect.Response[{{ .ProtoAlias }}.Get{{ .Model }}Response], error) {
+	id, err := uuid.FromString(req.Msg.GetId())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	}
+
+	row, err := h.store.Get{{ .Model }}(ctx, id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, connect.NewError(connect.CodeNotFound, err)
+		}
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return connect.NewResponse(&{{ .ProtoAlias }}.Get{{ .Model }}Response{
+		Item: {{ .ModelLower }}ToProto(row),
+	}), nil
+}

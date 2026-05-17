@@ -1,0 +1,53 @@
+package {{ .Package }}
+
+import (
+	"context"
+	"encoding/base64"
+	"fmt"
+
+	"connectrpc.com/connect"
+	"github.com/gofrs/uuid/v5"
+
+	{{ .ProtoAlias }} "{{ .ProtoImport }}"
+)
+
+func (h *{{ .ModelLower }}Handler) List{{ .Model }}s(
+	ctx context.Context,
+	req *connect.Request[{{ .ProtoAlias }}.List{{ .Model }}sRequest],
+) (*connect.Response[{{ .ProtoAlias }}.List{{ .Model }}sResponse], error) {
+	pageSize := req.Msg.GetPageSize()
+	if pageSize <= 0 {
+		pageSize = 50
+	}
+
+	var cursor uuid.UUID
+	if token := req.Msg.GetPageToken(); token != "" {
+		raw, err := base64.StdEncoding.DecodeString(token)
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid page token"))
+		}
+		cursor, err = uuid.FromString(string(raw))
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid page token"))
+		}
+	}
+
+	_ = cursor
+	_ = pageSize
+
+	rows, err := h.store.List{{ .Model }}s(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	items := make([]*{{ .ProtoAlias }}.{{ .Model }}, len(rows))
+	for i, row := range rows {
+		items[i] = {{ .ModelLower }}ToProto(row)
+	}
+
+	resp := &{{ .ProtoAlias }}.List{{ .Model }}sResponse{
+		Items: items,
+	}
+
+	return connect.NewResponse(resp), nil
+}
