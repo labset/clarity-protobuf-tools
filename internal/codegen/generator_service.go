@@ -62,16 +62,19 @@ func collectServiceEntities(plugin *protogen.Plugin) ([]*servicePackageEntities,
 	var result []*servicePackageEntities
 	for _, pe := range packages {
 		goPackage := ""
+		expectedPkg := pe.meta.Provider + "." + pe.meta.Domain + "." + pe.meta.Version
 		for _, file := range plugin.Files {
 			if !file.Generate {
 				continue
 			}
-			if string(
-				file.Desc.Package(),
-			) == pe.meta.Provider+"."+pe.meta.Domain+"."+pe.meta.Version {
-				goPackage = file.Desc.Options().(*descriptorpb.FileOptions).GetGoPackage()
-				break
+			if string(file.Desc.Package()) != expectedPkg {
+				continue
 			}
+			if fileOpts, ok := file.Desc.Options().(*descriptorpb.FileOptions); ok &&
+				fileOpts != nil {
+				goPackage = fileOpts.GetGoPackage()
+			}
+			break
 		}
 		result = append(result, &servicePackageEntities{
 			packageEntities: pe,
