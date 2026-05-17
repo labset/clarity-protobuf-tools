@@ -15,14 +15,14 @@ type {{ .Model }}Deps struct {
 	Pool *pgxpool.Pool
 }
 
-type {{ lower .Model }}Handler struct {
+type {{ .ModelLower }}Handler struct {
 	{{ .ConnectAlias }}.Unimplemented{{ .Model }}ServiceHandler
 	store *db.Queries
 }
 
 // New{{ .Model }}ServiceHandler creates a Connect handler for {{ .Model }}Service.
 func New{{ .Model }}ServiceHandler(deps {{ .Model }}Deps, opts ...connect.HandlerOption) (string, http.Handler) {
-	h := &{{ lower .Model }}Handler{
+	h := &{{ .ModelLower }}Handler{
 		store: db.New(deps.Pool),
 	}
 	return {{ .ConnectAlias }}.New{{ .Model }}ServiceHandler(h, opts...)

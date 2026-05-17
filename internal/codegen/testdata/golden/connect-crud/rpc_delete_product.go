@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 
 	"connectrpc.com/connect"
 	"github.com/gofrs/uuid/v5"
@@ -18,9 +19,12 @@ func (h *productHandler) DeleteProduct(
 		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}
 
-	err = h.store.SoftDeleteProduct(ctx, id)
+	rowsAffected, err := h.store.SoftDeleteProduct(ctx, id)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+	if rowsAffected == 0 {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("product not found"))
 	}
 
 	return connect.NewResponse(&inventoryv1.DeleteProductResponse{}), nil

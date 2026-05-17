@@ -15,6 +15,9 @@ func GeneratorForMode(raw string) (Generator, error) {
 	case "service":
 		return &serviceGenerator{outputDir: p.outputDir}, nil
 	case "connect-crud":
+		if p.goModule == "" {
+			return nil, fmt.Errorf("connect-crud mode requires go_module parameter")
+		}
 		return &connectCrudGenerator{outputDir: p.outputDir, goModule: p.goModule}, nil
 	default:
 		return nil, fmt.Errorf("unknown mode %q", p.mode)

@@ -2,10 +2,12 @@ package api
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"connectrpc.com/connect"
 	"github.com/gofrs/uuid/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 
 	inventoryv1 "github.com/acme/inventory/v1"
@@ -25,6 +27,10 @@ func (h *productHandler) CreateProduct(
 
 	row, err := h.store.CreateProduct(ctx, params)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return nil, connect.NewError(connect.CodeAlreadyExists, err)
+		}
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 

@@ -8,6 +8,7 @@ import (
 	"connectrpc.com/connect"
 	"github.com/gofrs/uuid/v5"
 
+	"github.com/acme/app/internal/acme/inventory/v1/db"
 	inventoryv1 "github.com/acme/inventory/v1"
 )
 
@@ -32,10 +33,10 @@ func (h *productHandler) ListProducts(
 		}
 	}
 
-	_ = cursor
-	_ = pageSize
-
-	rows, err := h.store.ListProducts(ctx)
+	rows, err := h.store.ListProductsPaginated(ctx, db.ListProductsPaginatedParams{
+		Cursor:   cursor,
+		PageSize: pageSize,
+	})
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
@@ -47,6 +48,11 @@ func (h *productHandler) ListProducts(
 
 	resp := &inventoryv1.ListProductsResponse{
 		Items: items,
+	}
+
+	if int32(len(rows)) == pageSize {
+		lastID := rows[len(rows)-1].ID.String()
+		resp.NextPageToken = base64.StdEncoding.EncodeToString([]byte(lastID))
 	}
 
 	return connect.NewResponse(resp), nil

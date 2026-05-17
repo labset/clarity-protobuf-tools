@@ -37,6 +37,7 @@ The `protoc-gen-clarity` plugin already generates proto service definitions (`se
 - [ ] DFR-3: Filtering/sorting options on List operations
 - [ ] DFR-4: Bulk operations (batch create, batch delete)
 - [ ] DFR-5: Hard delete / purge RPC
+- [ ] DFR-6: Nullable/optional field handling in mapper conversions
 
 ## Constraints
 

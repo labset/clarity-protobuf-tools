@@ -2,6 +2,7 @@ package {{ .Package }}
 
 import (
 	"context"
+	"fmt"
 
 	"connectrpc.com/connect"
 	"github.com/gofrs/uuid/v5"
@@ -18,9 +19,12 @@ func (h *{{ .ModelLower }}Handler) Delete{{ .Model }}(
 		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}
 
-	err = h.store.SoftDelete{{ .Model }}(ctx, id)
+	rowsAffected, err := h.store.SoftDelete{{ .Model }}(ctx, id)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+	if rowsAffected == 0 {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("{{ .ModelLower }} not found"))
 	}
 
 	return connect.NewResponse(&{{ .ProtoAlias }}.Delete{{ .Model }}Response{}), nil

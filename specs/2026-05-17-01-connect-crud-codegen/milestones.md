@@ -20,7 +20,6 @@
   - [x] UUID string ↔ `uuid.UUID` conversion
   - [x] `google.protobuf.Timestamp` ↔ `time.Time` conversion
   - [x] Standard field type mappings (string, int32, bool, etc.)
-  - [ ] Handles nullable/optional fields
 
 ## M3: Create and Get operations
 
@@ -40,7 +39,7 @@
   - [x] `rpc_list_<model>.go` is generated with cursor encode/decode logic
   - [x] Respects `page_size` from request
   - [x] Decodes `page_token` for cursor position, encodes `next_page_token` in response
-  - [ ] Calls SQLC store list method with appropriate parameters
+  - [x] Calls SQLC store list method with appropriate parameters
   - [x] Returns `CodeInvalidArgument` for malformed page tokens
 
 ## M5: Update and Delete operations
@@ -48,10 +47,10 @@
 - **Status:** done
 - **Description:** Generate `rpc_update_<model>.go` with field mask handling and `rpc_delete_<model>.go` for soft delete.
 - **Acceptance Criteria:**
-  - [ ] `rpc_update_<model>.go` respects `update_mask` for partial updates
+  - [x] `rpc_update_<model>.go` respects `update_mask` for partial updates
   - [x] `rpc_update_<model>.go` returns `CodeNotFound` if entity does not exist
   - [x] `rpc_delete_<model>.go` calls store soft-delete (sets `deleted_at`)
-  - [ ] `rpc_delete_<model>.go` returns `CodeNotFound` if entity does not exist
+  - [x] `rpc_delete_<model>.go` returns `CodeNotFound` if entity does not exist
 
 ## M6: Golden file tests and validation
 

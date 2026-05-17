@@ -11,7 +11,6 @@ import (
 
 	"github.com/labset/clarity-protobuf-tools/internal/clarity"
 	"google.golang.org/protobuf/compiler/protogen"
-	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 //go:embed templates/connect-crud/*.tmpl
@@ -19,7 +18,6 @@ var connectCrudTemplateFS embed.FS
 
 var connectCrudTemplates = template.Must(
 	template.New("connect-crud").Funcs(template.FuncMap{
-		"lower":     strings.ToLower,
 		"snakeCase": toSnakeCase,
 	}).ParseFS(connectCrudTemplateFS, "templates/connect-crud/*.tmpl"),
 )
@@ -32,12 +30,11 @@ type connectCrudGenerator struct {
 type handlerData struct {
 	Package       string
 	Model         string
+	ModelLower    string
 	ModelSnake    string
 	StoreImport   string
-	ProtoImport   string
 	ConnectImport string
 	ConnectAlias  string
-	ProtoAlias    string
 }
 
 type mapperData struct {
@@ -53,7 +50,6 @@ type mapperData struct {
 type mapperField struct {
 	ProtoName string // PascalCase, e.g. "Name"
 	SQLCName  string // PascalCase SQLC column name, e.g. "Name"
-	Kind      string // "string", "int32", "int64", "bool", "float32", "float64", "bytes"
 }
 
 type rpcData struct {
@@ -63,6 +59,7 @@ type rpcData struct {
 	StoreImport string
 	ProtoImport string
 	ProtoAlias  string
+	Fields      []mapperField
 }
 
 var opTemplateMap = map[string]string{
@@ -100,16 +97,16 @@ func (g *connectCrudGenerator) Generate(plugin *protogen.Plugin) error {
 
 			modelName := string(msg.Desc.Name())
 			modelSnake := toSnakeCase(modelName)
+			modelLower := strings.ToLower(modelName[:1]) + modelName[1:]
 
 			data := handlerData{
 				Package:       "api",
 				Model:         modelName,
+				ModelLower:    modelLower,
 				ModelSnake:    modelSnake,
 				StoreImport:   storeImport,
-				ProtoImport:   protoImport,
 				ConnectImport: connectImport,
 				ConnectAlias:  connectAlias,
-				ProtoAlias:    protoAlias,
 			}
 
 			content, err := renderHandler(data)
@@ -125,7 +122,7 @@ func (g *connectCrudGenerator) Generate(plugin *protogen.Plugin) error {
 			mapData := mapperData{
 				Package:     "api",
 				Model:       modelName,
-				ModelLower:  strings.ToLower(modelName[:1]) + modelName[1:],
+				ModelLower:  modelLower,
 				StoreImport: storeImport,
 				ProtoImport: protoImport,
 				ProtoAlias:  protoAlias,
@@ -144,10 +141,11 @@ func (g *connectCrudGenerator) Generate(plugin *protogen.Plugin) error {
 			rpc := rpcData{
 				Package:     "api",
 				Model:       modelName,
-				ModelLower:  strings.ToLower(modelName[:1]) + modelName[1:],
+				ModelLower:  modelLower,
 				StoreImport: storeImport,
 				ProtoImport: protoImport,
 				ProtoAlias:  protoAlias,
+				Fields:      fields,
 			}
 
 			for _, op := range ops {
@@ -226,33 +224,9 @@ func extractMapperFields(msg *protogen.Message) []mapperField {
 		fields = append(fields, mapperField{
 			ProtoName: toPascalCase(string(field.Desc.Name())),
 			SQLCName:  toPascalCase(string(field.Desc.Name())),
-			Kind:      protoKindToMapperKind(field.Desc),
 		})
 	}
 	return fields
-}
-
-func protoKindToMapperKind(fd protoreflect.FieldDescriptor) string {
-	switch fd.Kind() {
-	case protoreflect.BoolKind:
-		return "bool"
-	case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
-		return "int32"
-	case protoreflect.Uint32Kind, protoreflect.Fixed32Kind:
-		return "int32"
-	case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
-		return "int64"
-	case protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
-		return "int64"
-	case protoreflect.FloatKind:
-		return "float32"
-	case protoreflect.DoubleKind:
-		return "float64"
-	case protoreflect.BytesKind:
-		return "bytes"
-	default:
-		return "string"
-	}
 }
 
 func toPascalCase(s string) string {
