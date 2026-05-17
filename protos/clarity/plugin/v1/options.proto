@@ -11,8 +11,18 @@ enum Role {
   ROLE_ENTITY = 1;
 }
 
+enum Operation {
+  OPERATION_UNSPECIFIED = 0;
+  OPERATION_CREATE = 1;
+  OPERATION_GET = 2;
+  OPERATION_LIST = 3;
+  OPERATION_UPDATE = 4;
+  OPERATION_DELETE = 5;
+}
+
 message ClarityMessageOptions {
   Role role = 1;
+  repeated Operation operations = 2;
 }
 
 extend google.protobuf.MessageOptions {
