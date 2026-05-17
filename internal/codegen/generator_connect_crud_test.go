@@ -121,37 +121,37 @@ func TestConnectCrudGenerator_AllOperations(t *testing.T) {
 	assert.Equal(
 		t,
 		loadConnectCrudGolden(t, "handler_product.go"),
-		files["acme/inventory/v1/api/handler_product.go"],
+		files["internal/acme/inventory/v1/api/handler_product.go"],
 	)
 	assert.Equal(
 		t,
 		loadConnectCrudGolden(t, "mapper_product.go"),
-		files["acme/inventory/v1/api/mapper_product.go"],
+		files["internal/acme/inventory/v1/api/mapper_product.go"],
 	)
 	assert.Equal(
 		t,
 		loadConnectCrudGolden(t, "rpc_create_product.go"),
-		files["acme/inventory/v1/api/rpc_create_product.go"],
+		files["internal/acme/inventory/v1/api/rpc_create_product.go"],
 	)
 	assert.Equal(
 		t,
 		loadConnectCrudGolden(t, "rpc_get_product.go"),
-		files["acme/inventory/v1/api/rpc_get_product.go"],
+		files["internal/acme/inventory/v1/api/rpc_get_product.go"],
 	)
 	assert.Equal(
 		t,
 		loadConnectCrudGolden(t, "rpc_list_product.go"),
-		files["acme/inventory/v1/api/rpc_list_product.go"],
+		files["internal/acme/inventory/v1/api/rpc_list_product.go"],
 	)
 	assert.Equal(
 		t,
 		loadConnectCrudGolden(t, "rpc_update_product.go"),
-		files["acme/inventory/v1/api/rpc_update_product.go"],
+		files["internal/acme/inventory/v1/api/rpc_update_product.go"],
 	)
 	assert.Equal(
 		t,
 		loadConnectCrudGolden(t, "rpc_delete_product.go"),
-		files["acme/inventory/v1/api/rpc_delete_product.go"],
+		files["internal/acme/inventory/v1/api/rpc_delete_product.go"],
 	)
 }
 
@@ -185,7 +185,7 @@ func TestConnectCrudGenerator_NoOperations(t *testing.T) {
 
 	// atlas-sqlc files still generated (entity exists), but no connect-crud files (no operations)
 	assert.Contains(t, files, "internal/acme/inventory/v1/sql/schema.sql")
-	assert.NotContains(t, files, "acme/inventory/v1/api/handler_product.go")
+	assert.NotContains(t, files, "internal/acme/inventory/v1/api/handler_product.go")
 }
 
 func TestConnectCrudGenerator_SingleOperation(t *testing.T) {
@@ -218,9 +218,9 @@ func TestConnectCrudGenerator_SingleOperation(t *testing.T) {
 
 	// atlas-sqlc: 5 files + connect-crud: 1 handler + 1 mapper + 1 rpc = 3 → total 8
 	assert.Len(t, files, 8)
-	assert.Contains(t, files, "acme/inventory/v1/api/handler_product.go")
-	assert.Contains(t, files, "acme/inventory/v1/api/mapper_product.go")
-	assert.Contains(t, files, "acme/inventory/v1/api/rpc_get_product.go")
+	assert.Contains(t, files, "internal/acme/inventory/v1/api/handler_product.go")
+	assert.Contains(t, files, "internal/acme/inventory/v1/api/mapper_product.go")
+	assert.Contains(t, files, "internal/acme/inventory/v1/api/rpc_get_product.go")
 }
 
 func TestConnectCrudGenerator_OutputDir(t *testing.T) {
@@ -252,7 +252,7 @@ func TestConnectCrudGenerator_OutputDir(t *testing.T) {
 	}
 
 	// Verify connect-crud files use output_dir
-	assert.Contains(t, files, "custom/out/acme/inventory/v1/api/handler_product.go")
+	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/api/handler_product.go")
 	// Verify atlas-sqlc files also use output_dir
 	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/sql/schema.sql")
 }

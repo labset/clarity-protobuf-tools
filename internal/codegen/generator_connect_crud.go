@@ -80,7 +80,7 @@ func (g *connectCrudGenerator) Generate(plugin *protogen.Plugin) error {
 	}
 
 	for _, pe := range packages {
-		outDir := fmt.Sprintf("%s/%s/%s/api", pe.meta.Provider, pe.meta.Domain, pe.meta.Version)
+		outDir := fmt.Sprintf("%s/api", pe.meta.outputDir())
 		if g.atlasSqlc.sqlc.outputDir != "" {
 			outDir = fmt.Sprintf("%s/%s", g.atlasSqlc.sqlc.outputDir, outDir)
 		}

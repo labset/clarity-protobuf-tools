@@ -152,23 +152,22 @@ Requires the `go_module` parameter to derive the SQLC store import path.
 For a message in package `acme.inventory.v1` with all operations, generates:
 
 ```
-internal/acme/inventory/v1/           # from atlas-sqlc (included automatically)
-├── sql/
+internal/acme/inventory/v1/
+├── sql/                              # from atlas-sqlc (included automatically)
 │   ├── schema.sql
 │   ├── baseline.sql
 │   └── queries/
 │       └── product.sql
 ├── sqlc.yaml
-└── atlas.hcl
-
-acme/inventory/v1/api/                # connect-crud handlers
-├── handler_product.go         # ProductDeps, constructor, Connect service registration
-├── mapper_product.go          # proto ↔ SQLC conversion functions
-├── rpc_create_product.go      # Create with duplicate detection (CodeAlreadyExists)
-├── rpc_get_product.go         # Get by ID with CodeNotFound
-├── rpc_list_product.go        # Cursor-based pagination (page_size, page_token)
-├── rpc_update_product.go      # Partial update via update_mask
-└── rpc_delete_product.go      # Soft delete with CodeNotFound
+├── atlas.hcl
+└── api/                              # connect-crud handlers
+    ├── handler_product.go         # ProductDeps, constructor, Connect service registration
+    ├── mapper_product.go          # proto ↔ SQLC conversion functions
+    ├── rpc_create_product.go      # Create with duplicate detection (CodeAlreadyExists)
+    ├── rpc_get_product.go         # Get by ID with CodeNotFound
+    ├── rpc_list_product.go        # Cursor-based pagination (page_size, page_token)
+    ├── rpc_update_product.go      # Partial update via update_mask
+    └── rpc_delete_product.go      # Soft delete with CodeNotFound
 ```
 
 Generated handlers:
