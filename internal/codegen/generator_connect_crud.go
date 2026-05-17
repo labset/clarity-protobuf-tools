@@ -11,6 +11,7 @@ import (
 
 	"github.com/labset/clarity-protobuf-tools/internal/clarity"
 	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 //go:embed templates/connect-crud/*.tmpl
@@ -51,6 +52,8 @@ type mapperData struct {
 type mapperField struct {
 	ProtoName string // PascalCase, e.g. "Name"
 	SQLCName  string // PascalCase SQLC column name, e.g. "Name"
+	IsEnum    bool   // true if the field is a proto enum
+	EnumType  string // short enum type name, e.g. "Status"
 }
 
 type rpcData struct {
@@ -242,10 +245,15 @@ func extractMapperFields(msg *protogen.Message) []mapperField {
 		if string(field.Desc.Name()) == "entity" {
 			continue
 		}
-		fields = append(fields, mapperField{
+		mf := mapperField{
 			ProtoName: toPascalCase(string(field.Desc.Name())),
 			SQLCName:  toSQLCName(string(field.Desc.Name())),
-		})
+		}
+		if field.Desc.Kind() == protoreflect.EnumKind {
+			mf.IsEnum = true
+			mf.EnumType = string(field.Desc.Enum().Name())
+		}
+		fields = append(fields, mf)
 	}
 	return fields
 }
