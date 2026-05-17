@@ -184,26 +184,7 @@ breaking:
 
 ### buf.gen.yaml
 
-#### Go + gRPC generation
-
-```yaml
-version: v2
-inputs:
-  - directory: protos
-
-plugins:
-  # Go SDK
-  - local: protoc-gen-go
-    out: gen/go
-    opt: paths=source_relative
-
-  # gRPC
-  - local: protoc-gen-go-grpc
-    out: gen/go
-    opt: paths=source_relative
-```
-
-#### Clarity codegen (sqlc mode)
+#### sqlc mode
 
 ```yaml
 version: v2
@@ -217,7 +198,7 @@ plugins:
       - mode=sqlc
 ```
 
-#### Clarity codegen (atlas-sqlc mode)
+#### atlas-sqlc mode
 
 ```yaml
 version: v2
@@ -231,7 +212,7 @@ plugins:
       - mode=atlas-sqlc
 ```
 
-#### Clarity codegen (service mode)
+#### service mode
 
 Generates `.proto` service definitions from entity messages — output alongside your source protos:
 
