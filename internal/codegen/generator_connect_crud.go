@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 	"text/template"
-
 	"unicode"
 
 	"github.com/labset/clarity-protobuf-tools/internal/clarity"
