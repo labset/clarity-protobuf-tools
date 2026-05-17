@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"os"
 	"text/template"
 
 	"google.golang.org/protobuf/compiler/protogen"
@@ -36,26 +37,37 @@ func (g *atlasSqlcGenerator) Generate(plugin *protogen.Plugin) error {
 			outDir = fmt.Sprintf("%s/%s", g.sqlc.outputDir, outDir)
 		}
 
-		atlasContent, err := renderAtlasConfig(pe.meta)
-		if err != nil {
-			return err
-		}
-		if _, err := plugin.NewGeneratedFile(fmt.Sprintf("%s/atlas.hcl", outDir), "").
-			Write([]byte(atlasContent)); err != nil {
-			return err
+		atlasPath := fmt.Sprintf("%s/atlas.hcl", outDir)
+		if !fileExists(atlasPath) {
+			atlasContent, err := renderAtlasConfig(pe.meta)
+			if err != nil {
+				return err
+			}
+			if _, err := plugin.NewGeneratedFile(atlasPath, "").
+				Write([]byte(atlasContent)); err != nil {
+				return err
+			}
 		}
 
-		baselineContent, err := renderBaseline()
-		if err != nil {
-			return err
-		}
-		if _, err := plugin.NewGeneratedFile(fmt.Sprintf("%s/sql/baseline.sql", outDir), "").
-			Write([]byte(baselineContent)); err != nil {
-			return err
+		baselinePath := fmt.Sprintf("%s/sql/baseline.sql", outDir)
+		if !fileExists(baselinePath) {
+			baselineContent, err := renderBaseline()
+			if err != nil {
+				return err
+			}
+			if _, err := plugin.NewGeneratedFile(baselinePath, "").
+				Write([]byte(baselineContent)); err != nil {
+				return err
+			}
 		}
 	}
 
 	return nil
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
 }
 
 func renderAtlasConfig(meta packageMeta) (string, error) {
