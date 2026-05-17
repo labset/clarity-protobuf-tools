@@ -22,7 +22,7 @@ var connectCrudTemplates = template.Must(
 )
 
 type connectCrudGenerator struct {
-	outputDir string
+	atlasSqlc *atlasSqlcGenerator
 	goModule  string
 }
 
@@ -70,6 +70,10 @@ var opTemplateMap = map[string]string{
 }
 
 func (g *connectCrudGenerator) Generate(plugin *protogen.Plugin) error {
+	if err := g.atlasSqlc.Generate(plugin); err != nil {
+		return err
+	}
+
 	packages, err := collectServiceEntities(plugin)
 	if err != nil {
 		return err
@@ -77,8 +81,8 @@ func (g *connectCrudGenerator) Generate(plugin *protogen.Plugin) error {
 
 	for _, pe := range packages {
 		outDir := fmt.Sprintf("%s/%s/%s/api", pe.meta.Provider, pe.meta.Domain, pe.meta.Version)
-		if g.outputDir != "" {
-			outDir = fmt.Sprintf("%s/%s", g.outputDir, outDir)
+		if g.atlasSqlc.sqlc.outputDir != "" {
+			outDir = fmt.Sprintf("%s/%s", g.atlasSqlc.sqlc.outputDir, outDir)
 		}
 
 		storeImport := fmt.Sprintf(

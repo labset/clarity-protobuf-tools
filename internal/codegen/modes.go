@@ -18,7 +18,10 @@ func GeneratorForMode(raw string) (Generator, error) {
 		if p.goModule == "" {
 			return nil, fmt.Errorf("connect-crud mode requires go_module parameter")
 		}
-		return &connectCrudGenerator{outputDir: p.outputDir, goModule: p.goModule}, nil
+		return &connectCrudGenerator{
+			atlasSqlc: &atlasSqlcGenerator{sqlc: &sqlcGenerator{outputDir: p.outputDir}},
+			goModule:  p.goModule,
+		}, nil
 	default:
 		return nil, fmt.Errorf("unknown mode %q", p.mode)
 	}

@@ -20,6 +20,13 @@ func loadConnectCrudGolden(t *testing.T, name string) string {
 	return string(data)
 }
 
+func newTestConnectCrudGenerator(outputDir string) *connectCrudGenerator {
+	return &connectCrudGenerator{
+		atlasSqlc: &atlasSqlcGenerator{sqlc: &sqlcGenerator{outputDir: outputDir}},
+		goModule:  "github.com/acme/app",
+	}
+}
+
 func testConnectCrudProtoFile(
 	t *testing.T,
 	ops ...pluginV1.Operation,
@@ -86,7 +93,7 @@ func TestConnectCrudGenerator_AllOperations(t *testing.T) {
 	plugin, err := protogen.Options{}.New(req)
 	require.NoError(t, err)
 
-	gen := &connectCrudGenerator{goModule: "github.com/acme/app"}
+	gen := newTestConnectCrudGenerator("")
 	err = gen.Generate(plugin)
 	require.NoError(t, err)
 
@@ -98,9 +105,19 @@ func TestConnectCrudGenerator_AllOperations(t *testing.T) {
 		files[f.GetName()] = f.GetContent()
 	}
 
-	// 1 handler + 1 mapper + 5 rpc files = 7 total
-	assert.Len(t, files, 7)
+	// atlas-sqlc files: schema.sql, queries/product.sql, sqlc.yaml, atlas.hcl, baseline.sql = 5
+	// connect-crud files: 1 handler + 1 mapper + 5 rpc files = 7
+	// total = 12
+	assert.Len(t, files, 12)
 
+	// Verify atlas-sqlc files are present
+	assert.Contains(t, files, "internal/acme/inventory/v1/sql/schema.sql")
+	assert.Contains(t, files, "internal/acme/inventory/v1/sql/queries/product.sql")
+	assert.Contains(t, files, "internal/acme/inventory/v1/sqlc.yaml")
+	assert.Contains(t, files, "internal/acme/inventory/v1/atlas.hcl")
+	assert.Contains(t, files, "internal/acme/inventory/v1/sql/baseline.sql")
+
+	// Verify connect-crud files
 	assert.Equal(
 		t,
 		loadConnectCrudGolden(t, "handler_product.go"),
@@ -154,13 +171,21 @@ func TestConnectCrudGenerator_NoOperations(t *testing.T) {
 	plugin, err := protogen.Options{}.New(req)
 	require.NoError(t, err)
 
-	gen := &connectCrudGenerator{goModule: "github.com/acme/app"}
+	gen := newTestConnectCrudGenerator("")
 	err = gen.Generate(plugin)
 	require.NoError(t, err)
 
 	resp := plugin.Response()
 	require.NotNil(t, resp)
-	assert.Empty(t, resp.GetFile())
+
+	files := make(map[string]string)
+	for _, f := range resp.GetFile() {
+		files[f.GetName()] = f.GetContent()
+	}
+
+	// atlas-sqlc files still generated (entity exists), but no connect-crud files (no operations)
+	assert.Contains(t, files, "internal/acme/inventory/v1/sql/schema.sql")
+	assert.NotContains(t, files, "acme/inventory/v1/api/handler_product.go")
 }
 
 func TestConnectCrudGenerator_SingleOperation(t *testing.T) {
@@ -179,7 +204,7 @@ func TestConnectCrudGenerator_SingleOperation(t *testing.T) {
 	plugin, err := protogen.Options{}.New(req)
 	require.NoError(t, err)
 
-	gen := &connectCrudGenerator{goModule: "github.com/acme/app"}
+	gen := newTestConnectCrudGenerator("")
 	err = gen.Generate(plugin)
 	require.NoError(t, err)
 
@@ -191,8 +216,8 @@ func TestConnectCrudGenerator_SingleOperation(t *testing.T) {
 		files[f.GetName()] = f.GetContent()
 	}
 
-	// 1 handler + 1 mapper + 1 rpc file = 3
-	assert.Len(t, files, 3)
+	// atlas-sqlc: 5 files + connect-crud: 1 handler + 1 mapper + 1 rpc = 3 → total 8
+	assert.Len(t, files, 8)
 	assert.Contains(t, files, "acme/inventory/v1/api/handler_product.go")
 	assert.Contains(t, files, "acme/inventory/v1/api/mapper_product.go")
 	assert.Contains(t, files, "acme/inventory/v1/api/rpc_get_product.go")
@@ -214,14 +239,20 @@ func TestConnectCrudGenerator_OutputDir(t *testing.T) {
 	plugin, err := protogen.Options{}.New(req)
 	require.NoError(t, err)
 
-	gen := &connectCrudGenerator{outputDir: "custom/out", goModule: "github.com/acme/app"}
+	gen := newTestConnectCrudGenerator("custom/out")
 	err = gen.Generate(plugin)
 	require.NoError(t, err)
 
 	resp := plugin.Response()
 	require.NotNil(t, resp)
 
+	files := make(map[string]string)
 	for _, f := range resp.GetFile() {
-		assert.Contains(t, f.GetName(), "custom/out/acme/inventory/v1/api/")
+		files[f.GetName()] = f.GetContent()
 	}
+
+	// Verify connect-crud files use output_dir
+	assert.Contains(t, files, "custom/out/acme/inventory/v1/api/handler_product.go")
+	// Verify atlas-sqlc files also use output_dir
+	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/sql/schema.sql")
 }
