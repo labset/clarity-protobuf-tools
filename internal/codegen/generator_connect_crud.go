@@ -137,7 +137,8 @@ func (g *connectCrudGenerator) Generate(plugin *protogen.Plugin) error {
 				return err
 			}
 			mapperPath := fmt.Sprintf("%s/mapper_%s.go", outDir, modelSnake)
-			if _, err := plugin.NewGeneratedFile(mapperPath, "").Write([]byte(mapperContent)); err != nil {
+			if _, err := plugin.NewGeneratedFile(mapperPath, "").
+				Write([]byte(mapperContent)); err != nil {
 				return err
 			}
 
@@ -162,7 +163,8 @@ func (g *connectCrudGenerator) Generate(plugin *protogen.Plugin) error {
 				}
 				opName := strings.ToLower(strings.TrimPrefix(op.String(), "OPERATION_"))
 				rpcPath := fmt.Sprintf("%s/rpc_%s_%s.go", outDir, opName, modelSnake)
-				if _, err := plugin.NewGeneratedFile(rpcPath, "").Write([]byte(rpcContent)); err != nil {
+				if _, err := plugin.NewGeneratedFile(rpcPath, "").
+					Write([]byte(rpcContent)); err != nil {
 					return err
 				}
 			}

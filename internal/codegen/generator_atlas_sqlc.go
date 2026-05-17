@@ -40,7 +40,8 @@ func (g *atlasSqlcGenerator) Generate(plugin *protogen.Plugin) error {
 		if err != nil {
 			return err
 		}
-		if _, err := plugin.NewGeneratedFile(fmt.Sprintf("%s/atlas.hcl", outDir), "").Write([]byte(atlasContent)); err != nil {
+		if _, err := plugin.NewGeneratedFile(fmt.Sprintf("%s/atlas.hcl", outDir), "").
+			Write([]byte(atlasContent)); err != nil {
 			return err
 		}
 
@@ -48,7 +49,8 @@ func (g *atlasSqlcGenerator) Generate(plugin *protogen.Plugin) error {
 		if err != nil {
 			return err
 		}
-		if _, err := plugin.NewGeneratedFile(fmt.Sprintf("%s/sql/baseline.sql", outDir), "").Write([]byte(baselineContent)); err != nil {
+		if _, err := plugin.NewGeneratedFile(fmt.Sprintf("%s/sql/baseline.sql", outDir), "").
+			Write([]byte(baselineContent)); err != nil {
 			return err
 		}
 	}
