@@ -4,14 +4,14 @@
 
 ## Context
 
-The `protoc-gen-clarity` plugin already generates proto service definitions (`service` mode), SQLC queries/models (`sqlc` mode), and Atlas migrations (`atlas` mode). The final piece is generating the Go handler layer that wires Connect-RPC services to the SQLC stores. This eliminates boilerplate handler code and ensures consistency between the API and data layers.
+The `protoc-gen-clarity` plugin already generates proto service definitions (`service` mode), SQLC queries/models (`sqlc` mode), and Atlas migrations (`atlas-sqlc` mode). The final piece is generating the Go handler layer that wires Connect-RPC services to the SQLC stores. This mode composes `atlas-sqlc` under the hood so a single invocation produces the full stack: SQL schema, SQLC queries/config, Atlas migration config, and Connect handler code.
 
 ## Requirements
 
 ### Functional
 
-- [ ] FR-1: Add a new `connect-crud` codegen mode to `protoc-gen-clarity`
-- [ ] FR-2: Generate output under `<output_dir>/<provider>/<domain>/<version>/api/`
+- [ ] FR-1: Add a new `connect-crud` codegen mode to `protoc-gen-clarity` that composes `atlas-sqlc` under the hood
+- [ ] FR-2: Generate handler output under `<output_dir>/internal/<provider>/<domain>/<version>/api/`, aligned with `atlas-sqlc` output at `<output_dir>/internal/<provider>/<domain>/<version>/`
 - [ ] FR-3: Generate `handler_<model>.go` per entity containing: a `<Model>Deps` struct (with `*pgxpool.Pool`), a constructor that creates the SQLC store, and Connect service handler registration
 - [ ] FR-4: Generate `rpc_<op>_<model>.go` per opted-in operation containing the method implementation
 - [ ] FR-5: Generate `mapper_<model>.go` per entity with proto-to-SQLC and SQLC-to-proto conversion functions (UUID string ↔ `uuid.UUID`, `google.protobuf.Timestamp` ↔ `time.Time`, etc.)
@@ -49,8 +49,6 @@ The `protoc-gen-clarity` plugin already generates proto service definitions (`se
 ## Out of Scope
 
 - Proto service definition generation (handled by `service` mode)
-- SQL query generation (handled by `sqlc` mode)
-- Migration generation (handled by `atlas` mode)
 - gRPC transport (Connect-only)
 - Authentication/authorization logic
 - Runtime pagination cursor encoding strategy (implementation detail)

@@ -3,11 +3,12 @@
 ## M1: Generator scaffolding and handler template
 
 - **Status:** done
-- **Description:** Register `connect-crud` mode, add `generator_connect_crud.go`, produce `handler_<model>.go` with the `<Model>Deps` struct, constructor (creates SQLC store from pool), and Connect service registration. No RPC implementations yet.
+- **Description:** Register `connect-crud` mode composing `atlas-sqlc` under the hood, add `generator_connect_crud.go`, produce `handler_<model>.go` with the `<Model>Deps` struct, constructor (creates SQLC store from pool), and Connect service registration. No RPC implementations yet.
 - **Acceptance Criteria:**
   - [x] `connect-crud` mode is registered and selectable via plugin options
+  - [x] `connect-crud` composes `atlas-sqlc` generator, producing SQL schema, SQLC queries/config, and Atlas migration config
   - [x] `generator_connect_crud.go` follows existing generator conventions
-  - [x] `handler_<model>.go` is generated under `<provider>/<domain>/<version>/api/`
+  - [x] `handler_<model>.go` is generated under `internal/<provider>/<domain>/<version>/api/`
   - [x] Handler struct holds the SQLC store, created once in the constructor from `*pgxpool.Pool` in deps
   - [x] Connect service handler registration wires up to the handler struct
 
