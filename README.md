@@ -139,6 +139,35 @@ Generated services follow these conventions:
 - **Get/Update/Delete** requests validate `id` with `buf.validate` UUID constraint
 - **Delete** is always soft delete at the API layer
 
+### connect-crud
+
+Generates Go [Connect-RPC](https://connectrpc.com/) handler implementations from `ROLE_ENTITY` messages, backed by SQLC-generated stores.
+
+```
+protoc --clarity_out=. --clarity_opt=mode=connect-crud,go_module=github.com/acme/app proto/*.proto
+```
+
+Requires the `go_module` parameter to derive the SQLC store import path.
+
+For a message in package `acme.inventory.v1` with all operations, generates:
+
+```
+acme/inventory/v1/api/
+├── handler_product.go         # ProductDeps, constructor, Connect service registration
+├── mapper_product.go          # proto ↔ SQLC conversion functions
+├── rpc_create_product.go      # Create with duplicate detection (CodeAlreadyExists)
+├── rpc_get_product.go         # Get by ID with CodeNotFound
+├── rpc_list_product.go        # Cursor-based pagination (page_size, page_token)
+├── rpc_update_product.go      # Partial update via update_mask
+└── rpc_delete_product.go      # Soft delete with CodeNotFound
+```
+
+Generated handlers:
+
+- Accept `...connect.HandlerOption` for interceptor injection
+- Create the SQLC store once in the constructor from `*pgxpool.Pool`
+- Use consistent Connect error codes: `CodeNotFound`, `CodeInvalidArgument`, `CodeAlreadyExists`
+
 ### Type Mapping (sqlc/atlas-sqlc)
 
 | Proto Type | PostgreSQL Type |
@@ -210,6 +239,21 @@ plugins:
     out: internal
     opt:
       - mode=atlas-sqlc
+```
+
+#### connect-crud mode
+
+```yaml
+version: v2
+inputs:
+  - directory: protos
+
+plugins:
+  - local: protoc-gen-clarity
+    out: .
+    opt:
+      - mode=connect-crud
+      - go_module=github.com/acme/app
 ```
 
 #### service mode
