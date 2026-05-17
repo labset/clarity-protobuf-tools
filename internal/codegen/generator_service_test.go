@@ -206,6 +206,109 @@ func TestServiceGenerator_NoOperations(t *testing.T) {
 	assert.Empty(t, resp.GetFile())
 }
 
+func TestServiceGenerator_MultipleEntities(t *testing.T) {
+	deps := collectFileDescriptors(t,
+		"clarity/plugin/v1/options.proto",
+		"clarity/plugin/v1/entity.proto",
+	)
+
+	modelsFile := &descriptorpb.FileDescriptorProto{
+		Name:    proto.String("acme/inventory/v1/models.proto"),
+		Package: proto.String("acme.inventory.v1"),
+		Syntax:  proto.String("proto3"),
+		Options: &descriptorpb.FileOptions{
+			GoPackage: proto.String(
+				"github.com/acme/inventory/v1;inventoryv1",
+			),
+		},
+		Dependency: []string{
+			"clarity/plugin/v1/options.proto",
+			"clarity/plugin/v1/entity.proto",
+		},
+		MessageType: []*descriptorpb.DescriptorProto{
+			{
+				Name: proto.String("Product"),
+				Options: entityMessageOptionsWithOps(
+					t,
+					pluginV1.Operation_OPERATION_CREATE,
+					pluginV1.Operation_OPERATION_GET,
+				),
+				Field: []*descriptorpb.FieldDescriptorProto{
+					{
+						Name:     proto.String("entity"),
+						Number:   proto.Int32(1),
+						Type:     descriptorpb.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+						TypeName: proto.String(".clarity.plugin.v1.Entity"),
+					},
+					{
+						Name:   proto.String("name"),
+						Number: proto.Int32(2),
+						Type:   descriptorpb.FieldDescriptorProto_TYPE_STRING.Enum(),
+					},
+				},
+			},
+			{
+				Name: proto.String("Order"),
+				Options: entityMessageOptionsWithOps(
+					t,
+					pluginV1.Operation_OPERATION_GET,
+					pluginV1.Operation_OPERATION_LIST,
+					pluginV1.Operation_OPERATION_DELETE,
+				),
+				Field: []*descriptorpb.FieldDescriptorProto{
+					{
+						Name:     proto.String("entity"),
+						Number:   proto.Int32(1),
+						Type:     descriptorpb.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+						TypeName: proto.String(".clarity.plugin.v1.Entity"),
+					},
+					{
+						Name:   proto.String("quantity"),
+						Number: proto.Int32(2),
+						Type:   descriptorpb.FieldDescriptorProto_TYPE_INT32.Enum(),
+					},
+				},
+			},
+		},
+	}
+
+	req := &pluginpb.CodeGeneratorRequest{
+		FileToGenerate: []string{"acme/inventory/v1/models.proto"},
+		ProtoFile:      append(deps, modelsFile),
+	}
+
+	plugin, err := protogen.Options{}.New(req)
+	require.NoError(t, err)
+
+	gen := &serviceGenerator{}
+	err = gen.Generate(plugin)
+	require.NoError(t, err)
+
+	resp := plugin.Response()
+	require.NotNil(t, resp)
+
+	files := make(map[string]string)
+	for _, f := range resp.GetFile() {
+		files[f.GetName()] = f.GetContent()
+	}
+
+	// Product: 1 service + 2 rpcs = 3
+	// Order: 1 service + 3 rpcs = 4
+	// Total = 7
+	assert.Len(t, files, 7)
+
+	// Product files
+	assert.Contains(t, files, "acme/inventory/v1/service_product.proto")
+	assert.Contains(t, files, "acme/inventory/v1/rpc_create_product.proto")
+	assert.Contains(t, files, "acme/inventory/v1/rpc_get_product.proto")
+
+	// Order files
+	assert.Contains(t, files, "acme/inventory/v1/service_order.proto")
+	assert.Contains(t, files, "acme/inventory/v1/rpc_get_order.proto")
+	assert.Contains(t, files, "acme/inventory/v1/rpc_list_order.proto")
+	assert.Contains(t, files, "acme/inventory/v1/rpc_delete_order.proto")
+}
+
 func TestServiceGenerator_OutputDir(t *testing.T) {
 	deps := collectFileDescriptors(t,
 		"clarity/plugin/v1/options.proto",
