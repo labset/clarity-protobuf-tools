@@ -174,7 +174,9 @@ func (g *connectCrudGenerator) Generate(plugin *protogen.Plugin) error {
 //   - protoAlias:    "inventoryv1"
 //   - connectImport: "github.com/acme/inventory/v1/inventoryv1connect"
 //   - connectAlias:  "inventoryv1connect"
-func deriveGoImports(goPackage string) (protoImport, protoAlias, connectImport, connectAlias string) {
+func deriveGoImports(
+	goPackage string,
+) (protoImport, protoAlias, connectImport, connectAlias string) {
 	importPath, alias, hasSemicolon := strings.Cut(goPackage, ";")
 	if hasSemicolon {
 		protoImport = importPath
