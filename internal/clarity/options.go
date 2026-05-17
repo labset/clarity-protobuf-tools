@@ -29,3 +29,20 @@ func messageRole(md protoreflect.MessageDescriptor) pluginV1.Role {
 func IsEntity(md protoreflect.MessageDescriptor) bool {
 	return messageRole(md) == pluginV1.Role_ROLE_ENTITY
 }
+
+// Operations returns the operations configured for a message descriptor.
+func Operations(md protoreflect.MessageDescriptor) []pluginV1.Operation {
+	opts, ok := md.Options().(*descriptorpb.MessageOptions)
+	if !ok {
+		return nil
+	}
+	if !proto.HasExtension(opts, pluginV1.E_Message) {
+		return nil
+	}
+	ext := proto.GetExtension(opts, pluginV1.E_Message)
+	clarityOpts, ok := ext.(*pluginV1.ClarityMessageOptions)
+	if !ok || clarityOpts == nil {
+		return nil
+	}
+	return clarityOpts.GetOperations()
+}

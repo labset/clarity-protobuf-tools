@@ -1,0 +1,57 @@
+syntax = "{{ .Syntax }}";
+
+package {{ .Package }};
+
+option go_package = "{{ .GoPackage }}";
+
+import "{{ .ModelFile }}";
+{{ if eq .Op.String "OPERATION_CREATE" }}
+message Create{{ .Model }}Request {
+{{- range .Fields }}
+  {{ if .Optional }}optional {{ end }}{{ .Type }} {{ .Name }} = {{ .Number }};
+{{- end }}
+}
+
+message Create{{ .Model }}Response {
+  {{ .Model }} {{ snakeCase .Model }} = 1;
+}
+{{ end }}
+{{- if eq .Op.String "OPERATION_GET" }}
+message Get{{ .Model }}Request {
+  string id = 1;
+}
+
+message Get{{ .Model }}Response {
+  {{ .Model }} {{ snakeCase .Model }} = 1;
+}
+{{ end }}
+{{- if eq .Op.String "OPERATION_LIST" }}
+message List{{ .Model }}sRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message List{{ .Model }}sResponse {
+  repeated {{ .Model }} {{ snakeCase .Model }}s = 1;
+  string next_page_token = 2;
+}
+{{ end }}
+{{- if eq .Op.String "OPERATION_UPDATE" }}
+message Update{{ .Model }}Request {
+  string id = 1;
+{{- range .Fields }}
+  {{ if .Optional }}optional {{ end }}{{ .Type }} {{ .Name }} = {{ add .Number 1 }};
+{{- end }}
+}
+
+message Update{{ .Model }}Response {
+  {{ .Model }} {{ snakeCase .Model }} = 1;
+}
+{{ end }}
+{{- if eq .Op.String "OPERATION_DELETE" }}
+message Delete{{ .Model }}Request {
+  string id = 1;
+}
+
+message Delete{{ .Model }}Response {}
+{{ end }}

@@ -1,0 +1,30 @@
+syntax = "{{ .Syntax }}";
+
+package {{ .Package }};
+
+option go_package = "{{ .GoPackage }}";
+
+import "{{ .ModelFile }}";
+{{- range .Ops }}
+import "rpc_{{ lower (trimPrefix .String "OPERATION_") }}_{{ snakeCase $.Model }}.proto";
+{{- end }}
+
+service {{ .Model }}Service {
+{{- range .Ops }}
+{{- if eq .String "OPERATION_CREATE" }}
+  rpc Create{{ $.Model }}(Create{{ $.Model }}Request) returns (Create{{ $.Model }}Response);
+{{- end }}
+{{- if eq .String "OPERATION_GET" }}
+  rpc Get{{ $.Model }}(Get{{ $.Model }}Request) returns (Get{{ $.Model }}Response);
+{{- end }}
+{{- if eq .String "OPERATION_LIST" }}
+  rpc List{{ $.Model }}s(List{{ $.Model }}sRequest) returns (List{{ $.Model }}sResponse);
+{{- end }}
+{{- if eq .String "OPERATION_UPDATE" }}
+  rpc Update{{ $.Model }}(Update{{ $.Model }}Request) returns (Update{{ $.Model }}Response);
+{{- end }}
+{{- if eq .String "OPERATION_DELETE" }}
+  rpc Delete{{ $.Model }}(Delete{{ $.Model }}Request) returns (Delete{{ $.Model }}Response);
+{{- end }}
+{{- end }}
+}
