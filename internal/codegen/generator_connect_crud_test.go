@@ -274,5 +274,9 @@ func TestConnectCrudGenerator_OutputDir(t *testing.T) {
 
 	// Verify store import includes output_dir
 	mapperContent := files["custom/out/internal/acme/inventory/v1/api/mapper_product.go"]
-	assert.Contains(t, mapperContent, "\"github.com/acme/app/custom/out/internal/acme/inventory/v1/db\"")
+	assert.Contains(
+		t,
+		mapperContent,
+		"\"github.com/acme/app/custom/out/internal/acme/inventory/v1/db\"",
+	)
 }

@@ -91,7 +91,12 @@ func (g *connectCrudGenerator) Generate(plugin *protogen.Plugin) error {
 			outDir = fmt.Sprintf("%s/%s", g.atlasSqlc.sqlc.outputDir, outDir)
 		}
 
-		storeBase := fmt.Sprintf("internal/%s/%s/%s/db", pe.meta.Provider, pe.meta.Domain, pe.meta.Version)
+		storeBase := fmt.Sprintf(
+			"internal/%s/%s/%s/db",
+			pe.meta.Provider,
+			pe.meta.Domain,
+			pe.meta.Version,
+		)
 		if g.atlasSqlc.sqlc.outputDir != "" {
 			storeBase = fmt.Sprintf("%s/%s", g.atlasSqlc.sqlc.outputDir, storeBase)
 		}
