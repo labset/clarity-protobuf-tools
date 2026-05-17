@@ -5,9 +5,9 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	pluginv1 "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1"
 	"github.com/acme/app/internal/acme/inventory/v1/db"
 	inventoryv1 "github.com/acme/inventory/v1"
+	pluginv1 "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1"
 )
 
 func productToProto(row db.AcmeInventoryV1Product) *inventoryv1.Product {

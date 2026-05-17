@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"go/format"
 	"strings"
 	"text/template"
 	"unicode"
@@ -207,7 +208,7 @@ func renderHandler(data handlerData) (string, error) {
 	if err := connectCrudTemplates.ExecuteTemplate(&buf, "handler.go.tmpl", data); err != nil {
 		return "", fmt.Errorf("executing handler template: %w", err)
 	}
-	return buf.String(), nil
+	return formatGo(buf.Bytes())
 }
 
 func renderRPC(tmplName string, data rpcData) (string, error) {
@@ -215,7 +216,7 @@ func renderRPC(tmplName string, data rpcData) (string, error) {
 	if err := connectCrudTemplates.ExecuteTemplate(&buf, tmplName, data); err != nil {
 		return "", fmt.Errorf("executing %s template: %w", tmplName, err)
 	}
-	return buf.String(), nil
+	return formatGo(buf.Bytes())
 }
 
 func renderMapper(data mapperData) (string, error) {
@@ -223,7 +224,15 @@ func renderMapper(data mapperData) (string, error) {
 	if err := connectCrudTemplates.ExecuteTemplate(&buf, "mapper.go.tmpl", data); err != nil {
 		return "", fmt.Errorf("executing mapper template: %w", err)
 	}
-	return buf.String(), nil
+	return formatGo(buf.Bytes())
+}
+
+func formatGo(src []byte) (string, error) {
+	formatted, err := format.Source(src)
+	if err != nil {
+		return "", fmt.Errorf("formatting generated Go code: %w", err)
+	}
+	return string(formatted), nil
 }
 
 // extractMapperFields extracts non-entity fields from a proto message for mapper generation.
