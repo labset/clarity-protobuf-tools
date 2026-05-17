@@ -22,8 +22,8 @@ func productToProto(row db.AcmeInventoryV1Product) *inventoryv1.Product {
 	}
 }
 
-func productFromCreate(msg *inventoryv1.Product, id uuid.UUID, now pgtype.Timestamptz) db.CreateAcmeInventoryV1ProductParams {
-	return db.CreateAcmeInventoryV1ProductParams{
+func productFromCreate(msg *inventoryv1.Product, id uuid.UUID, now pgtype.Timestamptz) db.CreateProductParams {
+	return db.CreateProductParams{
 		ID:        id,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -32,8 +32,8 @@ func productFromCreate(msg *inventoryv1.Product, id uuid.UUID, now pgtype.Timest
 	}
 }
 
-func productFromUpdate(msg *inventoryv1.Product, id uuid.UUID) db.UpdateAcmeInventoryV1ProductParams {
-	return db.UpdateAcmeInventoryV1ProductParams{
+func productFromUpdate(msg *inventoryv1.Product, id uuid.UUID) db.UpdateProductParams {
+	return db.UpdateProductParams{
 		ID:    id,
 		Name:  msg.GetName(),
 		Price: msg.GetPrice(),

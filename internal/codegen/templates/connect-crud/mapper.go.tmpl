@@ -23,8 +23,8 @@ func {{ .ModelLower }}ToProto(row db.{{ .DBPrefix }}{{ .Model }}) *{{ .ProtoAlia
 	}
 }
 
-func {{ .ModelLower }}FromCreate(msg *{{ .ProtoAlias }}.{{ .Model }}, id uuid.UUID, now pgtype.Timestamptz) db.Create{{ .DBPrefix }}{{ .Model }}Params {
-	return db.Create{{ .DBPrefix }}{{ .Model }}Params{
+func {{ .ModelLower }}FromCreate(msg *{{ .ProtoAlias }}.{{ .Model }}, id uuid.UUID, now pgtype.Timestamptz) db.Create{{ .Model }}Params {
+	return db.Create{{ .Model }}Params{
 		ID:        id,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -34,8 +34,8 @@ func {{ .ModelLower }}FromCreate(msg *{{ .ProtoAlias }}.{{ .Model }}, id uuid.UU
 	}
 }
 
-func {{ .ModelLower }}FromUpdate(msg *{{ .ProtoAlias }}.{{ .Model }}, id uuid.UUID) db.Update{{ .DBPrefix }}{{ .Model }}Params {
-	return db.Update{{ .DBPrefix }}{{ .Model }}Params{
+func {{ .ModelLower }}FromUpdate(msg *{{ .ProtoAlias }}.{{ .Model }}, id uuid.UUID) db.Update{{ .Model }}Params {
+	return db.Update{{ .Model }}Params{
 		ID: id,
 {{- range .Fields }}
 		{{ .SQLCName }}: msg.Get{{ .ProtoName }}(),
