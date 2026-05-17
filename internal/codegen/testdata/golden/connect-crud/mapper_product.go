@@ -17,8 +17,9 @@ func productToProto(row db.AcmeInventoryV1Product) *inventoryv1.Product {
 			CreatedAt: timestamppb.New(row.CreatedAt.Time),
 			UpdatedAt: timestamppb.New(row.UpdatedAt.Time),
 		},
-		Name:  row.Name,
-		Price: row.Price,
+		Name:   row.Name,
+		Price:  row.Price,
+		Status: inventoryv1.ProductStatus(inventoryv1.ProductStatus_value[row.Status]),
 	}
 }
 
@@ -29,13 +30,15 @@ func productFromCreate(msg *inventoryv1.Product, id uuid.UUID, now pgtype.Timest
 		UpdatedAt: now,
 		Name:      msg.GetName(),
 		Price:     msg.GetPrice(),
+		Status:    msg.GetStatus().String(),
 	}
 }
 
 func productFromUpdate(msg *inventoryv1.Product, id uuid.UUID) db.UpdateProductParams {
 	return db.UpdateProductParams{
-		ID:    id,
-		Name:  msg.GetName(),
-		Price: msg.GetPrice(),
+		ID:     id,
+		Name:   msg.GetName(),
+		Price:  msg.GetPrice(),
+		Status: msg.GetStatus().String(),
 	}
 }

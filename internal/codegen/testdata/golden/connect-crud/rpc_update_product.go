@@ -43,6 +43,9 @@ func (h *productHandler) UpdateProduct(
 		if !allowed["price"] {
 			params.Price = current.Price
 		}
+		if !allowed["status"] {
+			params.Status = current.Status
+		}
 	}
 
 	row, err := h.store.UpdateProduct(ctx, params)

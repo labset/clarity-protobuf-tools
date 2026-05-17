@@ -43,6 +43,16 @@ func testConnectCrudProtoFile(
 			"clarity/plugin/v1/options.proto",
 			"clarity/plugin/v1/entity.proto",
 		},
+		EnumType: []*descriptorpb.EnumDescriptorProto{
+			{
+				Name: proto.String("ProductStatus"),
+				Value: []*descriptorpb.EnumValueDescriptorProto{
+					{Name: proto.String("PRODUCT_STATUS_UNSPECIFIED"), Number: proto.Int32(0)},
+					{Name: proto.String("PRODUCT_STATUS_ACTIVE"), Number: proto.Int32(1)},
+					{Name: proto.String("PRODUCT_STATUS_ARCHIVED"), Number: proto.Int32(2)},
+				},
+			},
+		},
 		MessageType: []*descriptorpb.DescriptorProto{
 			{
 				Name:    proto.String("Product"),
@@ -63,6 +73,12 @@ func testConnectCrudProtoFile(
 						Name:   proto.String("price"),
 						Number: proto.Int32(3),
 						Type:   descriptorpb.FieldDescriptorProto_TYPE_INT64.Enum(),
+					},
+					{
+						Name:     proto.String("status"),
+						Number:   proto.Int32(4),
+						Type:     descriptorpb.FieldDescriptorProto_TYPE_ENUM.Enum(),
+						TypeName: proto.String(".acme.inventory.v1.ProductStatus"),
 					},
 				},
 			},
@@ -255,4 +271,8 @@ func TestConnectCrudGenerator_OutputDir(t *testing.T) {
 	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/api/handler_product.go")
 	// Verify atlas-sqlc files also use output_dir
 	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/sql/schema.sql")
+
+	// Verify store import includes output_dir
+	mapperContent := files["custom/out/internal/acme/inventory/v1/api/mapper_product.go"]
+	assert.Contains(t, mapperContent, "\"github.com/acme/app/custom/out/internal/acme/inventory/v1/db\"")
 }

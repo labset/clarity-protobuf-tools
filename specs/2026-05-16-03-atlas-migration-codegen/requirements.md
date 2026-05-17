@@ -17,7 +17,7 @@ The current schema naming convention (`<provider>_<domain>`) does not include th
 - [ ] FR-3: Generate `atlas.hcl` at `<outputDir>/atlas.hcl` with:
   - Schema source referencing `sql/schema.sql` and `sql/baseline.sql`
   - Migration directory at `migrations/`
-  - Dev database URL: `docker://postgres/17-alpine/dev?search_path=<provider>_<domain>_<version>`
+  - Dev database URL: `docker://postgres/17-alpine/dev`
 - [ ] FR-4: Generate `sql/baseline.sql` containing `CREATE SCHEMA IF NOT EXISTS public;` to prevent Atlas from dropping the public schema during diffs
 - [ ] FR-5: The `atlas.hcl` template lives under `internal/codegen/templates/atlas-sqlc/`
 - [ ] FR-6: The `baseline.sql` template lives under `internal/codegen/templates/atlas-sqlc/`

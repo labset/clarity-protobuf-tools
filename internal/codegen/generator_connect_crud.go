@@ -91,10 +91,11 @@ func (g *connectCrudGenerator) Generate(plugin *protogen.Plugin) error {
 			outDir = fmt.Sprintf("%s/%s", g.atlasSqlc.sqlc.outputDir, outDir)
 		}
 
-		storeImport := fmt.Sprintf(
-			"%s/internal/%s/%s/%s/db",
-			g.goModule, pe.meta.Provider, pe.meta.Domain, pe.meta.Version,
-		)
+		storeBase := fmt.Sprintf("internal/%s/%s/%s/db", pe.meta.Provider, pe.meta.Domain, pe.meta.Version)
+		if g.atlasSqlc.sqlc.outputDir != "" {
+			storeBase = fmt.Sprintf("%s/%s", g.atlasSqlc.sqlc.outputDir, storeBase)
+		}
+		storeImport := fmt.Sprintf("%s/%s", g.goModule, storeBase)
 
 		protoImport, protoAlias, connectImport, connectAlias := deriveGoImports(pe.goPackage)
 
