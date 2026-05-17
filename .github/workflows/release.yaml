@@ -13,6 +13,7 @@ jobs:
       - run: mise run lint
 
   release:
+    needs: [lint]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -20,3 +21,13 @@ jobs:
       - run: goreleaser release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-protos:
+    needs: [lint]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: bufbuild/buf-action@v1
+        with:
+          token: ${{ secrets.BUF_TOKEN }}
+          push: true
