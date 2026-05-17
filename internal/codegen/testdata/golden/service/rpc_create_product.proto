@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package acme.inventory.v1;
+
+option go_package = "github.com/acme/inventory/v1;inventoryv1";
+
+import "acme/inventory/v1/models.proto";
+
+message CreateProductRequest {
+  Product item = 1;
+}
+
+message CreateProductResponse {
+  Product item = 1;
+}

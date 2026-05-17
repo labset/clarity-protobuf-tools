@@ -1,0 +1,65 @@
+syntax = "{{ .Syntax }}";
+
+package {{ .Package }};
+
+option go_package = "{{ .GoPackage }}";
+
+import "{{ .ModelFile }}";
+{{- if eq .Op.String "OPERATION_UPDATE" }}
+import "google/protobuf/field_mask.proto";
+{{- end }}
+{{- if or (eq .Op.String "OPERATION_GET") (eq .Op.String "OPERATION_UPDATE") (eq .Op.String "OPERATION_DELETE") }}
+import "buf/validate/validate.proto";
+{{- end }}
+{{- if eq .Op.String "OPERATION_CREATE" }}
+
+message Create{{ .Model }}Request {
+  {{ .Model }} item = 1;
+}
+
+message Create{{ .Model }}Response {
+  {{ .Model }} item = 1;
+}
+{{- end }}
+{{- if eq .Op.String "OPERATION_GET" }}
+
+message Get{{ .Model }}Request {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message Get{{ .Model }}Response {
+  {{ .Model }} item = 1;
+}
+{{- end }}
+{{- if eq .Op.String "OPERATION_LIST" }}
+
+message List{{ .Model }}sRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message List{{ .Model }}sResponse {
+  repeated {{ .Model }} items = 1;
+  string next_page_token = 2;
+}
+{{- end }}
+{{- if eq .Op.String "OPERATION_UPDATE" }}
+
+message Update{{ .Model }}Request {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  {{ .Model }} item = 2;
+  google.protobuf.FieldMask update_mask = 3;
+}
+
+message Update{{ .Model }}Response {
+  {{ .Model }} item = 1;
+}
+{{- end }}
+{{- if eq .Op.String "OPERATION_DELETE" }}
+
+message Delete{{ .Model }}Request {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message Delete{{ .Model }}Response {}
+{{- end }}

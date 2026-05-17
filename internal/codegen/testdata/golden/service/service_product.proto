@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package acme.inventory.v1;
+
+option go_package = "github.com/acme/inventory/v1;inventoryv1";
+
+import "acme/inventory/v1/models.proto";
+import "acme/inventory/v1/rpc_create_product.proto";
+import "acme/inventory/v1/rpc_get_product.proto";
+import "acme/inventory/v1/rpc_list_product.proto";
+import "acme/inventory/v1/rpc_update_product.proto";
+import "acme/inventory/v1/rpc_delete_product.proto";
+
+service ProductService {
+  rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);
+  rpc GetProduct(GetProductRequest) returns (GetProductResponse);
+  rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);
+  rpc UpdateProduct(UpdateProductRequest) returns (UpdateProductResponse);
+  rpc DeleteProduct(DeleteProductRequest) returns (DeleteProductResponse);
+}
