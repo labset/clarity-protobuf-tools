@@ -244,10 +244,20 @@ func extractMapperFields(msg *protogen.Message) []mapperField {
 		}
 		fields = append(fields, mapperField{
 			ProtoName: toPascalCase(string(field.Desc.Name())),
-			SQLCName:  toPascalCase(string(field.Desc.Name())),
+			SQLCName:  toSQLCName(string(field.Desc.Name())),
 		})
 	}
 	return fields
+}
+
+// toSQLCName converts a snake_case field name to the PascalCase form that sqlc
+// generates, respecting Go initialisms (e.g., "category_id" → "CategoryID").
+func toSQLCName(s string) string {
+	pascal := toPascalCase(s)
+	if strings.HasSuffix(pascal, "Id") {
+		return pascal[:len(pascal)-2] + "ID"
+	}
+	return pascal
 }
 
 func toPascalCase(s string) string {
