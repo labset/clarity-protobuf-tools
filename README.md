@@ -158,6 +158,106 @@ Generated services follow these conventions:
 | `repeated <message>`, nested message, `map` | `JSONB` |
 | `oneof` | Nullable columns per variant |
 
+## Usage with Buf
+
+### buf.yaml
+
+```yaml
+version: v2
+
+modules:
+  - path: protos
+
+deps:
+  - buf.build/labset/clarity-protobuf-tools
+
+lint:
+  use:
+    - STANDARD
+  plugins:
+    - plugin: clarity-lint-plugin
+
+breaking:
+  use:
+    - FILE
+```
+
+### buf.gen.yaml
+
+#### Go + gRPC generation
+
+```yaml
+version: v2
+inputs:
+  - directory: protos
+
+plugins:
+  # Go SDK
+  - local: protoc-gen-go
+    out: gen/go
+    opt: paths=source_relative
+
+  # gRPC
+  - local: protoc-gen-go-grpc
+    out: gen/go
+    opt: paths=source_relative
+```
+
+#### Clarity codegen (sqlc mode)
+
+```yaml
+version: v2
+inputs:
+  - directory: protos
+
+plugins:
+  - local: protoc-gen-clarity
+    out: internal
+    opt:
+      - mode=sqlc
+```
+
+#### Clarity codegen (atlas-sqlc mode)
+
+```yaml
+version: v2
+inputs:
+  - directory: protos
+
+plugins:
+  - local: protoc-gen-clarity
+    out: internal
+    opt:
+      - mode=atlas-sqlc
+```
+
+#### Clarity codegen (service mode)
+
+Generates `.proto` service definitions from entity messages — output alongside your source protos:
+
+```yaml
+version: v2
+inputs:
+  - directory: protos
+
+plugins:
+  - local: protoc-gen-clarity
+    out: protos
+    opt:
+      - mode=service
+```
+
+### Running generation
+
+```bash
+# generate with a specific config
+buf generate --template buf.gen.yaml
+
+# or with multiple configs in sequence
+buf generate --template buf.gen.yaml
+buf generate --template buf.gen.services.yaml
+```
+
 ## Development
 
 ### Requirements
