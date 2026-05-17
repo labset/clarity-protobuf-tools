@@ -8,7 +8,7 @@ import "{{ .ModelFile }}";
 {{- if eq .Op.String "OPERATION_UPDATE" }}
 import "google/protobuf/field_mask.proto";
 {{- end }}
-{{- if or (eq .Op.String "OPERATION_GET") (eq .Op.String "OPERATION_DELETE") }}
+{{- if or (eq .Op.String "OPERATION_GET") (eq .Op.String "OPERATION_UPDATE") (eq .Op.String "OPERATION_DELETE") }}
 import "buf/validate/validate.proto";
 {{- end }}
 {{- if eq .Op.String "OPERATION_CREATE" }}

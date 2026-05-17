@@ -6,6 +6,7 @@ option go_package = "github.com/acme/inventory/v1;inventoryv1";
 
 import "acme/inventory/v1/models.proto";
 import "google/protobuf/field_mask.proto";
+import "buf/validate/validate.proto";
 
 message UpdateProductRequest {
   string id = 1 [(buf.validate.field).string.uuid = true];
