@@ -141,7 +141,7 @@ Generated services follow these conventions:
 
 ### connect-crud
 
-Generates Go [Connect-RPC](https://connectrpc.com/) handler implementations from `ROLE_ENTITY` messages, backed by SQLC-generated stores.
+Generates Go [Connect-RPC](https://connectrpc.com/) handler implementations from `ROLE_ENTITY` messages, backed by SQLC-generated stores. This mode includes `atlas-sqlc` under the hood, so a single invocation produces the full stack: SQL schema, SQLC queries/config, Atlas migration config, and Connect handler code.
 
 ```
 protoc --clarity_out=. --clarity_opt=mode=connect-crud,go_module=github.com/acme/app proto/*.proto
@@ -152,7 +152,16 @@ Requires the `go_module` parameter to derive the SQLC store import path.
 For a message in package `acme.inventory.v1` with all operations, generates:
 
 ```
-acme/inventory/v1/api/
+internal/acme/inventory/v1/           # from atlas-sqlc (included automatically)
+├── sql/
+│   ├── schema.sql
+│   ├── baseline.sql
+│   └── queries/
+│       └── product.sql
+├── sqlc.yaml
+└── atlas.hcl
+
+acme/inventory/v1/api/                # connect-crud handlers
 ├── handler_product.go         # ProductDeps, constructor, Connect service registration
 ├── mapper_product.go          # proto ↔ SQLC conversion functions
 ├── rpc_create_product.go      # Create with duplicate detection (CodeAlreadyExists)
