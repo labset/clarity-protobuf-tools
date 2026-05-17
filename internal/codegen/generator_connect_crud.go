@@ -38,6 +38,7 @@ type handlerData struct {
 
 type mapperData struct {
 	Package     string
+	DBPrefix    string
 	Model       string
 	ModelLower  string
 	StoreImport string
@@ -53,6 +54,7 @@ type mapperField struct {
 
 type rpcData struct {
 	Package     string
+	DBPrefix    string
 	Model       string
 	ModelLower  string
 	StoreImport string
@@ -122,8 +124,10 @@ func (g *connectCrudGenerator) Generate(plugin *protogen.Plugin) error {
 			}
 
 			fields := extractMapperFields(msg)
+			dbPrefix := toPascalCase(pe.meta.Schema)
 			mapData := mapperData{
 				Package:     "api",
+				DBPrefix:    dbPrefix,
 				Model:       modelName,
 				ModelLower:  modelLower,
 				StoreImport: storeImport,
@@ -144,6 +148,7 @@ func (g *connectCrudGenerator) Generate(plugin *protogen.Plugin) error {
 
 			rpc := rpcData{
 				Package:     "api",
+				DBPrefix:    dbPrefix,
 				Model:       modelName,
 				ModelLower:  modelLower,
 				StoreImport: storeImport,

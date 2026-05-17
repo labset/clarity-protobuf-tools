@@ -33,7 +33,7 @@ func (h *productHandler) ListProducts(
 		}
 	}
 
-	rows, err := h.store.ListProductsPaginated(ctx, db.ListProductsPaginatedParams{
+	rows, err := h.store.ListProductsPaginated(ctx, db.ListAcmeInventoryV1ProductsPaginatedParams{
 		Cursor:   cursor,
 		PageSize: pageSize,
 	})

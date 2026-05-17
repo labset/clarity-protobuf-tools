@@ -33,7 +33,7 @@ func (h *{{ .ModelLower }}Handler) List{{ .Model }}s(
 		}
 	}
 
-	rows, err := h.store.List{{ .Model }}sPaginated(ctx, db.List{{ .Model }}sPaginatedParams{
+	rows, err := h.store.List{{ .Model }}sPaginated(ctx, db.List{{ .DBPrefix }}{{ .Model }}sPaginatedParams{
 		Cursor:   cursor,
 		PageSize: pageSize,
 	})

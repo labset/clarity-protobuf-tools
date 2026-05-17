@@ -10,7 +10,7 @@ import (
 	inventoryv1 "github.com/acme/inventory/v1"
 )
 
-func productToProto(row db.Product) *inventoryv1.Product {
+func productToProto(row db.AcmeInventoryV1Product) *inventoryv1.Product {
 	return &inventoryv1.Product{
 		Entity: &pluginv1.Entity{
 			Id:        row.ID.String(),
@@ -22,8 +22,8 @@ func productToProto(row db.Product) *inventoryv1.Product {
 	}
 }
 
-func productFromCreate(msg *inventoryv1.Product, id uuid.UUID, now pgtype.Timestamptz) db.CreateProductParams {
-	return db.CreateProductParams{
+func productFromCreate(msg *inventoryv1.Product, id uuid.UUID, now pgtype.Timestamptz) db.CreateAcmeInventoryV1ProductParams {
+	return db.CreateAcmeInventoryV1ProductParams{
 		ID:        id,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -32,8 +32,8 @@ func productFromCreate(msg *inventoryv1.Product, id uuid.UUID, now pgtype.Timest
 	}
 }
 
-func productFromUpdate(msg *inventoryv1.Product, id uuid.UUID) db.UpdateProductParams {
-	return db.UpdateProductParams{
+func productFromUpdate(msg *inventoryv1.Product, id uuid.UUID) db.UpdateAcmeInventoryV1ProductParams {
+	return db.UpdateAcmeInventoryV1ProductParams{
 		ID:    id,
 		Name:  msg.GetName(),
 		Price: msg.GetPrice(),
