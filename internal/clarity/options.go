@@ -1,6 +1,8 @@
 package clarity
 
 import (
+	"path"
+
 	pluginV1 "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -35,12 +37,16 @@ func IsReference(md protoreflect.MessageDescriptor) bool {
 	return messageRole(md) == pluginV1.Role_ROLE_REFERENCE
 }
 
-// IsReferenceField returns true if the field is a message type with ROLE_REFERENCE.
+// IsReferenceField returns true if the field is a message type with ROLE_REFERENCE
+// defined in a refs.proto file.
 func IsReferenceField(fd protoreflect.FieldDescriptor) bool {
 	if fd.Kind() != protoreflect.MessageKind {
 		return false
 	}
-	return IsReference(fd.Message())
+	if !IsReference(fd.Message()) {
+		return false
+	}
+	return path.Base(string(fd.Message().ParentFile().Path())) == "refs.proto"
 }
 
 // HasForeignKey returns true if the field has the foreign_key option set to true.

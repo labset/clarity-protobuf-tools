@@ -10,20 +10,20 @@ The current codegen pipeline handles scalar and enum fields on entities but has 
 
 ### Functional
 
-- [ ] FR-1: Add `ROLE_REFERENCE` value to the `Role` enum in `options.proto`
-- [ ] FR-2: Add a `ClarityFieldOptions` message with a `bool foreign_key` field and extend `google.protobuf.FieldOptions` in `options.proto`
-- [ ] FR-3: Add a lint rule enforcing that for every entity in `models.proto`, a corresponding `<Model>Ref` message with `ROLE_REFERENCE` exists in `refs.proto`
-- [ ] FR-4: In SQL schema codegen (`sqlc` mode), ref-type fields produce a `<snake_name>_id UUID NOT NULL` column
-- [ ] FR-5: When a ref field has `foreign_key = true`, emit a `REFERENCES <derived_table>(id)` constraint on the column
-- [ ] FR-6: The referenced table name is derived from the ref message name (e.g., `CategoryRef` -> `category` table in the same schema)
-- [ ] FR-7: In SQLC query codegen, include `_id` columns in insert, update, select, and list queries
-- [ ] FR-8: In connect-crud mapper codegen, ref fields map `msg.Get<Ref>().GetId()` to `uuid.UUID` and reverse (`<Ref>Ref{Id: row.<Name>ID.String()}`)
+- [x] FR-1: Add `ROLE_REFERENCE` value to the `Role` enum in `options.proto`
+- [x] FR-2: Add a `ClarityFieldOptions` message with a `bool foreign_key` field and extend `google.protobuf.FieldOptions` in `options.proto`
+- [x] FR-3: Add a lint rule enforcing that for every entity in `models.proto`, a corresponding `<Model>Ref` message with `ROLE_REFERENCE` exists in `refs.proto`
+- [x] FR-4: In SQL schema codegen (`sqlc` mode), ref-type fields produce a `<snake_name>_id UUID NOT NULL` column
+- [x] FR-5: When a ref field has `foreign_key = true`, emit a `REFERENCES <derived_table>(id)` constraint on the column
+- [x] FR-6: The referenced table name is derived from the ref message name (e.g., `CategoryRef` -> `category` table in the same schema)
+- [x] FR-7: In SQLC query codegen, include `_id` columns in insert, update, select, and list queries
+- [x] FR-8: In connect-crud mapper codegen, ref fields map `msg.Get<Ref>().GetId()` to `uuid.UUID` and reverse (`<Ref>Ref{Id: row.<Name>ID.String()}`)
 
 ### Non-Functional
 
-- [ ] NFR-1: Follow existing codegen conventions -- `generator_` prefix, embedded templates, golden file tests
-- [ ] NFR-2: `ROLE_REFERENCE` messages are only recognised in files named `refs.proto`
-- [ ] NFR-3: `foreign_key` defaults to `false` -- no FK constraint unless explicitly opted in
+- [x] NFR-1: Follow existing codegen conventions -- `generator_` prefix, embedded templates, golden file tests
+- [x] NFR-2: `ROLE_REFERENCE` messages are only recognised in files named `refs.proto`
+- [x] NFR-3: `foreign_key` defaults to `false` -- no FK constraint unless explicitly opted in
 
 ### Deferred
 
