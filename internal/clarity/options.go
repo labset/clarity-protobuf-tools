@@ -30,6 +30,11 @@ func IsEntity(md protoreflect.MessageDescriptor) bool {
 	return messageRole(md) == pluginV1.Role_ROLE_ENTITY
 }
 
+// IsReference returns true if the message has ROLE_REFERENCE.
+func IsReference(md protoreflect.MessageDescriptor) bool {
+	return messageRole(md) == pluginV1.Role_ROLE_REFERENCE
+}
+
 // Operations returns the operations configured for a message descriptor.
 func Operations(md protoreflect.MessageDescriptor) []pluginV1.Operation {
 	opts, ok := md.Options().(*descriptorpb.MessageOptions)

@@ -12,14 +12,14 @@
 
 ## M2: Linter -- Enforce refs.proto Convention
 
-- **Status:** pending
+- **Status:** done
 - **Description:** Add a lint rule that enforces every entity defined in `models.proto` has a corresponding `<Model>Ref` message with `ROLE_REFERENCE` in `refs.proto` within the same package.
 - **Acceptance Criteria:**
-  - [ ] New `check_ref_message.go` rule in `internal/rules/`
-  - [ ] Rule registered in `checks.go`
-  - [ ] Rule reports a diagnostic when an entity in `models.proto` has no matching `<Model>Ref` in `refs.proto`
-  - [ ] Rule reports a diagnostic when a ref message exists but lacks `ROLE_REFERENCE`
-  - [ ] Rule passes when all entities have valid corresponding refs
+  - [x] New `check_ref_message.go` rule in `internal/rules/`
+  - [x] Rule registered in `checks.go`
+  - [x] Rule reports a diagnostic when an entity in `models.proto` has no matching `<Model>Ref` in `refs.proto`
+  - [x] Rule reports a diagnostic when a ref message exists but lacks `ROLE_REFERENCE`
+  - [x] Rule passes when all entities have valid corresponding refs
 
 ## M3: SQL Schema and SQLC Query Codegen
 
