@@ -211,6 +211,54 @@ func TestConnectCrudOutboxGenerator_CreateOnly(t *testing.T) {
 	assert.NotContains(t, files, "internal/acme/inventory/v1/outbox/event_delete_product.go")
 }
 
+func TestConnectCrudOutboxGenerator_RefFields(t *testing.T) {
+	deps := collectFileDescriptors(t,
+		"clarity/plugin/v1/options.proto",
+		"clarity/plugin/v1/entity.proto",
+	)
+
+	refFiles := testRefProtoFiles(t)
+	refFiles[1].MessageType[0].Options = entityMessageOptionsWithOps(t,
+		pluginV1.Operation_OPERATION_CREATE,
+		pluginV1.Operation_OPERATION_GET,
+	)
+
+	req := &pluginpb.CodeGeneratorRequest{
+		FileToGenerate: []string{"acme/inventory/v1/models.proto"},
+		ProtoFile:      append(deps, refFiles...),
+	}
+
+	plugin, err := protogen.Options{}.New(req)
+	require.NoError(t, err)
+
+	gen := newTestConnectCrudOutboxGenerator("")
+	err = gen.Generate(plugin)
+	require.NoError(t, err)
+
+	resp := plugin.Response()
+	require.NotNil(t, resp)
+
+	files := make(map[string]string)
+	for _, f := range resp.GetFile() {
+		files[f.GetName()] = f.GetContent()
+	}
+
+	// Verify ref mapper is generated (reuses connect-crud mapper template)
+	assert.Equal(
+		t,
+		loadConnectCrudGolden(t, "ref_mapper_product.go"),
+		files["internal/acme/inventory/v1/api/mapper_product.go"],
+	)
+
+	// Verify outbox event and transactional RPC are generated for create
+	assert.Contains(t, files, "internal/acme/inventory/v1/outbox/event_create_product.go")
+	assert.Contains(t, files, "internal/acme/inventory/v1/api/rpc_create_product.go")
+
+	// Verify get RPC is generated (read-only, no event)
+	assert.Contains(t, files, "internal/acme/inventory/v1/api/rpc_get_product.go")
+	assert.NotContains(t, files, "internal/acme/inventory/v1/outbox/event_get_product.go")
+}
+
 func TestConnectCrudOutboxGenerator_OutputDir(t *testing.T) {
 	deps := collectFileDescriptors(t,
 		"clarity/plugin/v1/options.proto",
