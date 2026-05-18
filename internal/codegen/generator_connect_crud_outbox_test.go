@@ -25,7 +25,7 @@ func newTestConnectCrudOutboxGenerator(outputDir string) *connectCrudOutboxGener
 	}
 }
 
-func TestConnectCrudOutboxGenerator_AllMutatingOps(t *testing.T) {
+func TestConnectCrudOutboxGenerator_AllOperations(t *testing.T) {
 	deps := collectFileDescriptors(t,
 		"clarity/plugin/v1/options.proto",
 		"clarity/plugin/v1/entity.proto",
@@ -60,13 +60,62 @@ func TestConnectCrudOutboxGenerator_AllMutatingOps(t *testing.T) {
 		files[f.GetName()] = f.GetContent()
 	}
 
-	// atlas-sqlc files: 5
-	// outbox event files: 3 (create, update, delete — not get/list)
-	// total = 8
-	assert.Len(t, files, 8)
+	// atlas-sqlc: 5
+	// handler + mapper: 2
+	// RPCs: 5 (create, get, list, update, delete)
+	// outbox events: 3 (create, update, delete)
+	// total = 15
+	assert.Len(t, files, 15)
 
 	// Verify atlas-sqlc files are present
 	assert.Contains(t, files, "internal/acme/inventory/v1/sql/schema.sql")
+	assert.Contains(t, files, "internal/acme/inventory/v1/sql/queries/product.sql")
+	assert.Contains(t, files, "internal/acme/inventory/v1/sqlc.yaml")
+	assert.Contains(t, files, "internal/acme/inventory/v1/atlas.hcl")
+	assert.Contains(t, files, "internal/acme/inventory/v1/sql/baseline.sql")
+
+	// Verify handler
+	assert.Equal(
+		t,
+		loadConnectCrudOutboxGolden(t, "handler_product.go"),
+		files["internal/acme/inventory/v1/api/handler_product.go"],
+	)
+
+	// Verify mapper (reused from connect-crud)
+	assert.Equal(
+		t,
+		loadConnectCrudOutboxGolden(t, "mapper_product.go"),
+		files["internal/acme/inventory/v1/api/mapper_product.go"],
+	)
+
+	// Verify transactional RPCs
+	assert.Equal(
+		t,
+		loadConnectCrudOutboxGolden(t, "rpc_create_product.go"),
+		files["internal/acme/inventory/v1/api/rpc_create_product.go"],
+	)
+	assert.Equal(
+		t,
+		loadConnectCrudOutboxGolden(t, "rpc_update_product.go"),
+		files["internal/acme/inventory/v1/api/rpc_update_product.go"],
+	)
+	assert.Equal(
+		t,
+		loadConnectCrudOutboxGolden(t, "rpc_delete_product.go"),
+		files["internal/acme/inventory/v1/api/rpc_delete_product.go"],
+	)
+
+	// Verify read-only RPCs (unchanged from connect-crud)
+	assert.Equal(
+		t,
+		loadConnectCrudOutboxGolden(t, "rpc_get_product.go"),
+		files["internal/acme/inventory/v1/api/rpc_get_product.go"],
+	)
+	assert.Equal(
+		t,
+		loadConnectCrudOutboxGolden(t, "rpc_list_product.go"),
+		files["internal/acme/inventory/v1/api/rpc_list_product.go"],
+	)
 
 	// Verify outbox event files
 	assert.Equal(
@@ -118,8 +167,9 @@ func TestConnectCrudOutboxGenerator_NoOperations(t *testing.T) {
 		files[f.GetName()] = f.GetContent()
 	}
 
-	// atlas-sqlc files still generated, but no outbox files
+	// atlas-sqlc files still generated, but no handler/RPC/outbox files
 	assert.Contains(t, files, "internal/acme/inventory/v1/sql/schema.sql")
+	assert.NotContains(t, files, "internal/acme/inventory/v1/api/handler_product.go")
 	assert.NotContains(t, files, "internal/acme/inventory/v1/outbox/event_create_product.go")
 }
 
@@ -151,8 +201,11 @@ func TestConnectCrudOutboxGenerator_CreateOnly(t *testing.T) {
 		files[f.GetName()] = f.GetContent()
 	}
 
-	// atlas-sqlc: 5 + outbox: 1 (create only) = 6
-	assert.Len(t, files, 6)
+	// atlas-sqlc: 5 + handler + mapper: 2 + rpc: 1 + event: 1 = 9
+	assert.Len(t, files, 9)
+	assert.Contains(t, files, "internal/acme/inventory/v1/api/handler_product.go")
+	assert.Contains(t, files, "internal/acme/inventory/v1/api/mapper_product.go")
+	assert.Contains(t, files, "internal/acme/inventory/v1/api/rpc_create_product.go")
 	assert.Contains(t, files, "internal/acme/inventory/v1/outbox/event_create_product.go")
 	assert.NotContains(t, files, "internal/acme/inventory/v1/outbox/event_update_product.go")
 	assert.NotContains(t, files, "internal/acme/inventory/v1/outbox/event_delete_product.go")
@@ -186,6 +239,25 @@ func TestConnectCrudOutboxGenerator_OutputDir(t *testing.T) {
 		files[f.GetName()] = f.GetContent()
 	}
 
+	// Verify all paths include output_dir
+	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/api/handler_product.go")
+	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/api/rpc_create_product.go")
 	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/outbox/event_create_product.go")
 	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/sql/schema.sql")
+
+	// Verify store import includes output_dir
+	mapperContent := files["custom/out/internal/acme/inventory/v1/api/mapper_product.go"]
+	assert.Contains(
+		t,
+		mapperContent,
+		"\"github.com/acme/app/custom/out/internal/acme/inventory/v1/db\"",
+	)
+
+	// Verify outbox import includes output_dir
+	rpcContent := files["custom/out/internal/acme/inventory/v1/api/rpc_create_product.go"]
+	assert.Contains(
+		t,
+		rpcContent,
+		"\"github.com/acme/app/custom/out/internal/acme/inventory/v1/outbox\"",
+	)
 }
