@@ -12,22 +12,22 @@ We want a new codegen mode (`connect-crud-outbox`) that wraps mutating CRUD oper
 
 ### Functional
 
-- [ ] FR-1: Introduce a new codegen mode `connect-crud-outbox` that composes the existing `sqlc` and `atlas` generators
-- [ ] FR-2: Generate handler scaffolding that injects `*river.Client[pgx.Tx]` alongside `*pgxpool.Pool` in the handler deps
-- [ ] FR-3: Generate transactional Create/Update/Delete RPC methods that wrap the SQLC call and `river.InsertTx()` in a single Postgres transaction
-- [ ] FR-4: Generate Get and List RPC methods unchanged (no outbox, no transaction wrapping)
-- [ ] FR-5: Generate outbox event files at `<provider>/<domain>/<version>/outbox/event_<op>_<model>.go` for each mutating operation (create, update, delete)
-- [ ] FR-6: Each event struct implements `river.JobArgs` with a `Kind()` method returning `<op>_<model_snake>` (e.g. `create_book`, `update_book`, `delete_book`)
-- [ ] FR-7: Create event args contain `EntityID (uuid.UUID)` and `OccurredAt (time.Time)`
-- [ ] FR-8: Update event args contain `EntityID (uuid.UUID)`, `FieldMask ([]string)`, and `OccurredAt (time.Time)`
-- [ ] FR-9: Delete event args contain `EntityID (uuid.UUID)` and `OccurredAt (time.Time)`
-- [ ] FR-10: Mapper and field extraction logic is reused from the existing `connect-crud` generator
+- [x] FR-1: Introduce a new codegen mode `connect-crud-outbox` that composes the existing `sqlc` and `atlas` generators
+- [x] FR-2: Generate handler scaffolding that injects `*river.Client[pgx.Tx]` alongside `*pgxpool.Pool` in the handler deps
+- [x] FR-3: Generate transactional Create/Update/Delete RPC methods that wrap the SQLC call and `river.InsertTx()` in a single Postgres transaction
+- [x] FR-4: Generate Get and List RPC methods unchanged (no outbox, no transaction wrapping)
+- [x] FR-5: Generate outbox event files at `internal/<provider>/<domain>/<version>/outbox/event_<op>_<model>.go` for each mutating operation (create, update, delete)
+- [x] FR-6: Each event struct implements `river.JobArgs` with a `Kind()` method returning `<op>_<model_snake>` (e.g. `create_book`, `update_book`, `delete_book`)
+- [x] FR-7: Create event args contain `EntityID (uuid.UUID)` and `OccurredAt (time.Time)`
+- [x] FR-8: Update event args contain `EntityID (uuid.UUID)`, `FieldMask ([]string)`, and `OccurredAt (time.Time)`
+- [x] FR-9: Delete event args contain `EntityID (uuid.UUID)` and `OccurredAt (time.Time)`
+- [x] FR-10: Mapper and field extraction logic is reused from the existing `connect-crud` generator
 
 ### Non-Functional
 
-- [ ] NFR-1: Follow existing codegen conventions — `generator_` file prefix, `embed` for templates, golden file tests
-- [ ] NFR-2: Templates live under `internal/codegen/templates/connect-crud-outbox/`
-- [ ] NFR-3: Golden test files scoped under `internal/codegen/testdata/golden/connect-crud-outbox/`
+- [x] NFR-1: Follow existing codegen conventions — `generator_` file prefix, `embed` for templates, golden file tests
+- [x] NFR-2: Templates live under `internal/codegen/templates/connect-crud-outbox/`
+- [x] NFR-3: Golden test files scoped under `internal/codegen/testdata/golden/connect-crud-outbox/`
 
 ### Deferred
 

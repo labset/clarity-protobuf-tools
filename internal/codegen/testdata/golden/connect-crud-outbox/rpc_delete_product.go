@@ -21,6 +21,8 @@ func (h *productHandler) DeleteProduct(
 		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}
 
+	now := time.Now()
+
 	tx, err := h.pool.Begin(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
@@ -37,7 +39,7 @@ func (h *productHandler) DeleteProduct(
 
 	_, err = h.river.InsertTx(ctx, tx, outbox.DeleteProductEventArgs{
 		EntityID:   id,
-		OccurredAt: time.Now(),
+		OccurredAt: now,
 	}, nil)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
