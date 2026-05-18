@@ -290,7 +290,11 @@ func TestConnectCrudOutboxGenerator_OutputDir(t *testing.T) {
 	// Verify all paths include output_dir
 	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/api/handler_product.go")
 	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/api/rpc_create_product.go")
-	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/outbox/event_create_product.go")
+	assert.Contains(
+		t,
+		files,
+		"custom/out/internal/acme/inventory/v1/outbox/event_create_product.go",
+	)
 	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/sql/schema.sql")
 
 	// Verify store import includes output_dir

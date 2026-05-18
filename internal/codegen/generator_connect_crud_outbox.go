@@ -228,7 +228,11 @@ func (g *connectCrudOutboxGenerator) Generate(plugin *protogen.Plugin) error {
 
 func renderOutboxHandler(data handlerData) (string, error) {
 	var buf bytes.Buffer
-	if err := connectCrudOutboxTemplates.ExecuteTemplate(&buf, "handler.go.tmpl", data); err != nil {
+	if err := connectCrudOutboxTemplates.ExecuteTemplate(
+		&buf,
+		"handler.go.tmpl",
+		data,
+	); err != nil {
 		return "", fmt.Errorf("executing outbox handler template: %w", err)
 	}
 	return formatGo(buf.Bytes())
