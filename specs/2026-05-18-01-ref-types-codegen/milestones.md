@@ -2,13 +2,13 @@
 
 ## M1: Proto Options -- ROLE_REFERENCE and Field Options
 
-- **Status:** pending
+- **Status:** done
 - **Description:** Add `ROLE_REFERENCE` to the `Role` enum and introduce a `ClarityFieldOptions` message with a `bool foreign_key` field, extending `google.protobuf.FieldOptions`. Regenerate Go code from the updated proto.
 - **Acceptance Criteria:**
-  - [ ] `ROLE_REFERENCE` value exists in the `Role` enum in `options.proto`
-  - [ ] `ClarityFieldOptions` message with `foreign_key` bool field exists in `options.proto`
-  - [ ] `google.protobuf.FieldOptions` is extended with `clarity.plugin.v1.field` using `ClarityFieldOptions`
-  - [ ] Generated Go code compiles and includes the new types
+  - [x] `ROLE_REFERENCE` value exists in the `Role` enum in `options.proto`
+  - [x] `ClarityFieldOptions` message with `foreign_key` bool field exists in `options.proto`
+  - [x] `google.protobuf.FieldOptions` is extended with `clarity.plugin.v1.field` using `ClarityFieldOptions`
+  - [x] Generated Go code compiles and includes the new types
 
 ## M2: Linter -- Enforce refs.proto Convention
 
