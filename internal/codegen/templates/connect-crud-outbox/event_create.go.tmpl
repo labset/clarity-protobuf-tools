@@ -1,0 +1,22 @@
+package outbox
+
+import (
+	"time"
+
+	"github.com/gofrs/uuid/v5"
+	"github.com/riverqueue/river"
+)
+
+// Create{{ .Model }}EventArgs contains the River job arguments for a {{ .Model }} creation event.
+type Create{{ .Model }}EventArgs struct {
+	EntityID   uuid.UUID `json:"entity_id"`
+	OccurredAt time.Time `json:"occurred_at"`
+}
+
+func (Create{{ .Model }}EventArgs) Kind() string {
+	return "create_{{ .ModelSnake }}"
+}
+
+func (Create{{ .Model }}EventArgs) InsertOpts() river.InsertOpts {
+	return river.InsertOpts{}
+}

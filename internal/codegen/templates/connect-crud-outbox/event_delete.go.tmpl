@@ -1,0 +1,22 @@
+package outbox
+
+import (
+	"time"
+
+	"github.com/gofrs/uuid/v5"
+	"github.com/riverqueue/river"
+)
+
+// Delete{{ .Model }}EventArgs contains the River job arguments for a {{ .Model }} deletion event.
+type Delete{{ .Model }}EventArgs struct {
+	EntityID   uuid.UUID `json:"entity_id"`
+	OccurredAt time.Time `json:"occurred_at"`
+}
+
+func (Delete{{ .Model }}EventArgs) Kind() string {
+	return "delete_{{ .ModelSnake }}"
+}
+
+func (Delete{{ .Model }}EventArgs) InsertOpts() river.InsertOpts {
+	return river.InsertOpts{}
+}

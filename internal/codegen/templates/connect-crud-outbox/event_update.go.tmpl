@@ -1,0 +1,23 @@
+package outbox
+
+import (
+	"time"
+
+	"github.com/gofrs/uuid/v5"
+	"github.com/riverqueue/river"
+)
+
+// Update{{ .Model }}EventArgs contains the River job arguments for a {{ .Model }} update event.
+type Update{{ .Model }}EventArgs struct {
+	EntityID   uuid.UUID `json:"entity_id"`
+	FieldMask  []string  `json:"field_mask,omitempty"`
+	OccurredAt time.Time `json:"occurred_at"`
+}
+
+func (Update{{ .Model }}EventArgs) Kind() string {
+	return "update_{{ .ModelSnake }}"
+}
+
+func (Update{{ .Model }}EventArgs) InsertOpts() river.InsertOpts {
+	return river.InsertOpts{}
+}

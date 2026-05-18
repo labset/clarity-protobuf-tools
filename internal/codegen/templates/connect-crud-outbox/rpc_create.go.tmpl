@@ -1,0 +1,59 @@
+package {{ .Package }}
+
+import (
+	"context"
+	"errors"
+	"time"
+
+	"connectrpc.com/connect"
+	"github.com/gofrs/uuid/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgtype"
+
+	"{{ .OutboxImport }}"
+	{{ .ProtoAlias }} "{{ .ProtoImport }}"
+)
+
+func (h *{{ .ModelLower }}Handler) Create{{ .Model }}(
+	ctx context.Context,
+	req *connect.Request[{{ .ProtoAlias }}.Create{{ .Model }}Request],
+) (*connect.Response[{{ .ProtoAlias }}.Create{{ .Model }}Response], error) {
+	id, err := uuid.NewV4()
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	now := pgtype.Timestamptz{Time: time.Now(), Valid: true}
+	params := {{ .ModelLower }}FromCreate(req.Msg.GetItem(), id, now)
+
+	tx, err := h.pool.Begin(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+	defer tx.Rollback(ctx)
+
+	row, err := h.store.WithTx(tx).Create{{ .Model }}(ctx, params)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return nil, connect.NewError(connect.CodeAlreadyExists, err)
+		}
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	_, err = h.river.InsertTx(ctx, tx, outbox.Create{{ .Model }}EventArgs{
+		EntityID:   id,
+		OccurredAt: now.Time,
+	}, nil)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return connect.NewResponse(&{{ .ProtoAlias }}.Create{{ .Model }}Response{
+		Item: {{ .ModelLower }}ToProto(row),
+	}), nil
+}

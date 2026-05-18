@@ -1,0 +1,85 @@
+package {{ .Package }}
+
+import (
+	"context"
+	"errors"
+	"time"
+
+	"connectrpc.com/connect"
+	"github.com/gofrs/uuid/v5"
+	"github.com/jackc/pgx/v5"
+
+	"{{ .OutboxImport }}"
+	{{ .ProtoAlias }} "{{ .ProtoImport }}"
+)
+
+func (h *{{ .ModelLower }}Handler) Update{{ .Model }}(
+	ctx context.Context,
+	req *connect.Request[{{ .ProtoAlias }}.Update{{ .Model }}Request],
+) (*connect.Response[{{ .ProtoAlias }}.Update{{ .Model }}Response], error) {
+	id, err := uuid.FromString(req.Msg.GetId())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	}
+
+	now := time.Now()
+
+	tx, err := h.pool.Begin(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+	defer tx.Rollback(ctx)
+
+	store := h.store.WithTx(tx)
+
+	current, err := store.Get{{ .Model }}(ctx, id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, connect.NewError(connect.CodeNotFound, err)
+		}
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	item := req.Msg.GetItem()
+	mask := req.Msg.GetUpdateMask()
+	params := {{ .ModelLower }}FromUpdate(item, id)
+
+	var fieldMask []string
+	if mask != nil && len(mask.GetPaths()) > 0 {
+		fieldMask = mask.GetPaths()
+		allowed := make(map[string]bool)
+		for _, p := range fieldMask {
+			allowed[p] = true
+		}
+{{- range .Fields }}
+		if !allowed["{{ snakeCase .ProtoName }}"] {
+			params.{{ .SQLCName }} = current.{{ .SQLCName }}
+		}
+{{- end }}
+	}
+
+	row, err := store.Update{{ .Model }}(ctx, params)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, connect.NewError(connect.CodeNotFound, err)
+		}
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	_, err = h.river.InsertTx(ctx, tx, outbox.Update{{ .Model }}EventArgs{
+		EntityID:   id,
+		FieldMask:  fieldMask,
+		OccurredAt: now,
+	}, nil)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return connect.NewResponse(&{{ .ProtoAlias }}.Update{{ .Model }}Response{
+		Item: {{ .ModelLower }}ToProto(row),
+	}), nil
+}
