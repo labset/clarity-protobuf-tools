@@ -451,8 +451,16 @@ func TestSqlcGenerator_Generate_RefFields(t *testing.T) {
 		files[f.GetName()] = f.GetContent()
 	}
 
-	assert.Equal(t, loadGolden(t, "ref_schema.sql"), files["internal/acme/inventory/v1/sql/schema.sql"])
-	assert.Equal(t, loadGolden(t, "ref_queries_product.sql"), files["internal/acme/inventory/v1/sql/queries/product.sql"])
+	assert.Equal(
+		t,
+		loadGolden(t, "ref_schema.sql"),
+		files["internal/acme/inventory/v1/sql/schema.sql"],
+	)
+	assert.Equal(
+		t,
+		loadGolden(t, "ref_queries_product.sql"),
+		files["internal/acme/inventory/v1/sql/queries/product.sql"],
+	)
 }
 
 func TestSqlcGenerator_Generate_OutputDir(t *testing.T) {
