@@ -18,7 +18,9 @@ func {{ .ModelLower }}ToProto(row db.{{ .DBPrefix }}{{ .Model }}) *{{ .ProtoAlia
 			UpdatedAt: timestamppb.New(row.UpdatedAt.Time),
 		},
 {{- range .Fields }}
-{{- if .IsEnum }}
+{{- if .IsRef }}
+		{{ .ProtoName }}: &{{ $.ProtoAlias }}.{{ .RefType }}{Id: row.{{ .SQLCName }}.String()},
+{{- else if .IsEnum }}
 		{{ .ProtoName }}: {{ $.ProtoAlias }}.{{ .EnumType }}({{ $.ProtoAlias }}.{{ .EnumType }}_value[row.{{ .SQLCName }}]),
 {{- else }}
 		{{ .ProtoName }}: row.{{ .SQLCName }},
@@ -33,7 +35,9 @@ func {{ .ModelLower }}FromCreate(msg *{{ .ProtoAlias }}.{{ .Model }}, id uuid.UU
 		CreatedAt: now,
 		UpdatedAt: now,
 {{- range .Fields }}
-{{- if .IsEnum }}
+{{- if .IsRef }}
+		{{ .SQLCName }}: uuid.FromStringOrNil(msg.Get{{ .ProtoName }}().GetId()),
+{{- else if .IsEnum }}
 		{{ .SQLCName }}: msg.Get{{ .ProtoName }}().String(),
 {{- else }}
 		{{ .SQLCName }}: msg.Get{{ .ProtoName }}(),
@@ -46,7 +50,9 @@ func {{ .ModelLower }}FromUpdate(msg *{{ .ProtoAlias }}.{{ .Model }}, id uuid.UU
 	return db.Update{{ .Model }}Params{
 		ID: id,
 {{- range .Fields }}
-{{- if .IsEnum }}
+{{- if .IsRef }}
+		{{ .SQLCName }}: uuid.FromStringOrNil(msg.Get{{ .ProtoName }}().GetId()),
+{{- else if .IsEnum }}
 		{{ .SQLCName }}: msg.Get{{ .ProtoName }}().String(),
 {{- else }}
 		{{ .SQLCName }}: msg.Get{{ .ProtoName }}(),

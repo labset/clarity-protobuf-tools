@@ -9,6 +9,7 @@ option go_package = "github.com/labset/clarity-protobuf-tools/api/clarity/plugin
 enum Role {
   ROLE_UNSPECIFIED = 0;
   ROLE_ENTITY = 1;
+  ROLE_REFERENCE = 2;
 }
 
 enum Operation {
@@ -25,6 +26,14 @@ message ClarityMessageOptions {
   repeated Operation operations = 2;
 }
 
+message ClarityFieldOptions {
+  bool foreign_key = 1;
+}
+
 extend google.protobuf.MessageOptions {
   ClarityMessageOptions message = 50001;
+}
+
+extend google.protobuf.FieldOptions {
+  ClarityFieldOptions field = 50002;
 }

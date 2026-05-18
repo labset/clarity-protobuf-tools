@@ -1,6 +1,8 @@
 package clarity
 
 import (
+	"path"
+
 	pluginV1 "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -28,6 +30,40 @@ func messageRole(md protoreflect.MessageDescriptor) pluginV1.Role {
 // IsEntity returns true if the message has ROLE_ENTITY.
 func IsEntity(md protoreflect.MessageDescriptor) bool {
 	return messageRole(md) == pluginV1.Role_ROLE_ENTITY
+}
+
+// IsReference returns true if the message has ROLE_REFERENCE.
+func IsReference(md protoreflect.MessageDescriptor) bool {
+	return messageRole(md) == pluginV1.Role_ROLE_REFERENCE
+}
+
+// IsReferenceField returns true if the field is a message type with ROLE_REFERENCE
+// defined in a refs.proto file.
+func IsReferenceField(fd protoreflect.FieldDescriptor) bool {
+	if fd.Kind() != protoreflect.MessageKind {
+		return false
+	}
+	if !IsReference(fd.Message()) {
+		return false
+	}
+	return path.Base(string(fd.Message().ParentFile().Path())) == "refs.proto"
+}
+
+// HasForeignKey returns true if the field has the foreign_key option set to true.
+func HasForeignKey(fd protoreflect.FieldDescriptor) bool {
+	opts, ok := fd.Options().(*descriptorpb.FieldOptions)
+	if !ok {
+		return false
+	}
+	if !proto.HasExtension(opts, pluginV1.E_Field) {
+		return false
+	}
+	ext := proto.GetExtension(opts, pluginV1.E_Field)
+	fieldOpts, ok := ext.(*pluginV1.ClarityFieldOptions)
+	if !ok || fieldOpts == nil {
+		return false
+	}
+	return fieldOpts.GetForeignKey()
 }
 
 // Operations returns the operations configured for a message descriptor.

@@ -52,6 +52,7 @@ message Product {
 | Role | Description |
 |------|-------------|
 | `ROLE_ENTITY` | Marks a message as a database entity — must have an `entity` field of type `clarity.plugin.v1.Entity` at field number 1 |
+| `ROLE_REFERENCE` | Marks a message as a reference type — must be defined in `refs.proto` with a `string id` field |
 
 ### Operations
 
@@ -65,13 +66,58 @@ message Product {
 
 Operations are opt-in — only specified operations produce service output.
 
+### Field Annotations
+
+Fields on entity messages can be annotated with `clarity.plugin.v1.ClarityFieldOptions`:
+
+```protobuf
+import "clarity/plugin/v1/options.proto";
+
+message Product {
+  option (clarity.plugin.v1.message) = {role: ROLE_ENTITY};
+  clarity.plugin.v1.Entity entity = 1;
+  CategoryRef category = 2 [(clarity.plugin.v1.field) = {foreign_key: true}];
+  SupplierRef supplier = 3; // no FK — different store
+  string name = 4;
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `foreign_key` | `bool` | `false` | When `true`, generates a `REFERENCES <table>(id)` constraint on the `_id` column |
+
+### Reference Types
+
+Reference types are defined in `refs.proto` files alongside `models.proto`:
+
+```protobuf
+// refs.proto
+import "clarity/plugin/v1/options.proto";
+
+message CategoryRef {
+  option (clarity.plugin.v1.message) = {role: ROLE_REFERENCE};
+  string id = 1;
+}
+```
+
+When an entity field uses a ref type:
+- **Schema**: produces a `<name>_id UUID NOT NULL` column (with optional `REFERENCES` constraint)
+- **Queries**: includes the `_id` column in all CRUD queries
+- **Mapper**: converts between `<Ref>Ref{Id: ...}` and `uuid.UUID`
+
 ## Lint Plugin
 
 The `clarity-lint-plugin` validates:
 
-- `ROLE_ENTITY` messages must be in files named `models.proto`
-- `ROLE_ENTITY` messages must have an `entity` field of type `clarity.plugin.v1.Entity` at field number 1
-- `ROLE_ENTITY` messages must be in a `<provider>.<domain>.<version>` package
+### Rules
+
+| Rule | Description |
+|------|-------------|
+| `CLARITY_ENTITY_FILE` | `ROLE_ENTITY` messages must be in files named `models.proto` under a `<provider>.<domain>.<version>` package |
+| `CLARITY_ENTITY_FIELD` | `ROLE_ENTITY` messages must have an `entity` field of type `clarity.plugin.v1.Entity` at field number 1 |
+| `CLARITY_REF_MESSAGE` | Every `ROLE_ENTITY` in `models.proto` must have a corresponding `<Model>Ref` with `ROLE_REFERENCE` in `refs.proto` |
+
+All rules are enabled by default.
 
 ## Codegen Modes
 
@@ -194,6 +240,7 @@ Generated handlers:
 | `repeated <scalar>` | Array (e.g. `TEXT[]`) |
 | `repeated <message>`, nested message, `map` | `JSONB` |
 | `oneof` | Nullable columns per variant |
+| `<Model>Ref` (ROLE_REFERENCE) | `UUID` (with optional `REFERENCES` via `foreign_key`) |
 
 ## Usage with Buf
 
@@ -315,4 +362,6 @@ mise run buf:lint      # lint proto files only
 mise run buf:format    # format proto files only
 mise run go:lint       # lint Go code only
 mise run go:format     # format Go code only
+mise run go:test       # run Go tests
+mise run go:vet        # run go vet
 ```

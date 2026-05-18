@@ -174,6 +174,11 @@ func renderSchema(meta packageMeta, messages []*protogen.Message) (string, error
 			if string(field.Desc.Name()) == "entity" {
 				continue
 			}
+			if clarity.IsReferenceField(field.Desc) {
+				col := refColumn(field, meta.Schema)
+				table.Columns = append(table.Columns, col.ColumnSQL())
+				continue
+			}
 			col := pgtype.MapField(field.Desc)
 			if field.Oneof != nil && !field.Desc.HasOptionalKeyword() {
 				col.Nullable = true
@@ -218,7 +223,7 @@ func renderQueries(meta packageMeta, msg *protogen.Message) (string, error) {
 		if string(field.Desc.Name()) == "entity" {
 			continue
 		}
-		allColumns = append(allColumns, string(field.Desc.Name()))
+		allColumns = append(allColumns, refColumnName(field))
 	}
 
 	// Insert excludes auto-managed columns.
@@ -282,6 +287,26 @@ var managedColumns = map[string]bool{
 	"created_at": true,
 	"updated_at": true,
 	"deleted_at": true,
+}
+
+// refColumn builds a UUID column for a reference field, with optional FK constraint.
+func refColumn(field *protogen.Field, schema string) pgtype.Column {
+	colName := string(field.Desc.Name()) + "_id"
+	col := pgtype.Column{Name: colName, Type: "UUID"}
+	if clarity.HasForeignKey(field.Desc) {
+		refMsgName := string(field.Desc.Message().Name())
+		refTable := toSnakeCase(strings.TrimSuffix(refMsgName, "Ref"))
+		col.Type = fmt.Sprintf("UUID REFERENCES %s.%s(id)", schema, refTable)
+	}
+	return col
+}
+
+// refColumnName returns the SQL column name for a field, appending _id for ref fields.
+func refColumnName(field *protogen.Field) string {
+	if clarity.IsReferenceField(field.Desc) {
+		return string(field.Desc.Name()) + "_id"
+	}
+	return string(field.Desc.Name())
 }
 
 func isEntityMessage(msg *protogen.Message) bool {
