@@ -23,15 +23,15 @@
 
 ## M3: SQL Schema and SQLC Query Codegen
 
-- **Status:** pending
+- **Status:** done
 - **Description:** Update the `sqlc` codegen mode so that ref-type fields on entities produce `<snake_name>_id UUID NOT NULL` columns in the schema, with an optional `REFERENCES <table>(id)` constraint when the field is annotated with `foreign_key = true`. Include the `_id` columns in generated SQLC queries.
 - **Acceptance Criteria:**
-  - [ ] Ref-type fields produce `<snake_name>_id UUID NOT NULL` columns in `schema.sql`
-  - [ ] Fields with `foreign_key = true` emit a `REFERENCES <derived_table>(id)` constraint
-  - [ ] Fields without `foreign_key` produce a plain UUID column with no constraint
-  - [ ] Referenced table name is derived from ref message name (e.g., `CategoryRef` -> `category`)
-  - [ ] Insert, update, select, and list queries include the `_id` columns
-  - [ ] Golden file tests cover both FK and non-FK ref fields
+  - [x] Ref-type fields produce `<snake_name>_id UUID NOT NULL` columns in `schema.sql`
+  - [x] Fields with `foreign_key = true` emit a `REFERENCES <derived_table>(id)` constraint
+  - [x] Fields without `foreign_key` produce a plain UUID column with no constraint
+  - [x] Referenced table name is derived from ref message name (e.g., `CategoryRef` -> `category`)
+  - [x] Insert, update, select, and list queries include the `_id` columns
+  - [x] Golden file tests cover both FK and non-FK ref fields
 
 ## M4: Connect-CRUD Mapper Codegen
 

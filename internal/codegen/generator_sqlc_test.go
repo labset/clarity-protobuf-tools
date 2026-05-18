@@ -317,6 +317,144 @@ func TestSqlcGenerator_Generate_MultiplePackages(t *testing.T) {
 	assert.Contains(t, files, "internal/acme/billing/v1/sql/queries/invoice.sql")
 }
 
+func referenceMessageOptions(t *testing.T) *descriptorpb.MessageOptions {
+	t.Helper()
+	opts := &descriptorpb.MessageOptions{}
+	proto.SetExtension(opts, pluginV1.E_Message, &pluginV1.ClarityMessageOptions{
+		Role: pluginV1.Role_ROLE_REFERENCE,
+	})
+	return opts
+}
+
+func foreignKeyFieldOptions(t *testing.T) *descriptorpb.FieldOptions {
+	t.Helper()
+	opts := &descriptorpb.FieldOptions{}
+	proto.SetExtension(opts, pluginV1.E_Field, &pluginV1.ClarityFieldOptions{
+		ForeignKey: true,
+	})
+	return opts
+}
+
+func testRefProtoFiles(t *testing.T) []*descriptorpb.FileDescriptorProto {
+	t.Helper()
+
+	refsFile := &descriptorpb.FileDescriptorProto{
+		Name:    proto.String("acme/inventory/v1/refs.proto"),
+		Package: proto.String("acme.inventory.v1"),
+		Syntax:  proto.String("proto3"),
+		Options: &descriptorpb.FileOptions{
+			GoPackage: proto.String("github.com/acme/inventory/v1;inventoryv1"),
+		},
+		Dependency: []string{
+			"clarity/plugin/v1/options.proto",
+		},
+		MessageType: []*descriptorpb.DescriptorProto{
+			{
+				Name:    proto.String("CategoryRef"),
+				Options: referenceMessageOptions(t),
+				Field: []*descriptorpb.FieldDescriptorProto{
+					{
+						Name:   proto.String("id"),
+						Number: proto.Int32(1),
+						Type:   descriptorpb.FieldDescriptorProto_TYPE_STRING.Enum(),
+					},
+				},
+			},
+			{
+				Name:    proto.String("SupplierRef"),
+				Options: referenceMessageOptions(t),
+				Field: []*descriptorpb.FieldDescriptorProto{
+					{
+						Name:   proto.String("id"),
+						Number: proto.Int32(1),
+						Type:   descriptorpb.FieldDescriptorProto_TYPE_STRING.Enum(),
+					},
+				},
+			},
+		},
+	}
+
+	modelsFile := &descriptorpb.FileDescriptorProto{
+		Name:    proto.String("acme/inventory/v1/models.proto"),
+		Package: proto.String("acme.inventory.v1"),
+		Syntax:  proto.String("proto3"),
+		Options: &descriptorpb.FileOptions{
+			GoPackage: proto.String("github.com/acme/inventory/v1;inventoryv1"),
+		},
+		Dependency: []string{
+			"clarity/plugin/v1/options.proto",
+			"clarity/plugin/v1/entity.proto",
+			"acme/inventory/v1/refs.proto",
+		},
+		MessageType: []*descriptorpb.DescriptorProto{
+			{
+				Name:    proto.String("Product"),
+				Options: entityMessageOptions(t),
+				Field: []*descriptorpb.FieldDescriptorProto{
+					{
+						Name:     proto.String("entity"),
+						Number:   proto.Int32(1),
+						Type:     descriptorpb.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+						TypeName: proto.String(".clarity.plugin.v1.Entity"),
+					},
+					{
+						Name:     proto.String("category"),
+						Number:   proto.Int32(2),
+						Type:     descriptorpb.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+						TypeName: proto.String(".acme.inventory.v1.CategoryRef"),
+						Options:  foreignKeyFieldOptions(t),
+					},
+					{
+						Name:     proto.String("supplier"),
+						Number:   proto.Int32(3),
+						Type:     descriptorpb.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+						TypeName: proto.String(".acme.inventory.v1.SupplierRef"),
+					},
+					{
+						Name:   proto.String("name"),
+						Number: proto.Int32(4),
+						Type:   descriptorpb.FieldDescriptorProto_TYPE_STRING.Enum(),
+					},
+				},
+			},
+		},
+	}
+
+	return []*descriptorpb.FileDescriptorProto{refsFile, modelsFile}
+}
+
+func TestSqlcGenerator_Generate_RefFields(t *testing.T) {
+	deps := collectFileDescriptors(t,
+		"clarity/plugin/v1/options.proto",
+		"clarity/plugin/v1/entity.proto",
+	)
+
+	refFiles := testRefProtoFiles(t)
+
+	req := &pluginpb.CodeGeneratorRequest{
+		FileToGenerate: []string{"acme/inventory/v1/models.proto"},
+		ProtoFile:      append(deps, refFiles...),
+	}
+
+	plugin, err := protogen.Options{}.New(req)
+	require.NoError(t, err)
+
+	gen := &sqlcGenerator{}
+	err = gen.Generate(plugin)
+	require.NoError(t, err)
+
+	resp := plugin.Response()
+	require.NotNil(t, resp)
+
+	files := make(map[string]string)
+	for _, f := range resp.GetFile() {
+		files[f.GetName()] = f.GetContent()
+	}
+
+	assert.Equal(t, loadGolden(t, "ref_schema.sql"), files["internal/acme/inventory/v1/sql/schema.sql"])
+	assert.Equal(t, loadGolden(t, "ref_queries_product.sql"), files["internal/acme/inventory/v1/sql/queries/product.sql"])
+}
+
 func TestSqlcGenerator_Generate_OutputDir(t *testing.T) {
 	deps := collectFileDescriptors(t,
 		"clarity/plugin/v1/options.proto",

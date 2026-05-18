@@ -40,6 +40,14 @@ run = "go install ./cmd/..."
 # Go Tasks
 #############
 
+[tasks."go:test"]
+description = "Run Go tests"
+run = "go test ./..."
+
+[tasks."go:vet"]
+description = "Run go vet"
+run = "go vet ./..."
+
 [tasks."go:lint"]
 description = "Run golangci-lint on the codebase"
 run = "golangci-lint run"

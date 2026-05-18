@@ -35,6 +35,31 @@ func IsReference(md protoreflect.MessageDescriptor) bool {
 	return messageRole(md) == pluginV1.Role_ROLE_REFERENCE
 }
 
+// IsReferenceField returns true if the field is a message type with ROLE_REFERENCE.
+func IsReferenceField(fd protoreflect.FieldDescriptor) bool {
+	if fd.Kind() != protoreflect.MessageKind {
+		return false
+	}
+	return IsReference(fd.Message())
+}
+
+// HasForeignKey returns true if the field has the foreign_key option set to true.
+func HasForeignKey(fd protoreflect.FieldDescriptor) bool {
+	opts, ok := fd.Options().(*descriptorpb.FieldOptions)
+	if !ok {
+		return false
+	}
+	if !proto.HasExtension(opts, pluginV1.E_Field) {
+		return false
+	}
+	ext := proto.GetExtension(opts, pluginV1.E_Field)
+	fieldOpts, ok := ext.(*pluginV1.ClarityFieldOptions)
+	if !ok || fieldOpts == nil {
+		return false
+	}
+	return fieldOpts.GetForeignKey()
+}
+
 // Operations returns the operations configured for a message descriptor.
 func Operations(md protoreflect.MessageDescriptor) []pluginV1.Operation {
 	opts, ok := md.Options().(*descriptorpb.MessageOptions)
