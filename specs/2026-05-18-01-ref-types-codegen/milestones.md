@@ -35,10 +35,10 @@
 
 ## M4: Connect-CRUD Mapper Codegen
 
-- **Status:** pending
+- **Status:** done
 - **Description:** Update the connect-crud mapper codegen to handle ref-type fields, converting between proto ref messages and UUID columns in the `toProto`, `fromCreate`, and `fromUpdate` mapper functions.
 - **Acceptance Criteria:**
-  - [ ] `toProto` maps `row.<Name>ID` to `<Ref>Ref{Id: row.<Name>ID.String()}`
-  - [ ] `fromCreate` maps `msg.Get<Ref>().GetId()` to `uuid.UUID`
-  - [ ] `fromUpdate` maps `msg.Get<Ref>().GetId()` to `uuid.UUID`
-  - [ ] Golden file tests cover ref fields in mapper output
+  - [x] `toProto` maps `row.<Name>ID` to `<Ref>Ref{Id: row.<Name>ID.String()}`
+  - [x] `fromCreate` maps `msg.Get<Ref>().GetId()` to `uuid.UUID`
+  - [x] `fromUpdate` maps `msg.Get<Ref>().GetId()` to `uuid.UUID`
+  - [x] Golden file tests cover ref fields in mapper output

@@ -239,6 +239,46 @@ func TestConnectCrudGenerator_SingleOperation(t *testing.T) {
 	assert.Contains(t, files, "internal/acme/inventory/v1/api/rpc_get_product.go")
 }
 
+func TestConnectCrudGenerator_RefFields(t *testing.T) {
+	deps := collectFileDescriptors(t,
+		"clarity/plugin/v1/options.proto",
+		"clarity/plugin/v1/entity.proto",
+	)
+
+	refFiles := testRefProtoFiles(t)
+	// Override the models file to include operations and keep only the Product entity with refs
+	refFiles[1].MessageType[0].Options = entityMessageOptionsWithOps(t,
+		pluginV1.Operation_OPERATION_CREATE,
+		pluginV1.Operation_OPERATION_GET,
+	)
+
+	req := &pluginpb.CodeGeneratorRequest{
+		FileToGenerate: []string{"acme/inventory/v1/models.proto"},
+		ProtoFile:      append(deps, refFiles...),
+	}
+
+	plugin, err := protogen.Options{}.New(req)
+	require.NoError(t, err)
+
+	gen := newTestConnectCrudGenerator("")
+	err = gen.Generate(plugin)
+	require.NoError(t, err)
+
+	resp := plugin.Response()
+	require.NotNil(t, resp)
+
+	files := make(map[string]string)
+	for _, f := range resp.GetFile() {
+		files[f.GetName()] = f.GetContent()
+	}
+
+	assert.Equal(
+		t,
+		loadConnectCrudGolden(t, "ref_mapper_product.go"),
+		files["internal/acme/inventory/v1/api/mapper_product.go"],
+	)
+}
+
 func TestConnectCrudGenerator_OutputDir(t *testing.T) {
 	deps := collectFileDescriptors(t,
 		"clarity/plugin/v1/options.proto",

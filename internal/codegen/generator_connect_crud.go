@@ -54,6 +54,8 @@ type mapperField struct {
 	SQLCName  string // PascalCase SQLC column name, e.g. "Name"
 	IsEnum    bool   // true if the field is a proto enum
 	EnumType  string // short enum type name, e.g. "Status"
+	IsRef     bool   // true if the field is a reference type
+	RefType   string // short ref type name, e.g. "CategoryRef"
 }
 
 type rpcData struct {
@@ -255,7 +257,11 @@ func extractMapperFields(msg *protogen.Message) []mapperField {
 			ProtoName: toPascalCase(string(field.Desc.Name())),
 			SQLCName:  toSQLCName(string(field.Desc.Name())),
 		}
-		if field.Desc.Kind() == protoreflect.EnumKind {
+		if clarity.IsReferenceField(field.Desc) {
+			mf.IsRef = true
+			mf.RefType = string(field.Desc.Message().Name())
+			mf.SQLCName = toSQLCName(string(field.Desc.Name()) + "_id")
+		} else if field.Desc.Kind() == protoreflect.EnumKind {
 			mf.IsEnum = true
 			mf.EnumType = string(field.Desc.Enum().Name())
 		}
