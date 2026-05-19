@@ -87,8 +87,17 @@ run = "buf format --write"
 
 [tasks."e2e:ci"]
 description = "Run all e2e tests"
+depends = ["e2e:ci:connect-crud-outbox", "e2e:ci:mcp-tools"]
+
+[tasks."e2e:ci:connect-crud-outbox"]
+description = "Run e2e tests for connect-crud-outbox (CI)"
 dir = "test/connect-crud-outbox"
 run = "go test -v -count=1 ./e2e/..."
+
+[tasks."e2e:ci:mcp-tools"]
+description = "Run e2e tests for mcp-tools (CI)"
+dir = "test/mcp-tools"
+run = "go mod tidy && go test -v -count=1 ./e2e/..."
 
 [tasks.e2e]
 description = "Run all e2e tests"

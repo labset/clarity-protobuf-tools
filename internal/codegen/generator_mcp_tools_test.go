@@ -76,19 +76,32 @@ func TestMcpToolsGenerator_AllOperations(t *testing.T) {
 		files["internal/acme/inventory/v1/mcp/registry_product.go"],
 	)
 
-	// Verify a representative MCP tool file
+	// Verify all MCP tool files
+	assert.Equal(
+		t,
+		loadMcpToolsGolden(t, "tool_create_product.go"),
+		files["internal/acme/inventory/v1/mcp/tool_create_product.go"],
+	)
 	assert.Equal(
 		t,
 		loadMcpToolsGolden(t, "tool_get_product.go"),
 		files["internal/acme/inventory/v1/mcp/tool_get_product.go"],
 	)
-
-	// Verify all MCP tool files present
-	assert.Contains(t, files, "internal/acme/inventory/v1/mcp/tool_create_product.go")
-	assert.Contains(t, files, "internal/acme/inventory/v1/mcp/tool_get_product.go")
-	assert.Contains(t, files, "internal/acme/inventory/v1/mcp/tool_list_product.go")
-	assert.Contains(t, files, "internal/acme/inventory/v1/mcp/tool_update_product.go")
-	assert.Contains(t, files, "internal/acme/inventory/v1/mcp/tool_delete_product.go")
+	assert.Equal(
+		t,
+		loadMcpToolsGolden(t, "tool_list_product.go"),
+		files["internal/acme/inventory/v1/mcp/tool_list_product.go"],
+	)
+	assert.Equal(
+		t,
+		loadMcpToolsGolden(t, "tool_update_product.go"),
+		files["internal/acme/inventory/v1/mcp/tool_update_product.go"],
+	)
+	assert.Equal(
+		t,
+		loadMcpToolsGolden(t, "tool_delete_product.go"),
+		files["internal/acme/inventory/v1/mcp/tool_delete_product.go"],
+	)
 }
 
 func TestMcpToolsGenerator_NoOperations(t *testing.T) {

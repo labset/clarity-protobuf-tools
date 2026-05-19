@@ -10,17 +10,17 @@ The clarity protobuf tools project already generates connect-crud handlers from 
 
 ### Functional
 
-- [ ] FR-1: New `mcp-tools` codegen mode that invokes the `connect-crud` generator under the hood
-- [ ] FR-2: Generate one MCP tool per CRUD operation annotated on the proto message (create, get, list, update, delete)
-- [ ] FR-3: Generate typed input/output structs per tool operation, derived from the proto request/response messages
-- [ ] FR-4: Generate tool handler functions that construct a `connect.Request`, invoke the connect-crud handler method in-process, and return the result
-- [ ] FR-5: Generate a registration function that adds all tools for an entity to an `*mcp.Server` via `mcp.AddTool`
-- [ ] FR-6: Tool names should follow a consistent convention (e.g. `create_product`, `get_product`, `list_products`, `update_product`, `delete_product`)
+- [x] FR-1: New `mcp-tools` codegen mode that invokes the `connect-crud` generator under the hood
+- [x] FR-2: Generate one MCP tool per CRUD operation annotated on the proto message (create, get, list, update, delete)
+- [x] FR-3: Generate tool handler functions that unmarshal `CallToolRequest` arguments directly into proto request types and invoke the connect service handler interface in-process
+- [x] FR-4: Generate tool handler functions that construct a `connect.Request`, invoke the connect-crud handler method in-process, and return the result as JSON text content
+- [x] FR-5: Generate a registration function that adds all tools for an entity to an `*mcp.Server` via `server.AddTool`
+- [x] FR-6: Tool names should follow a consistent convention (e.g. `create_product`, `get_product`, `list_products`, `update_product`, `delete_product`)
 
 ### Non-Functional
 
-- [ ] NFR-1: Follow existing codegen conventions — `generator_` file prefix, embedded Go templates in `templates/mcp-tools/`, golden file tests in `testdata/golden/mcp-tools/`
-- [ ] NFR-2: Templates must use Go `text/template`, no string concatenation
+- [x] NFR-1: Follow existing codegen conventions — `generator_` file prefix, embedded Go templates in `templates/mcp-tools/`, golden file tests in `testdata/golden/mcp-tools/`
+- [x] NFR-2: Templates must use Go `text/template`, no string concatenation
 
 ### Deferred
 
