@@ -1,0 +1,51 @@
+package {{ .Package }}
+
+import (
+	"context"
+
+	"connectrpc.com/connect"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"google.golang.org/protobuf/encoding/protojson"
+
+	{{ .ProtoAlias }} "{{ .ProtoImport }}"
+)
+
+type Create{{ .Model }}Input struct {
+{{- range .Fields }}
+{{- if .IsRef }}
+	{{ .Name }}ID string `json:"{{ .JSONName }}_id"`
+{{- else }}
+	{{ .Name }} {{ .GoType }} `json:"{{ .JSONName }}"`
+{{- end }}
+{{- end }}
+}
+
+func (t *{{ .ModelLower }}Tools) create{{ .Model }}(
+	ctx context.Context,
+	_ *mcp.CallToolRequest,
+	input Create{{ .Model }}Input,
+) (*mcp.CallToolResult, struct{}, error) {
+	resp, err := t.handler.Create{{ .Model }}(ctx, connect.NewRequest(&{{ .ProtoAlias }}.Create{{ .Model }}Request{
+		Item: &{{ .ProtoAlias }}.{{ .Model }}{
+{{- range .Fields }}
+{{- if .IsRef }}
+			{{ .Name }}: &{{ $.ProtoAlias }}.{{ .RefType }}{Id: input.{{ .Name }}ID},
+{{- else if .IsEnum }}
+			{{ .Name }}: {{ $.ProtoAlias }}.{{ .EnumType }}({{ $.ProtoAlias }}.{{ .EnumType }}_value[input.{{ .Name }}]),
+{{- else }}
+			{{ .Name }}: input.{{ .Name }},
+{{- end }}
+{{- end }}
+		},
+	}))
+	if err != nil {
+		return nil, struct{}{}, err
+	}
+	data, err := protojson.Marshal(resp.Msg)
+	if err != nil {
+		return nil, struct{}{}, err
+	}
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{&mcp.TextContent{Text: string(data)}},
+	}, struct{}{}, nil
+}

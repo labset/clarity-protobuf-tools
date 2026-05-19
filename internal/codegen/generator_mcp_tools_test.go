@@ -1,6 +1,7 @@
 package codegen
 
 import (
+	"os"
 	"testing"
 
 	pluginV1 "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1"
@@ -10,13 +11,20 @@ import (
 	"google.golang.org/protobuf/types/pluginpb"
 )
 
+func loadMcpToolsGolden(t *testing.T, name string) string {
+	t.Helper()
+	data, err := os.ReadFile("testdata/golden/mcp-tools/" + name)
+	require.NoError(t, err)
+	return string(data)
+}
+
 func newTestMcpToolsGenerator(outputDir string) *mcpToolsGenerator {
 	return &mcpToolsGenerator{
 		connectCrud: newTestConnectCrudGenerator(outputDir),
 	}
 }
 
-func TestMcpToolsGenerator_DelegatesToConnectCrud(t *testing.T) {
+func TestMcpToolsGenerator_AllOperations(t *testing.T) {
 	deps := collectFileDescriptors(t,
 		"clarity/plugin/v1/options.proto",
 		"clarity/plugin/v1/entity.proto",
@@ -51,45 +59,46 @@ func TestMcpToolsGenerator_DelegatesToConnectCrud(t *testing.T) {
 		files[f.GetName()] = f.GetContent()
 	}
 
-	// All connect-crud files should be present:
-	// atlas-sqlc: 5 + connect-crud: handler + mapper + 5 rpc = 7 → total 12
-	assert.Len(t, files, 12)
+	// atlas-sqlc: 5 + connect-crud: 7 + mcp-tools: 6 (5 tool files + 1 registration) = 18
+	assert.Len(t, files, 18)
 
-	// Verify connect-crud files match golden files
+	// Verify connect-crud files still present
 	assert.Equal(
 		t,
 		loadConnectCrudGolden(t, "handler_product.go"),
 		files["internal/acme/inventory/v1/api/handler_product.go"],
 	)
+
+	// Verify MCP tool files
 	assert.Equal(
 		t,
-		loadConnectCrudGolden(t, "mapper_product.go"),
-		files["internal/acme/inventory/v1/api/mapper_product.go"],
+		loadMcpToolsGolden(t, "mcp_tools_product.go"),
+		files["internal/acme/inventory/v1/api/mcp_tools_product.go"],
 	)
 	assert.Equal(
 		t,
-		loadConnectCrudGolden(t, "rpc_create_product.go"),
-		files["internal/acme/inventory/v1/api/rpc_create_product.go"],
+		loadMcpToolsGolden(t, "mcp_tool_create_product.go"),
+		files["internal/acme/inventory/v1/api/mcp_tool_create_product.go"],
 	)
 	assert.Equal(
 		t,
-		loadConnectCrudGolden(t, "rpc_get_product.go"),
-		files["internal/acme/inventory/v1/api/rpc_get_product.go"],
+		loadMcpToolsGolden(t, "mcp_tool_get_product.go"),
+		files["internal/acme/inventory/v1/api/mcp_tool_get_product.go"],
 	)
 	assert.Equal(
 		t,
-		loadConnectCrudGolden(t, "rpc_list_product.go"),
-		files["internal/acme/inventory/v1/api/rpc_list_product.go"],
+		loadMcpToolsGolden(t, "mcp_tool_list_product.go"),
+		files["internal/acme/inventory/v1/api/mcp_tool_list_product.go"],
 	)
 	assert.Equal(
 		t,
-		loadConnectCrudGolden(t, "rpc_update_product.go"),
-		files["internal/acme/inventory/v1/api/rpc_update_product.go"],
+		loadMcpToolsGolden(t, "mcp_tool_update_product.go"),
+		files["internal/acme/inventory/v1/api/mcp_tool_update_product.go"],
 	)
 	assert.Equal(
 		t,
-		loadConnectCrudGolden(t, "rpc_delete_product.go"),
-		files["internal/acme/inventory/v1/api/rpc_delete_product.go"],
+		loadMcpToolsGolden(t, "mcp_tool_delete_product.go"),
+		files["internal/acme/inventory/v1/api/mcp_tool_delete_product.go"],
 	)
 }
 
@@ -121,9 +130,45 @@ func TestMcpToolsGenerator_NoOperations(t *testing.T) {
 		files[f.GetName()] = f.GetContent()
 	}
 
-	// atlas-sqlc files present, but no connect-crud files
+	// atlas-sqlc files present, but no connect-crud or mcp-tools files
 	assert.Contains(t, files, "internal/acme/inventory/v1/sql/schema.sql")
 	assert.NotContains(t, files, "internal/acme/inventory/v1/api/handler_product.go")
+	assert.NotContains(t, files, "internal/acme/inventory/v1/api/mcp_tools_product.go")
+}
+
+func TestMcpToolsGenerator_SingleOperation(t *testing.T) {
+	deps := collectFileDescriptors(t,
+		"clarity/plugin/v1/options.proto",
+		"clarity/plugin/v1/entity.proto",
+	)
+
+	modelsFile := testConnectCrudProtoFile(t, pluginV1.Operation_OPERATION_GET)
+
+	req := &pluginpb.CodeGeneratorRequest{
+		FileToGenerate: []string{"acme/inventory/v1/models.proto"},
+		ProtoFile:      append(deps, modelsFile),
+	}
+
+	plugin, err := protogen.Options{}.New(req)
+	require.NoError(t, err)
+
+	gen := newTestMcpToolsGenerator("")
+	err = gen.Generate(plugin)
+	require.NoError(t, err)
+
+	resp := plugin.Response()
+	require.NotNil(t, resp)
+
+	files := make(map[string]string)
+	for _, f := range resp.GetFile() {
+		files[f.GetName()] = f.GetContent()
+	}
+
+	// atlas-sqlc: 5 + connect-crud: 3 (handler + mapper + 1 rpc) + mcp-tools: 2 (1 tool + 1 registration) = 10
+	assert.Len(t, files, 10)
+	assert.Contains(t, files, "internal/acme/inventory/v1/api/mcp_tool_get_product.go")
+	assert.Contains(t, files, "internal/acme/inventory/v1/api/mcp_tools_product.go")
+	assert.NotContains(t, files, "internal/acme/inventory/v1/api/mcp_tool_create_product.go")
 }
 
 func TestMcpToolsGenerator_ModeRegistration(t *testing.T) {

@@ -1,0 +1,37 @@
+package {{ .Package }}
+
+import (
+	"context"
+
+	"connectrpc.com/connect"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"google.golang.org/protobuf/encoding/protojson"
+
+	{{ .ProtoAlias }} "{{ .ProtoImport }}"
+)
+
+type List{{ .Model }}sInput struct {
+	PageSize  int32  `json:"page_size"`
+	PageToken string `json:"page_token"`
+}
+
+func (t *{{ .ModelLower }}Tools) list{{ .Model }}s(
+	ctx context.Context,
+	_ *mcp.CallToolRequest,
+	input List{{ .Model }}sInput,
+) (*mcp.CallToolResult, struct{}, error) {
+	resp, err := t.handler.List{{ .Model }}s(ctx, connect.NewRequest(&{{ .ProtoAlias }}.List{{ .Model }}sRequest{
+		PageSize:  input.PageSize,
+		PageToken: input.PageToken,
+	}))
+	if err != nil {
+		return nil, struct{}{}, err
+	}
+	data, err := protojson.Marshal(resp.Msg)
+	if err != nil {
+		return nil, struct{}{}, err
+	}
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{&mcp.TextContent{Text: string(data)}},
+	}, struct{}{}, nil
+}
