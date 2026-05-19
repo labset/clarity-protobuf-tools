@@ -46,11 +46,11 @@ type mcpRegistrationData struct {
 }
 
 var mcpToolTemplateMap = map[string]string{
-	"OPERATION_CREATE": "mcp_tool_create.go.tmpl",
-	"OPERATION_GET":    "mcp_tool_get.go.tmpl",
-	"OPERATION_LIST":   "mcp_tool_list.go.tmpl",
-	"OPERATION_UPDATE": "mcp_tool_update.go.tmpl",
-	"OPERATION_DELETE": "mcp_tool_delete.go.tmpl",
+	"OPERATION_CREATE": "tool_create.go.tmpl",
+	"OPERATION_GET":    "tool_get.go.tmpl",
+	"OPERATION_LIST":   "tool_list.go.tmpl",
+	"OPERATION_UPDATE": "tool_update.go.tmpl",
+	"OPERATION_DELETE": "tool_delete.go.tmpl",
 }
 
 func (g *mcpToolsGenerator) Generate(plugin *protogen.Plugin) error {
@@ -155,7 +155,7 @@ func renderMcpTool(tmplName string, data mcpToolData) (string, error) {
 
 func renderMcpRegistration(data mcpRegistrationData) (string, error) {
 	var buf bytes.Buffer
-	if err := mcpToolsTemplates.ExecuteTemplate(&buf, "mcp_tools.go.tmpl", data); err != nil {
+	if err := mcpToolsTemplates.ExecuteTemplate(&buf, "registry.go.tmpl", data); err != nil {
 		return "", fmt.Errorf("executing mcp registration template: %w", err)
 	}
 	return formatGo(buf.Bytes())
