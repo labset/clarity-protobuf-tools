@@ -59,7 +59,7 @@ func TestMcpToolsGenerator_AllOperations(t *testing.T) {
 		files[f.GetName()] = f.GetContent()
 	}
 
-	// atlas-sqlc: 5 + connect-crud: 7 + mcp-tools: 6 (5 tool files + 1 registration) = 18
+	// atlas-sqlc: 5 + connect-crud: 7 + mcp-tools: 6 (5 tool files + 1 registry) = 18
 	assert.Len(t, files, 18)
 
 	// Verify connect-crud files still present
@@ -69,37 +69,26 @@ func TestMcpToolsGenerator_AllOperations(t *testing.T) {
 		files["internal/acme/inventory/v1/api/handler_product.go"],
 	)
 
-	// Verify MCP tool files
+	// Verify MCP registry
 	assert.Equal(
 		t,
-		loadMcpToolsGolden(t, "mcp_tools_product.go"),
-		files["internal/acme/inventory/v1/api/mcp_tools_product.go"],
+		loadMcpToolsGolden(t, "registry_product.go"),
+		files["internal/acme/inventory/v1/mcp/registry_product.go"],
 	)
+
+	// Verify a representative MCP tool file
 	assert.Equal(
 		t,
-		loadMcpToolsGolden(t, "mcp_tool_create_product.go"),
-		files["internal/acme/inventory/v1/api/mcp_tool_create_product.go"],
+		loadMcpToolsGolden(t, "tool_get_product.go"),
+		files["internal/acme/inventory/v1/mcp/tool_get_product.go"],
 	)
-	assert.Equal(
-		t,
-		loadMcpToolsGolden(t, "mcp_tool_get_product.go"),
-		files["internal/acme/inventory/v1/api/mcp_tool_get_product.go"],
-	)
-	assert.Equal(
-		t,
-		loadMcpToolsGolden(t, "mcp_tool_list_product.go"),
-		files["internal/acme/inventory/v1/api/mcp_tool_list_product.go"],
-	)
-	assert.Equal(
-		t,
-		loadMcpToolsGolden(t, "mcp_tool_update_product.go"),
-		files["internal/acme/inventory/v1/api/mcp_tool_update_product.go"],
-	)
-	assert.Equal(
-		t,
-		loadMcpToolsGolden(t, "mcp_tool_delete_product.go"),
-		files["internal/acme/inventory/v1/api/mcp_tool_delete_product.go"],
-	)
+
+	// Verify all MCP tool files present
+	assert.Contains(t, files, "internal/acme/inventory/v1/mcp/tool_create_product.go")
+	assert.Contains(t, files, "internal/acme/inventory/v1/mcp/tool_get_product.go")
+	assert.Contains(t, files, "internal/acme/inventory/v1/mcp/tool_list_product.go")
+	assert.Contains(t, files, "internal/acme/inventory/v1/mcp/tool_update_product.go")
+	assert.Contains(t, files, "internal/acme/inventory/v1/mcp/tool_delete_product.go")
 }
 
 func TestMcpToolsGenerator_NoOperations(t *testing.T) {
@@ -130,10 +119,8 @@ func TestMcpToolsGenerator_NoOperations(t *testing.T) {
 		files[f.GetName()] = f.GetContent()
 	}
 
-	// atlas-sqlc files present, but no connect-crud or mcp-tools files
 	assert.Contains(t, files, "internal/acme/inventory/v1/sql/schema.sql")
-	assert.NotContains(t, files, "internal/acme/inventory/v1/api/handler_product.go")
-	assert.NotContains(t, files, "internal/acme/inventory/v1/api/mcp_tools_product.go")
+	assert.NotContains(t, files, "internal/acme/inventory/v1/mcp/registry_product.go")
 }
 
 func TestMcpToolsGenerator_SingleOperation(t *testing.T) {
@@ -164,11 +151,11 @@ func TestMcpToolsGenerator_SingleOperation(t *testing.T) {
 		files[f.GetName()] = f.GetContent()
 	}
 
-	// atlas-sqlc: 5 + connect-crud: 3 (handler + mapper + 1 rpc) + mcp-tools: 2 (1 tool + 1 registration) = 10
+	// atlas-sqlc: 5 + connect-crud: 3 + mcp-tools: 2 = 10
 	assert.Len(t, files, 10)
-	assert.Contains(t, files, "internal/acme/inventory/v1/api/mcp_tool_get_product.go")
-	assert.Contains(t, files, "internal/acme/inventory/v1/api/mcp_tools_product.go")
-	assert.NotContains(t, files, "internal/acme/inventory/v1/api/mcp_tool_create_product.go")
+	assert.Contains(t, files, "internal/acme/inventory/v1/mcp/tool_get_product.go")
+	assert.Contains(t, files, "internal/acme/inventory/v1/mcp/registry_product.go")
+	assert.NotContains(t, files, "internal/acme/inventory/v1/mcp/tool_create_product.go")
 }
 
 func TestMcpToolsGenerator_ModeRegistration(t *testing.T) {

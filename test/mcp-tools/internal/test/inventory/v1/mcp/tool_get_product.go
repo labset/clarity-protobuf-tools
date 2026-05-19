@@ -5,16 +5,16 @@ import (
 	"encoding/json"
 
 	"connectrpc.com/connect"
+	inventoryv1 "github.com/labset/clarity-protobuf-tools/test/mcp-tools/schema/gen/test/inventory/v1"
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
-	{{ .ProtoAlias }} "{{ .ProtoImport }}"
 )
 
-func (t *{{ .ModelSnake }}Tools) list{{ .Model }}s(ctx context.Context, req *mcpsdk.CallToolRequest) (*mcpsdk.CallToolResult, error) {
-	var protoReq {{ .ProtoAlias }}.List{{ .Model }}sRequest
+func (t *productTools) getProduct(ctx context.Context, req *mcpsdk.CallToolRequest) (*mcpsdk.CallToolResult, error) {
+	var protoReq inventoryv1.GetProductRequest
 	if err := json.Unmarshal(req.Params.Arguments, &protoReq); err != nil {
 		return nil, err
 	}
-	resp, err := t.handler.List{{ .Model }}s(ctx, connect.NewRequest(&protoReq))
+	resp, err := t.handler.GetProduct(ctx, connect.NewRequest(&protoReq))
 	if err != nil {
 		return nil, err
 	}

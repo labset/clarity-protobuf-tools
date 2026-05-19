@@ -1,24 +1,18 @@
-package {{ .Package }}
+package mcp
 
 import (
-	"{{ .StoreImport }}"
-	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/google/jsonschema-go/jsonschema"
+	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
+	{{ .ConnectAlias }} "{{ .ConnectImport }}"
 )
 
-type {{ .ModelLower }}Tools struct {
-	handler *{{ .ModelLower }}Handler
+type {{ .ModelSnake }}Tools struct {
+	handler {{ .ConnectAlias }}.{{ .Model }}ServiceHandler
 }
 
-func Register{{ .Model }}Tools(server *mcp.Server, deps {{ .Model }}Deps) {
-	t := &{{ .ModelLower }}Tools{
-		handler: &{{ .ModelLower }}Handler{
-			store: db.New(deps.Pool),
-		},
-	}
+func Register{{ .Model }}Tools(server *mcpsdk.Server, handler {{ .ConnectAlias }}.{{ .Model }}ServiceHandler) {
+	t := &{{ .ModelSnake }}Tools{handler: handler}
 {{- range .Operations }}
-	mcp.AddTool(server, &mcp.Tool{
-		Name:        "{{ .ToolName }}",
-		Description: "{{ .Description }}",
-	}, t.{{ .MethodName }})
+	server.AddTool(&mcpsdk.Tool{Name: "{{ .ToolName }}", Description: "{{ .Description }}", InputSchema: &jsonschema.Schema{Type: "object"}}, t.{{ .MethodName }})
 {{- end }}
 }

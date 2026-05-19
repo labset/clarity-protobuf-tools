@@ -1,0 +1,7 @@
+version: v2
+
+modules:
+  - path: protos
+
+deps:
+  - buf.build/labset/clarity-protobuf-tools

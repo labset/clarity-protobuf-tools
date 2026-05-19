@@ -1,35 +1,28 @@
-package {{ .Package }}
+package mcp
 
 import (
 	"context"
+	"encoding/json"
 
 	"connectrpc.com/connect"
-	"github.com/modelcontextprotocol/go-sdk/mcp"
-	"google.golang.org/protobuf/encoding/protojson"
-
+	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 	{{ .ProtoAlias }} "{{ .ProtoImport }}"
 )
 
-type Get{{ .Model }}Input struct {
-	ID string `json:"id"`
-}
-
-func (t *{{ .ModelLower }}Tools) get{{ .Model }}(
-	ctx context.Context,
-	_ *mcp.CallToolRequest,
-	input Get{{ .Model }}Input,
-) (*mcp.CallToolResult, struct{}, error) {
-	resp, err := t.handler.Get{{ .Model }}(ctx, connect.NewRequest(&{{ .ProtoAlias }}.Get{{ .Model }}Request{
-		Id: input.ID,
-	}))
-	if err != nil {
-		return nil, struct{}{}, err
+func (t *{{ .ModelSnake }}Tools) get{{ .Model }}(ctx context.Context, req *mcpsdk.CallToolRequest) (*mcpsdk.CallToolResult, error) {
+	var protoReq {{ .ProtoAlias }}.Get{{ .Model }}Request
+	if err := json.Unmarshal(req.Params.Arguments, &protoReq); err != nil {
+		return nil, err
 	}
-	data, err := protojson.Marshal(resp.Msg)
+	resp, err := t.handler.Get{{ .Model }}(ctx, connect.NewRequest(&protoReq))
 	if err != nil {
-		return nil, struct{}{}, err
+		return nil, err
 	}
-	return &mcp.CallToolResult{
-		Content: []mcp.Content{&mcp.TextContent{Text: string(data)}},
-	}, struct{}{}, nil
+	data, err := json.Marshal(resp.Msg)
+	if err != nil {
+		return nil, err
+	}
+	return &mcpsdk.CallToolResult{
+		Content: []mcpsdk.Content{&mcpsdk.TextContent{Text: string(data)}},
+	}, nil
 }

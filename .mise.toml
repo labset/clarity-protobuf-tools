@@ -92,7 +92,7 @@ run = "go test -v -count=1 ./e2e/..."
 
 [tasks.e2e]
 description = "Run all e2e tests"
-depends = ["e2e:connect-crud-outbox"]
+depends = ["e2e:connect-crud-outbox", "e2e:mcp-tools"]
 
 [tasks."e2e:connect-crud-outbox"]
 description = "Run e2e tests for connect-crud-outbox"
@@ -109,5 +109,23 @@ run = "go generate ./..."
 [tasks."e2e:connect-crud-outbox:buf"]
 description = "Run buf generate for connect-crud-outbox e2e test"
 dir = "test/connect-crud-outbox/schema"
+depends = ["install"]
+run = "buf generate"
+
+[tasks."e2e:mcp-tools"]
+description = "Run e2e tests for mcp-tools"
+dir = "test/mcp-tools"
+depends = ["e2e:mcp-tools:sqlc"]
+run = "go mod tidy && go test -v -count=1 ./e2e/..."
+
+[tasks."e2e:mcp-tools:sqlc"]
+description = "Run sqlc generate for mcp-tools e2e test"
+dir = "test/mcp-tools"
+depends = ["e2e:mcp-tools:buf"]
+run = "go generate ./..."
+
+[tasks."e2e:mcp-tools:buf"]
+description = "Run buf generate for mcp-tools e2e test"
+dir = "test/mcp-tools/schema"
 depends = ["install"]
 run = "buf generate"
