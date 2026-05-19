@@ -28,6 +28,7 @@ depends = ["go:format", "buf:format"]
 
 [tasks.build]
 description = "Build the project using goreleaser"
+depends = ["e2e"]
 run = "goreleaser build --clean --snapshot"
 
 [tasks.generate]
@@ -89,6 +90,10 @@ description = "Run sqlc generate for connect-crud-outbox e2e test"
 dir = "test/connect-crud-outbox"
 depends = ["e2e:connect-crud-outbox:buf"]
 run = "go generate ./..."
+
+[tasks.e2e]
+description = "Run all e2e tests"
+depends = ["e2e:connect-crud-outbox"]
 
 [tasks."e2e:connect-crud-outbox:buf"]
 description = "Run buf generate for connect-crud-outbox e2e test"
