@@ -162,7 +162,11 @@ func TestConnectHandlersGenerator_OutputDir(t *testing.T) {
 		files[f.GetName()] = f.GetContent()
 	}
 
-	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/api/handler_product_service.go")
+	assert.Contains(
+		t,
+		files,
+		"custom/out/internal/acme/inventory/v1/api/handler_product_service.go",
+	)
 	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/api/rpc_create_product.go")
 }
 

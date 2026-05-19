@@ -15,7 +15,8 @@ import (
 var connectHandlersTemplateFS embed.FS
 
 var connectHandlersTemplates = template.Must(
-	template.New("connect-handlers").ParseFS(connectHandlersTemplateFS, "templates/connect-handlers/*.tmpl"),
+	template.New("connect-handlers").
+		ParseFS(connectHandlersTemplateFS, "templates/connect-handlers/*.tmpl"),
 )
 
 type connectHandlersGenerator struct {
@@ -115,7 +116,8 @@ func (g *connectHandlersGenerator) Generate(plugin *protogen.Plugin) error {
 			if err != nil {
 				return err
 			}
-			if _, err := plugin.NewGeneratedFile(handlerPath, "").Write([]byte(content)); err != nil {
+			if _, err := plugin.NewGeneratedFile(handlerPath, "").
+				Write([]byte(content)); err != nil {
 				return err
 			}
 		}
