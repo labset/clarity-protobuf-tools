@@ -78,12 +78,6 @@ run = "buf format --write"
 # E2E Tasks
 ##############
 
-[tasks."e2e:connect-crud-outbox"]
-description = "Run e2e tests for connect-crud-outbox"
-dir = "test/connect-crud-outbox"
-depends = ["e2e:connect-crud-outbox:tidy"]
-run = "go test -v -count=1 ./e2e/..."
-
 [tasks."e2e:connect-crud-outbox:buf"]
 description = "Run buf generate for connect-crud-outbox e2e test"
 dir = "test/connect-crud-outbox/schema"
@@ -96,14 +90,8 @@ dir = "test/connect-crud-outbox"
 depends = ["e2e:connect-crud-outbox:buf"]
 run = "go generate ./..."
 
-[tasks."e2e:connect-crud-outbox:tidy"]
-description = "Tidy go.mod for connect-crud-outbox e2e test"
+[tasks."e2e:connect-crud-outbox"]
+description = "Run e2e tests for connect-crud-outbox"
 dir = "test/connect-crud-outbox"
 depends = ["e2e:connect-crud-outbox:sqlc"]
-run = "go mod tidy"
-
-[tasks."e2e:connect-crud-outbox:build"]
-description = "Verify generated code compiles for connect-crud-outbox e2e test"
-dir = "test/connect-crud-outbox"
-depends = ["e2e:connect-crud-outbox:tidy"]
-run = "go build ./..."
+run = "go test -v -count=1 ./e2e/..."
