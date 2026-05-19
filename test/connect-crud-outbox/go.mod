@@ -6,7 +6,7 @@ require (
 	ariga.io/atlas-go-sdk v0.7.2
 	connectrpc.com/connect v1.18.1
 	github.com/gofrs/uuid/v5 v5.3.2
-	github.com/jackc/pgx/v5 v5.7.5
+	github.com/jackc/pgx/v5 v5.9.2
 	github.com/labset/clarity-protobuf-tools v0.0.0
 	github.com/riverqueue/river v0.20.0
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.20.0
