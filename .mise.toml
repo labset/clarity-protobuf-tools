@@ -3,6 +3,8 @@ go = "1.26.2"
 buf = "1.67.0"
 golangci-lint = "2.10.0"
 goreleaser = "2.12.7"
+sqlc = "1.29.0"
+"aqua:ariga/atlas" = "1.1.0"
 
 ##############
 # Main Tasks
@@ -26,7 +28,14 @@ depends = ["go:format", "buf:format"]
 
 [tasks.build]
 description = "Build the project using goreleaser"
+depends = ["e2e"]
 run = "goreleaser build --clean --snapshot"
+
+[tasks."build:ci"]
+description = "Build the project using goreleaser"
+depends = ["e2e:ci"]
+run = "goreleaser build --clean --snapshot"
+
 
 [tasks.generate]
 description = "Generate code from proto files"
@@ -71,3 +80,34 @@ run = "buf lint"
 [tasks."buf:format"]
 description = "Format proto files in place"
 run = "buf format --write"
+
+##############
+# E2E Tasks
+##############
+
+[tasks."e2e:ci"]
+description = "Run all e2e tests"
+dir = "test/connect-crud-outbox"
+run = "go test -v -count=1 ./e2e/..."
+
+[tasks.e2e]
+description = "Run all e2e tests"
+depends = ["e2e:connect-crud-outbox"]
+
+[tasks."e2e:connect-crud-outbox"]
+description = "Run e2e tests for connect-crud-outbox"
+dir = "test/connect-crud-outbox"
+depends = ["e2e:connect-crud-outbox:sqlc"]
+run = "go test -v -count=1 ./e2e/..."
+
+[tasks."e2e:connect-crud-outbox:sqlc"]
+description = "Run sqlc generate for connect-crud-outbox e2e test"
+dir = "test/connect-crud-outbox"
+depends = ["e2e:connect-crud-outbox:buf"]
+run = "go generate ./..."
+
+[tasks."e2e:connect-crud-outbox:buf"]
+description = "Run buf generate for connect-crud-outbox e2e test"
+dir = "test/connect-crud-outbox/schema"
+depends = ["install"]
+run = "buf generate"

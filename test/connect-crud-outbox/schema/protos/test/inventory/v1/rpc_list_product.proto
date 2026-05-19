@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package test.inventory.v1;
+
+option go_package = "github.com/labset/clarity-protobuf-tools/test/connect-crud-outbox/schema/gen/test/inventory/v1;inventoryv1";
+
+import "test/inventory/v1/models.proto";
+
+message ListProductsRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message ListProductsResponse {
+  repeated Product items = 1;
+  string next_page_token = 2;
+}
