@@ -18,7 +18,7 @@ import (
 
 func TestConnectHandlers_Unimplemented(t *testing.T) {
 	mux := http.NewServeMux()
-	path, handler := api.NewProductServiceHandler()
+	path, handler := api.NewProductServiceHandler(api.ProductServiceDeps{})
 	mux.Handle(path, handler)
 
 	server := httptest.NewServer(mux)

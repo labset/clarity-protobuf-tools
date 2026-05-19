@@ -10,18 +10,18 @@ The existing `connect-crud` and `connect-crud-outbox` codegen modes generate ful
 
 ### Functional
 
-- [ ] FR-1: Add a new `connect-handlers` codegen mode to `protoc-gen-clarity`
-- [ ] FR-2: Process any proto service definition (not limited to `models.proto`)
-- [ ] FR-3: Generate output under `<output_dir>/internal/<provider>/<domain>/<version>/api/`
-- [ ] FR-4: Generate `handler_<model>.go` per service containing: a deps struct, a constructor, and Connect service handler registration
-- [ ] FR-5: Generate `rpc_<name>.go` per RPC method containing a stub implementation that returns `connect.CodeUnimplemented`
-- [ ] FR-6: Only emit files that do not already exist — never overwrite existing handler or RPC files
+- [x] FR-1: Add a new `connect-handlers` codegen mode to `protoc-gen-clarity`
+- [x] FR-2: Process any proto service definition (not limited to `models.proto`)
+- [x] FR-3: Generate output under `<output_dir>/internal/<provider>/<domain>/<version>/api/`
+- [x] FR-4: Generate `handler_<model>.go` per service containing: a deps struct, a constructor, and Connect service handler registration
+- [x] FR-5: Generate `rpc_<name>.go` per RPC method containing a stub implementation that returns `connect.CodeUnimplemented`
+- [x] FR-6: Only emit files that do not already exist — never overwrite existing handler or RPC files
 
 ### Non-Functional
 
-- [ ] NFR-1: Follow existing codegen conventions — `generator_` file prefix, embedded templates, golden file tests
-- [ ] NFR-2: Templates live under `internal/codegen/templates/connect-handlers/`
-- [ ] NFR-3: Golden test files scoped under `internal/codegen/testdata/golden/connect-handlers/`
+- [x] NFR-1: Follow existing codegen conventions — `generator_` file prefix, embedded templates, golden file tests
+- [x] NFR-2: Templates live under `internal/codegen/templates/connect-handlers/`
+- [x] NFR-3: Golden test files scoped under `internal/codegen/testdata/golden/connect-handlers/`
 
 ### Deferred
 

@@ -8,12 +8,15 @@ import (
 	{{ .ConnectAlias }} "{{ .ConnectImport }}"
 )
 
+// {{ .Service }}Deps holds the dependencies for the {{ .Service }} handler.
+type {{ .Service }}Deps struct{}
+
 type {{ .ServiceLower }}Handler struct {
 	{{ .ConnectAlias }}.Unimplemented{{ .Service }}Handler
 }
 
 // New{{ .Service }}Handler creates a Connect handler for {{ .Service }}.
-func New{{ .Service }}Handler(opts ...connect.HandlerOption) (string, http.Handler) {
+func New{{ .Service }}Handler(deps {{ .Service }}Deps, opts ...connect.HandlerOption) (string, http.Handler) {
 	h := &{{ .ServiceLower }}Handler{}
 	return {{ .ConnectAlias }}.New{{ .Service }}Handler(h, opts...)
 }
