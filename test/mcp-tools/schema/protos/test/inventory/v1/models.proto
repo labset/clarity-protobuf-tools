@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package test.inventory.v1;
+
+import "clarity/plugin/v1/options.proto";
+import "clarity/plugin/v1/entity.proto";
+
+option go_package = "github.com/labset/clarity-protobuf-tools/test/mcp-tools/schema/gen/test/inventory/v1;inventoryv1";
+
+enum ProductStatus {
+  PRODUCT_STATUS_UNSPECIFIED = 0;
+  PRODUCT_STATUS_ACTIVE = 1;
+  PRODUCT_STATUS_ARCHIVED = 2;
+}
+
+message Product {
+  option (clarity.plugin.v1.message) = {
+    role: ROLE_ENTITY
+    operations: [
+      OPERATION_CREATE,
+      OPERATION_GET,
+      OPERATION_LIST,
+      OPERATION_UPDATE,
+      OPERATION_DELETE
+    ]
+  };
+
+  clarity.plugin.v1.Entity entity = 1;
+  string name = 2;
+  int64 price = 3;
+  ProductStatus status = 4;
+}

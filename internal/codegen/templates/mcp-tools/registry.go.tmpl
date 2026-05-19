@@ -1,0 +1,18 @@
+package mcp
+
+import (
+	"github.com/google/jsonschema-go/jsonschema"
+	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
+	{{ .ConnectAlias }} "{{ .ConnectImport }}"
+)
+
+type {{ .ModelSnake }}Tools struct {
+	handler {{ .ConnectAlias }}.{{ .Model }}ServiceHandler
+}
+
+func Register{{ .Model }}Tools(server *mcpsdk.Server, handler {{ .ConnectAlias }}.{{ .Model }}ServiceHandler) {
+	t := &{{ .ModelSnake }}Tools{handler: handler}
+{{- range .Operations }}
+	server.AddTool(&mcpsdk.Tool{Name: "{{ .ToolName }}", Description: "{{ .Description }}", InputSchema: &jsonschema.Schema{Type: "object"}}, t.{{ .MethodName }})
+{{- end }}
+}
