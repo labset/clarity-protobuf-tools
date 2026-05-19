@@ -101,7 +101,8 @@ func (g *mcpToolsGenerator) Generate(plugin *protogen.Plugin) error {
 					return err
 				}
 				filePath := fmt.Sprintf("%s/tool_%s_%s.go", outDir, opName, modelSnake)
-				if _, err := plugin.NewGeneratedFile(filePath, "").Write([]byte(content)); err != nil {
+				if _, err := plugin.NewGeneratedFile(filePath, "").
+					Write([]byte(content)); err != nil {
 					return err
 				}
 
@@ -121,7 +122,8 @@ func (g *mcpToolsGenerator) Generate(plugin *protogen.Plugin) error {
 				return err
 			}
 			regPath := fmt.Sprintf("%s/registry_%s.go", outDir, modelSnake)
-			if _, err := plugin.NewGeneratedFile(regPath, "").Write([]byte(regContent)); err != nil {
+			if _, err := plugin.NewGeneratedFile(regPath, "").
+				Write([]byte(regContent)); err != nil {
 				return err
 			}
 		}
