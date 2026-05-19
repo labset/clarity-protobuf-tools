@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package test.inventory.v1;
+
+option go_package = "github.com/labset/clarity-protobuf-tools/test/connect-handlers/schema/gen/test/inventory/v1;inventoryv1";
+
+message CreateProductRequest {
+  string name = 1;
+  int64 price = 2;
+}
+
+message CreateProductResponse {
+  string id = 1;
+}
+
+message GetProductRequest {
+  string id = 1;
+}
+
+message GetProductResponse {
+  string id = 1;
+  string name = 2;
+  int64 price = 3;
+}
+
+message ListProductsRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message ListProductsResponse {
+  repeated GetProductResponse items = 1;
+  string next_page_token = 2;
+}
+
+service ProductService {
+  rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);
+  rpc GetProduct(GetProductRequest) returns (GetProductResponse);
+  rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);
+}

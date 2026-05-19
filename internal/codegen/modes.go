@@ -40,6 +40,8 @@ func GeneratorForMode(raw string) (Generator, error) {
 				goModule:  p.goModule,
 			},
 		}, nil
+	case "connect-handlers":
+		return &connectHandlersGenerator{outputDir: p.outputDir}, nil
 	default:
 		return nil, fmt.Errorf("unknown mode %q", p.mode)
 	}

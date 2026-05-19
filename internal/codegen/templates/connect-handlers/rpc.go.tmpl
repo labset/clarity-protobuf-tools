@@ -1,0 +1,16 @@
+package {{ .Package }}
+
+import (
+	"context"
+
+	"connectrpc.com/connect"
+
+	{{ .ProtoAlias }} "{{ .ProtoImport }}"
+)
+
+func (h *{{ .ServiceLower }}Handler) {{ .Method }}(
+	_ context.Context,
+	_ *connect.Request[{{ .ProtoAlias }}.{{ .RequestType }}],
+) (*connect.Response[{{ .ProtoAlias }}.{{ .ResponseType }}], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, nil)
+}

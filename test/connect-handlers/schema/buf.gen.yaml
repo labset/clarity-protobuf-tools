@@ -1,0 +1,19 @@
+version: v2
+inputs:
+  - directory: protos
+
+plugins:
+  # Go protobuf
+  - remote: buf.build/protocolbuffers/go
+    out: gen
+    opt: paths=source_relative
+
+  # Connect Go
+  - remote: buf.build/connectrpc/go
+    out: gen
+    opt: paths=source_relative
+
+  # Clarity connect-handlers
+  - local: protoc-gen-clarity
+    out: ..
+    opt: mode=connect-handlers

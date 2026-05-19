@@ -30,6 +30,7 @@ mise run lint:fix      # auto-fix lint issues
 # e2e tests (requires Docker for testcontainers)
 mise run e2e                        # run all e2e tests (generates + tests)
 mise run e2e:connect-crud-outbox    # run connect-crud-outbox e2e only
+mise run e2e:connect-handlers       # run connect-handlers e2e only
 mise run e2e:mcp-tools              # run mcp-tools e2e only
 
 # full build (unit tests + e2e + goreleaser)
@@ -222,6 +223,27 @@ Generated services follow these conventions:
 - **Get/Update/Delete** requests validate `id` with `buf.validate` UUID constraint
 - **Delete** is always soft delete at the API layer
 
+### connect-handlers
+
+Generates Go [Connect-RPC](https://connectrpc.com/) handler scaffolding with stub implementations returning `Unimplemented` for any proto service definition. Unlike other modes, this processes services rather than entities and is standalone — no SQLC or Atlas composition.
+
+```
+protoc --clarity_out=. --clarity_opt=mode=connect-handlers proto/*.proto
+```
+
+For a service `ProductService` in package `acme.inventory.v1` with RPCs `CreateProduct`, `GetProduct`, `ListProducts`, generates:
+
+```
+internal/acme/inventory/v1/
+└── api/
+    ├── handler_product_service.go   # ProductServiceDeps, constructor, Connect registration
+    ├── rpc_create_product.go        # stub returning CodeUnimplemented
+    ├── rpc_get_product.go           # stub returning CodeUnimplemented
+    └── rpc_list_products.go         # stub returning CodeUnimplemented
+```
+
+Generated files are scaffolding — they are only emitted if they do not already exist on disk, so developers can safely edit them without regeneration overwriting their changes.
+
 ### connect-crud
 
 Generates Go [Connect-RPC](https://connectrpc.com/) handler implementations from `ROLE_ENTITY` messages, backed by SQLC-generated stores. This mode includes `atlas-sqlc` under the hood, so a single invocation produces the full stack: SQL schema, SQLC queries/config, Atlas migration config, and Connect handler code.
@@ -311,6 +333,20 @@ plugins:
       - mode=atlas-sqlc
 ```
 
+#### connect-handlers mode
+
+```yaml
+version: v2
+inputs:
+  - directory: protos
+
+plugins:
+  - local: protoc-gen-clarity
+    out: .
+    opt:
+      - mode=connect-handlers
+```
+
 #### connect-crud mode
 
 ```yaml
@@ -398,5 +434,6 @@ mise run go:test       # run unit tests
 mise run go:vet        # run go vet
 mise run e2e           # run all e2e tests
 mise run e2e:connect-crud-outbox  # e2e for connect-crud-outbox
+mise run e2e:connect-handlers     # e2e for connect-handlers
 mise run e2e:mcp-tools            # e2e for mcp-tools
 ```

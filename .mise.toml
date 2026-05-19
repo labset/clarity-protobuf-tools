@@ -87,7 +87,7 @@ run = "buf format --write"
 
 [tasks."e2e:ci"]
 description = "Run all e2e tests"
-depends = ["e2e:ci:connect-crud-outbox", "e2e:ci:mcp-tools"]
+depends = ["e2e:ci:connect-crud-outbox", "e2e:ci:mcp-tools", "e2e:ci:connect-handlers"]
 
 [tasks."e2e:ci:connect-crud-outbox"]
 description = "Run e2e tests for connect-crud-outbox (CI)"
@@ -101,7 +101,7 @@ run = "go mod tidy && go test -v -count=1 ./e2e/..."
 
 [tasks.e2e]
 description = "Run all e2e tests"
-depends = ["e2e:connect-crud-outbox", "e2e:mcp-tools"]
+depends = ["e2e:connect-crud-outbox", "e2e:mcp-tools", "e2e:connect-handlers"]
 
 [tasks."e2e:connect-crud-outbox"]
 description = "Run e2e tests for connect-crud-outbox"
@@ -138,3 +138,20 @@ description = "Run buf generate for mcp-tools e2e test"
 dir = "test/mcp-tools/schema"
 depends = ["install"]
 run = "buf generate"
+
+[tasks."e2e:connect-handlers"]
+description = "Run e2e tests for connect-handlers"
+dir = "test/connect-handlers"
+depends = ["e2e:connect-handlers:buf"]
+run = "go mod tidy && go test -v -count=1 ./e2e/..."
+
+[tasks."e2e:connect-handlers:buf"]
+description = "Run buf generate for connect-handlers e2e test"
+dir = "test/connect-handlers/schema"
+depends = ["install"]
+run = "buf generate"
+
+[tasks."e2e:ci:connect-handlers"]
+description = "Run e2e tests for connect-handlers (CI)"
+dir = "test/connect-handlers"
+run = "go mod tidy && go test -v -count=1 ./e2e/..."
