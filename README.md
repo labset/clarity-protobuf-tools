@@ -22,9 +22,18 @@ mise run install       # install plugins locally
 
 ```bash
 # edit proto annotations or codegen templates, then:
-mise run build         # compile + test
+mise run go:test       # run unit tests only
+mise run go:vet        # run go vet
 mise run lint          # lint Go + proto files
 mise run lint:fix      # auto-fix lint issues
+
+# e2e tests (requires Docker for testcontainers)
+mise run e2e                        # run all e2e tests (generates + tests)
+mise run e2e:connect-crud-outbox    # run connect-crud-outbox e2e only
+mise run e2e:mcp-tools              # run mcp-tools e2e only
+
+# full build (unit tests + e2e + goreleaser)
+mise run build
 ```
 
 ## Proto Annotations
@@ -353,7 +362,7 @@ mise install
 ```bash
 mise run deps          # download Go module dependencies
 mise run generate      # generate Go code from proto files
-mise run build         # build binaries (includes tests)
+mise run build         # full build (unit tests + e2e + goreleaser)
 mise run install       # install plugins locally
 mise run lint          # lint Go + proto files
 mise run lint:fix      # auto-fix lint issues
@@ -362,6 +371,9 @@ mise run buf:lint      # lint proto files only
 mise run buf:format    # format proto files only
 mise run go:lint       # lint Go code only
 mise run go:format     # format Go code only
-mise run go:test       # run Go tests
+mise run go:test       # run unit tests
 mise run go:vet        # run go vet
+mise run e2e           # run all e2e tests
+mise run e2e:connect-crud-outbox  # e2e for connect-crud-outbox
+mise run e2e:mcp-tools            # e2e for mcp-tools
 ```
