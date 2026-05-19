@@ -10,24 +10,24 @@ The `connect-crud-outbox` codegen mode is fully implemented with golden file tes
 
 ### Functional
 
-- [ ] FR-1: Standalone Go module at `test/connect-crud-outbox/` with its own `go.mod`, proto definitions, `buf.yaml`, and `buf.gen.yaml`
-- [ ] FR-2: Test proto defines at least one entity message (e.g. `Product`) with all five operations (create, get, list, update, delete) using clarity plugin options
-- [ ] FR-3: `buf generate` produces: protobuf Go code, Connect Go code, and clarity `connect-crud-outbox` output (schema SQL, SQLC config, handler, mapper, RPCs, outbox events)
-- [ ] FR-4: SQLC runs against the generated SQL to produce the `db` package
-- [ ] FR-5: Testcontainers spins up a Postgres instance for each test run
-- [ ] FR-6: River migrations applied to the test database before tests
-- [ ] FR-7: Schema SQL (generated) applied to the test database before tests
-- [ ] FR-8: Connect server started with real `pgxpool.Pool` + `river.Client[pgx.Tx]`, serving on a test HTTP server
-- [ ] FR-9: Tests exercise Create, Get, List, Update (with field mask), and Delete via Connect client
-- [ ] FR-10: Tests assert CRUD responses are correct (returned entities, not-found errors, pagination)
-- [ ] FR-11: Tests assert River jobs are enqueued in `river_job` table with correct `kind` and `args` for create/update/delete operations
-- [ ] FR-12: Tests assert no River jobs enqueued for get/list operations
+- [x] FR-1: Standalone Go module at `test/connect-crud-outbox/` with its own `go.mod`, proto definitions, `buf.yaml`, and `buf.gen.yaml`
+- [x] FR-2: Test proto defines at least one entity message (e.g. `Product`) with all five operations (create, get, list, update, delete) using clarity plugin options
+- [x] FR-3: `buf generate` produces: protobuf Go code, Connect Go code, and clarity `connect-crud-outbox` output (schema SQL, SQLC config, handler, mapper, RPCs, outbox events)
+- [x] FR-4: SQLC runs against the generated SQL to produce the `db` package
+- [x] FR-5: Testcontainers spins up a Postgres instance for each test run
+- [x] FR-6: River migrations applied to the test database before tests
+- [x] FR-7: Schema SQL (generated) applied to the test database before tests
+- [x] FR-8: Connect server started with real `pgxpool.Pool` + `river.Client[pgx.Tx]`, serving on a test HTTP server
+- [x] FR-9: Tests exercise Create, Get, List, Update (with field mask), and Delete via Connect client
+- [x] FR-10: Tests assert CRUD responses are correct (returned entities, not-found errors, pagination)
+- [x] FR-11: Tests assert River jobs are enqueued in `river_job` table with correct `kind` and `args` for create/update/delete operations
+- [x] FR-12: Tests assert no River jobs enqueued for get/list operations
 
 ### Non-Functional
 
-- [ ] NFR-1: Module uses a `mise run` task to orchestrate the generate + SQLC + test pipeline
-- [ ] NFR-2: Tests use `testify` assert/require
-- [ ] NFR-3: Generated code is gitignored (only protos, buf config, and test files are committed)
+- [x] NFR-1: Module uses a `mise run` task to orchestrate the generate + SQLC + test pipeline
+- [x] NFR-2: Tests use `testify` assert/require
+- [x] NFR-3: Generated code is committed to track the impact of plugin changes in diffs
 
 ### Deferred
 
