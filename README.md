@@ -116,7 +116,35 @@ When an entity field uses a ref type:
 
 ## Lint Plugin
 
-The `clarity-lint-plugin` validates:
+The `clarity-lint-plugin` is a [buf lint plugin](https://buf.build/docs/lint/plugins) that validates clarity-annotated proto messages. Install it locally, then configure it in your `buf.yaml`:
+
+```bash
+# install the plugin (must be on your PATH)
+go install github.com/labset/clarity-protobuf-tools/cmd/clarity-lint-plugin@latest
+```
+
+```yaml
+# buf.yaml
+version: v2
+
+modules:
+  - path: protos
+
+deps:
+  - buf.build/labset/clarity-protobuf-tools
+
+lint:
+  use:
+    - STANDARD
+  plugins:
+    - plugin: clarity-lint-plugin
+```
+
+Run linting with:
+
+```bash
+buf lint
+```
 
 ### Rules
 
@@ -253,28 +281,6 @@ Generated handlers:
 
 ## Usage with Buf
 
-### buf.yaml
-
-```yaml
-version: v2
-
-modules:
-  - path: protos
-
-deps:
-  - buf.build/labset/clarity-protobuf-tools
-
-lint:
-  use:
-    - STANDARD
-  plugins:
-    - plugin: clarity-lint-plugin
-
-breaking:
-  use:
-    - FILE
-```
-
 ### buf.gen.yaml
 
 #### sqlc mode
@@ -317,6 +323,23 @@ plugins:
     out: .
     opt:
       - mode=connect-crud
+      - go_module=github.com/acme/app
+```
+
+#### mcp-tools mode
+
+Generates MCP tool wrappers that invoke connect-crud handlers in-process. Includes `connect-crud` under the hood.
+
+```yaml
+version: v2
+inputs:
+  - directory: protos
+
+plugins:
+  - local: protoc-gen-clarity
+    out: .
+    opt:
+      - mode=mcp-tools
       - go_module=github.com/acme/app
 ```
 
