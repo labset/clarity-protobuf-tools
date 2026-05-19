@@ -14,7 +14,7 @@ import (
 )
 
 func TestUpdateProduct_FieldMask(t *testing.T) {
-	env := setupTestEnv(t)
+	env := setupTest(t)
 	ctx := context.Background()
 
 	created, err := env.client.CreateProduct(ctx, connect.NewRequest(&inventoryv1.CreateProductRequest{
@@ -58,7 +58,7 @@ func TestUpdateProduct_FieldMask(t *testing.T) {
 }
 
 func TestUpdateProduct_NotFound(t *testing.T) {
-	env := setupTestEnv(t)
+	env := setupTest(t)
 	ctx := context.Background()
 
 	_, err := env.client.UpdateProduct(ctx, connect.NewRequest(&inventoryv1.UpdateProductRequest{

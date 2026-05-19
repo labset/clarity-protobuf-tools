@@ -3,9 +3,11 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"testing"
 	"time"
 
@@ -24,6 +26,8 @@ import (
 	"github.com/labset/clarity-protobuf-tools/test/connect-crud-outbox/schema/gen/test/inventory/v1/inventoryv1connect"
 )
 
+var shared *testEnv
+
 type testEnv struct {
 	pool   *pgxpool.Pool
 	river  *river.Client[pgx.Tx]
@@ -31,8 +35,7 @@ type testEnv struct {
 	client inventoryv1connect.ProductServiceClient
 }
 
-func setupTestEnv(t *testing.T) *testEnv {
-	t.Helper()
+func TestMain(m *testing.M) {
 	ctx := context.Background()
 
 	// Start Postgres container
@@ -47,34 +50,46 @@ func setupTestEnv(t *testing.T) *testEnv {
 				WithStartupTimeout(30*time.Second),
 		),
 	)
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		require.NoError(t, pgContainer.Terminate(context.Background()))
-	})
+	if err != nil {
+		log.Fatalf("starting postgres container: %v", err)
+	}
 
 	connStr, err := pgContainer.ConnectionString(ctx, "sslmode=disable")
-	require.NoError(t, err)
+	if err != nil {
+		log.Fatalf("getting connection string: %v", err)
+	}
 
 	pool, err := pgxpool.New(ctx, connStr)
-	require.NoError(t, err)
-	t.Cleanup(pool.Close)
+	if err != nil {
+		log.Fatalf("creating pool: %v", err)
+	}
 
 	// Create a dev database for atlas schema normalization
 	_, err = pool.Exec(ctx, "CREATE DATABASE atlas_dev")
-	require.NoError(t, err)
+	if err != nil {
+		log.Fatalf("creating atlas_dev database: %v", err)
+	}
 
 	// Run River migrations
 	riverMigrator, err := rivermigrate.New(riverpgxv5.New(pool), nil)
-	require.NoError(t, err)
+	if err != nil {
+		log.Fatalf("creating river migrator: %v", err)
+	}
 	_, err = riverMigrator.Migrate(ctx, rivermigrate.DirectionUp, nil)
-	require.NoError(t, err)
+	if err != nil {
+		log.Fatalf("running river migrations: %v", err)
+	}
 
 	// Apply generated schema via atlas
 	devURL, err := replaceDBName(connStr, "atlas_dev")
-	require.NoError(t, err)
+	if err != nil {
+		log.Fatalf("building dev URL: %v", err)
+	}
 
 	atlasClient, err := atlasexec.NewClient("../internal/test/inventory/v1", "atlas")
-	require.NoError(t, err)
+	if err != nil {
+		log.Fatalf("creating atlas client: %v", err)
+	}
 
 	_, err = atlasClient.SchemaApply(ctx, &atlasexec.SchemaApplyParams{
 		URL:         connStr,
@@ -83,11 +98,15 @@ func setupTestEnv(t *testing.T) *testEnv {
 		Schema:      []string{"test_inventory_v1"},
 		AutoApprove: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		log.Fatalf("applying schema: %v", err)
+	}
 
 	// Create River client (no workers — we only inspect enqueued jobs)
 	riverClient, err := river.NewClient(riverpgxv5.New(pool), &river.Config{})
-	require.NoError(t, err)
+	if err != nil {
+		log.Fatalf("creating river client: %v", err)
+	}
 
 	// Start Connect server
 	mux := http.NewServeMux()
@@ -97,19 +116,32 @@ func setupTestEnv(t *testing.T) *testEnv {
 	})
 	mux.Handle(path, handler)
 	server := httptest.NewServer(mux)
-	t.Cleanup(server.Close)
 
-	client := inventoryv1connect.NewProductServiceClient(
-		http.DefaultClient,
-		server.URL,
-	)
-
-	return &testEnv{
+	shared = &testEnv{
 		pool:   pool,
 		river:  riverClient,
 		server: server,
-		client: client,
+		client: inventoryv1connect.NewProductServiceClient(http.DefaultClient, server.URL),
 	}
+
+	code := m.Run()
+
+	server.Close()
+	pool.Close()
+	_ = pgContainer.Terminate(ctx)
+	os.Exit(code)
+}
+
+func setupTest(t *testing.T) *testEnv {
+	t.Helper()
+	t.Cleanup(func() {
+		ctx := context.Background()
+		_, err := shared.pool.Exec(ctx, "TRUNCATE test_inventory_v1.product")
+		require.NoError(t, err)
+		_, err = shared.pool.Exec(ctx, "DELETE FROM river_job")
+		require.NoError(t, err)
+	})
+	return shared
 }
 
 func replaceDBName(connStr, dbName string) (string, error) {

@@ -12,7 +12,7 @@ import (
 )
 
 func TestGetProduct(t *testing.T) {
-	env := setupTestEnv(t)
+	env := setupTest(t)
 	ctx := context.Background()
 
 	created, err := env.client.CreateProduct(ctx, connect.NewRequest(&inventoryv1.CreateProductRequest{
@@ -37,7 +37,7 @@ func TestGetProduct(t *testing.T) {
 }
 
 func TestGetProduct_NoOutboxEvent(t *testing.T) {
-	env := setupTestEnv(t)
+	env := setupTest(t)
 	ctx := context.Background()
 
 	created, err := env.client.CreateProduct(ctx, connect.NewRequest(&inventoryv1.CreateProductRequest{
@@ -65,7 +65,7 @@ func TestGetProduct_NoOutboxEvent(t *testing.T) {
 }
 
 func TestGetProduct_NotFound(t *testing.T) {
-	env := setupTestEnv(t)
+	env := setupTest(t)
 	ctx := context.Background()
 
 	_, err := env.client.GetProduct(ctx, connect.NewRequest(&inventoryv1.GetProductRequest{

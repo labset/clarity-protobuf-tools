@@ -12,7 +12,7 @@ import (
 )
 
 func TestListProducts_Pagination(t *testing.T) {
-	env := setupTestEnv(t)
+	env := setupTest(t)
 	ctx := context.Background()
 
 	// Create 3 products

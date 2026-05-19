@@ -13,7 +13,7 @@ import (
 )
 
 func TestCreateProduct(t *testing.T) {
-	env := setupTestEnv(t)
+	env := setupTest(t)
 	ctx := context.Background()
 
 	resp, err := env.client.CreateProduct(ctx, connect.NewRequest(&inventoryv1.CreateProductRequest{

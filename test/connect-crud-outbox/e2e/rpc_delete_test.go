@@ -13,7 +13,7 @@ import (
 )
 
 func TestDeleteProduct(t *testing.T) {
-	env := setupTestEnv(t)
+	env := setupTest(t)
 	ctx := context.Background()
 
 	created, err := env.client.CreateProduct(ctx, connect.NewRequest(&inventoryv1.CreateProductRequest{
@@ -52,7 +52,7 @@ func TestDeleteProduct(t *testing.T) {
 }
 
 func TestDeleteProduct_NotFound(t *testing.T) {
-	env := setupTestEnv(t)
+	env := setupTest(t)
 	ctx := context.Background()
 
 	_, err := env.client.DeleteProduct(ctx, connect.NewRequest(&inventoryv1.DeleteProductRequest{
