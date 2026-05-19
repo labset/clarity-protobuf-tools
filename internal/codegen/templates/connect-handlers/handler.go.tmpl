@@ -1,0 +1,19 @@
+package {{ .Package }}
+
+import (
+	"net/http"
+
+	"connectrpc.com/connect"
+
+	{{ .ConnectAlias }} "{{ .ConnectImport }}"
+)
+
+type {{ .ServiceLower }}Handler struct {
+	{{ .ConnectAlias }}.Unimplemented{{ .Service }}Handler
+}
+
+// New{{ .Service }}Handler creates a Connect handler for {{ .Service }}.
+func New{{ .Service }}Handler(opts ...connect.HandlerOption) (string, http.Handler) {
+	h := &{{ .ServiceLower }}Handler{}
+	return {{ .ConnectAlias }}.New{{ .Service }}Handler(h, opts...)
+}
