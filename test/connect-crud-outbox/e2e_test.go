@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -25,6 +26,27 @@ import (
 	inventoryv1 "github.com/labset/clarity-protobuf-tools/test/connect-crud-outbox/schema/gen/test/inventory/v1"
 	"github.com/labset/clarity-protobuf-tools/test/connect-crud-outbox/schema/gen/test/inventory/v1/inventoryv1connect"
 )
+
+type riverJob struct {
+	Kind string
+	Args json.RawMessage
+}
+
+func queryRiverJobs(t *testing.T, ctx context.Context, pool *pgxpool.Pool) []riverJob {
+	t.Helper()
+	rows, err := pool.Query(ctx, "SELECT kind, args FROM river_job ORDER BY id")
+	require.NoError(t, err)
+	defer rows.Close()
+
+	var jobs []riverJob
+	for rows.Next() {
+		var j riverJob
+		require.NoError(t, rows.Scan(&j.Kind, &j.Args))
+		jobs = append(jobs, j)
+	}
+	require.NoError(t, rows.Err())
+	return jobs
+}
 
 type testEnv struct {
 	pool   *pgxpool.Pool
@@ -120,6 +142,16 @@ func TestCreateProduct(t *testing.T) {
 	assert.Equal(t, inventoryv1.ProductStatus_PRODUCT_STATUS_ACTIVE, item.GetStatus())
 	assert.NotNil(t, item.GetEntity().GetCreatedAt())
 	assert.NotNil(t, item.GetEntity().GetUpdatedAt())
+
+	// Verify outbox event
+	jobs := queryRiverJobs(t, ctx, env.pool)
+	require.Len(t, jobs, 1)
+	assert.Equal(t, "create_product", jobs[0].Kind)
+
+	var args map[string]any
+	require.NoError(t, json.Unmarshal(jobs[0].Args, &args))
+	assert.Equal(t, item.GetEntity().GetId(), args["entity_id"])
+	assert.NotEmpty(t, args["occurred_at"])
 }
 
 func TestGetProduct(t *testing.T) {
@@ -145,6 +177,34 @@ func TestGetProduct(t *testing.T) {
 	assert.Equal(t, id, item.GetEntity().GetId())
 	assert.Equal(t, "Gadget", item.GetName())
 	assert.Equal(t, int64(2999), item.GetPrice())
+}
+
+func TestGetProduct_NoOutboxEvent(t *testing.T) {
+	env := setupTestEnv(t)
+	ctx := context.Background()
+
+	created, err := env.client.CreateProduct(ctx, connect.NewRequest(&inventoryv1.CreateProductRequest{
+		Item: &inventoryv1.Product{
+			Name:   "ReadOnly",
+			Price:  100,
+			Status: inventoryv1.ProductStatus_PRODUCT_STATUS_ACTIVE,
+		},
+	}))
+	require.NoError(t, err)
+	id := created.Msg.GetItem().GetEntity().GetId()
+
+	// Get should not enqueue a job
+	_, err = env.client.GetProduct(ctx, connect.NewRequest(&inventoryv1.GetProductRequest{Id: id}))
+	require.NoError(t, err)
+
+	// List should not enqueue a job
+	_, err = env.client.ListProducts(ctx, connect.NewRequest(&inventoryv1.ListProductsRequest{PageSize: 10}))
+	require.NoError(t, err)
+
+	// Only the create job should exist
+	jobs := queryRiverJobs(t, ctx, env.pool)
+	require.Len(t, jobs, 1)
+	assert.Equal(t, "create_product", jobs[0].Kind)
 }
 
 func TestGetProduct_NotFound(t *testing.T) {
@@ -220,6 +280,20 @@ func TestUpdateProduct_FieldMask(t *testing.T) {
 	assert.Equal(t, "Updated", item.GetName())
 	assert.Equal(t, int64(500), item.GetPrice())
 	assert.Equal(t, inventoryv1.ProductStatus_PRODUCT_STATUS_ACTIVE, item.GetStatus())
+
+	// Verify outbox events: create + update
+	jobs := queryRiverJobs(t, ctx, env.pool)
+	require.Len(t, jobs, 2)
+	assert.Equal(t, "create_product", jobs[0].Kind)
+	assert.Equal(t, "update_product", jobs[1].Kind)
+
+	var args map[string]any
+	require.NoError(t, json.Unmarshal(jobs[1].Args, &args))
+	assert.Equal(t, id, args["entity_id"])
+	assert.NotEmpty(t, args["occurred_at"])
+	fieldMask, ok := args["field_mask"].([]any)
+	require.True(t, ok)
+	assert.Equal(t, []any{"name"}, fieldMask)
 }
 
 func TestUpdateProduct_NotFound(t *testing.T) {
@@ -262,6 +336,17 @@ func TestDeleteProduct(t *testing.T) {
 	}))
 	require.Error(t, err)
 	assert.Equal(t, connect.CodeNotFound, connect.CodeOf(err))
+
+	// Verify outbox events: create + delete
+	jobs := queryRiverJobs(t, ctx, env.pool)
+	require.Len(t, jobs, 2)
+	assert.Equal(t, "create_product", jobs[0].Kind)
+	assert.Equal(t, "delete_product", jobs[1].Kind)
+
+	var args map[string]any
+	require.NoError(t, json.Unmarshal(jobs[1].Args, &args))
+	assert.Equal(t, id, args["entity_id"])
+	assert.NotEmpty(t, args["occurred_at"])
 }
 
 func TestDeleteProduct_NotFound(t *testing.T) {
