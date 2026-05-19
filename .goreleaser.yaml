@@ -30,7 +30,7 @@ builds:
 
 archives:
   - id: protoc-gen-clarity
-    builds: [protoc-gen-clarity]
+    ids: [protoc-gen-clarity]
     formats: [tar.gz]
     name_template: >-
       protoc-gen-clarity_
@@ -44,7 +44,7 @@ archives:
         formats: [zip]
 
   - id: clarity-lint-plugin
-    builds: [clarity-lint-plugin]
+    ids: [clarity-lint-plugin]
     formats: [tar.gz]
     name_template: >-
       clarity-lint-plugin_
