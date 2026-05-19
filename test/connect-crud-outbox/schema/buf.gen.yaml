@@ -1,0 +1,19 @@
+version: v2
+inputs:
+  - directory: protos
+
+plugins:
+  # Go protobuf
+  - remote: buf.build/protocolbuffers/go
+    out: gen
+    opt: paths=source_relative
+
+  # Connect Go
+  - remote: buf.build/connectrpc/go
+    out: gen
+    opt: paths=source_relative
+
+  # Clarity connect-crud-outbox
+  - local: protoc-gen-clarity
+    out: ..
+    opt: mode=connect-crud-outbox,go_module=github.com/labset/clarity-protobuf-tools/test/connect-crud-outbox

@@ -1,0 +1,3 @@
+schema/gen/
+internal/
+!internal/test/inventory/v1/generate.go
