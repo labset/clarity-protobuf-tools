@@ -30,6 +30,16 @@ func GeneratorForMode(raw string) (Generator, error) {
 			atlasSqlc: &atlasSqlcGenerator{sqlc: &sqlcGenerator{outputDir: p.outputDir}},
 			goModule:  p.goModule,
 		}, nil
+	case "mcp-tools":
+		if p.goModule == "" {
+			return nil, fmt.Errorf("mcp-tools mode requires go_module parameter")
+		}
+		return &mcpToolsGenerator{
+			connectCrud: &connectCrudGenerator{
+				atlasSqlc: &atlasSqlcGenerator{sqlc: &sqlcGenerator{outputDir: p.outputDir}},
+				goModule:  p.goModule,
+			},
+		}, nil
 	default:
 		return nil, fmt.Errorf("unknown mode %q", p.mode)
 	}
