@@ -157,8 +157,17 @@ func (g *kafkaWorkerGenerator) Generate(plugin *protogen.Plugin) error {
 					OpTitle:      op.Title,
 					HasFieldMask: op.HasFieldMask,
 				}
-				if err := g.writeTemplate(plugin, "worker_op.go.tmpl", opData,
-					fmt.Sprintf("%s/worker_%s_%s.go", workersDir, op.Lower, modelSnake)); err != nil {
+				if err := g.writeTemplate(
+					plugin,
+					"worker_op.go.tmpl",
+					opData,
+					fmt.Sprintf(
+						"%s/worker_%s_%s.go",
+						workersDir,
+						op.Lower,
+						modelSnake,
+					),
+				); err != nil {
 					return err
 				}
 			}
@@ -181,8 +190,17 @@ func (g *kafkaWorkerGenerator) Generate(plugin *protogen.Plugin) error {
 					SubLower:      lower,
 					SubTitle:      title,
 				}
-				if err := g.writeTemplate(plugin, "consumer_sub.go.tmpl", subData,
-					fmt.Sprintf("%s/consumer_%s_%s.go", consumersDir, lower, modelSnake)); err != nil {
+				if err := g.writeTemplate(
+					plugin,
+					"consumer_sub.go.tmpl",
+					subData,
+					fmt.Sprintf(
+						"%s/consumer_%s_%s.go",
+						consumersDir,
+						lower,
+						modelSnake,
+					),
+				); err != nil {
 					return err
 				}
 			}
@@ -201,7 +219,12 @@ func (g *kafkaWorkerGenerator) Generate(plugin *protogen.Plugin) error {
 	return nil
 }
 
-func (g *kafkaWorkerGenerator) writeTemplate(plugin *protogen.Plugin, tmpl string, data any, path string) error {
+func (g *kafkaWorkerGenerator) writeTemplate(
+	plugin *protogen.Plugin,
+	tmpl string,
+	data any,
+	path string,
+) error {
 	var buf bytes.Buffer
 	if err := kafkaWorkerTemplates.ExecuteTemplate(&buf, tmpl, data); err != nil {
 		return fmt.Errorf("executing %s template: %w", tmpl, err)

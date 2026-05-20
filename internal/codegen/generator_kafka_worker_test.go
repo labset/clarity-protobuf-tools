@@ -93,7 +93,12 @@ func testKafkaWorkerProtoFile(
 	}
 }
 
-func runKafkaWorkerGenerator(t *testing.T, gen *kafkaWorkerGenerator, ops []pluginV1.Operation, subs []pluginV1.Subscriber) map[string]string {
+func runKafkaWorkerGenerator(
+	t *testing.T,
+	gen *kafkaWorkerGenerator,
+	ops []pluginV1.Operation,
+	subs []pluginV1.Subscriber,
+) map[string]string {
 	t.Helper()
 	deps := collectFileDescriptors(t,
 		"clarity/plugin/v1/options.proto",
@@ -214,9 +219,17 @@ func TestKafkaWorkerGenerator_OutputDir(t *testing.T) {
 	files := runKafkaWorkerGenerator(t, newTestKafkaWorkerGenerator("custom/out"), ops, subs)
 
 	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/workers/register_product.go")
-	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/workers/worker_create_product.go")
+	assert.Contains(
+		t,
+		files,
+		"custom/out/internal/acme/inventory/v1/workers/worker_create_product.go",
+	)
 	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/workers/envelope.go")
-	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/consumers/consumer_audit_product.go")
+	assert.Contains(
+		t,
+		files,
+		"custom/out/internal/acme/inventory/v1/consumers/consumer_audit_product.go",
+	)
 
 	workerContent := files["custom/out/internal/acme/inventory/v1/workers/worker_create_product.go"]
 	assert.Contains(t, workerContent,
