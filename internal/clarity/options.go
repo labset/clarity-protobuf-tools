@@ -82,3 +82,20 @@ func Operations(md protoreflect.MessageDescriptor) []pluginV1.Operation {
 	}
 	return clarityOpts.GetOperations()
 }
+
+// Subscribers returns the subscribers configured for a message descriptor.
+func Subscribers(md protoreflect.MessageDescriptor) []pluginV1.Subscriber {
+	opts, ok := md.Options().(*descriptorpb.MessageOptions)
+	if !ok {
+		return nil
+	}
+	if !proto.HasExtension(opts, pluginV1.E_Message) {
+		return nil
+	}
+	ext := proto.GetExtension(opts, pluginV1.E_Message)
+	clarityOpts, ok := ext.(*pluginV1.ClarityMessageOptions)
+	if !ok || clarityOpts == nil {
+		return nil
+	}
+	return clarityOpts.GetSubscribers()
+}

@@ -1,0 +1,55 @@
+package {{ .Package }}
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+
+	"github.com/riverqueue/river"
+	"github.com/segmentio/kafka-go"
+
+	"{{ .OutboxImport }}"
+)
+
+const {{ .ModelLower }}Topic = "{{ .Domain }}.{{ .ModelSnake }}.events.{{ .Version }}"
+
+// {{ .Model }}WorkerDeps holds dependencies for {{ .Model }} Kafka workers.
+type {{ .Model }}WorkerDeps struct {
+	Writer *kafka.Writer
+}
+
+// Register{{ .Model }}Workers registers River workers that publish {{ .Model }} outbox events to Kafka.
+func Register{{ .Model }}Workers(workers *river.Workers, deps {{ .Model }}WorkerDeps) {
+{{- range .Operations }}
+	river.AddWorker(workers, &{{ .Lower }}{{ $.Model }}Worker{writer: deps.Writer})
+{{- end }}
+}
+{{- range .Operations }}
+
+type {{ .Lower }}{{ $.Model }}Worker struct {
+	river.WorkerDefaults[outbox.{{ .Title }}{{ $.Model }}EventArgs]
+	writer *kafka.Writer
+}
+
+func (w *{{ .Lower }}{{ $.Model }}Worker) Work(ctx context.Context, job *river.Job[outbox.{{ .Title }}{{ $.Model }}EventArgs]) error {
+	envelope := EventEnvelope{
+		EntityID:   job.Args.EntityID.String(),
+		Operation:  "{{ .Lower }}",
+{{- if .HasFieldMask }}
+		FieldMask:  job.Args.FieldMask,
+{{- end }}
+		OccurredAt: job.Args.OccurredAt,
+	}
+
+	data, err := json.Marshal(envelope)
+	if err != nil {
+		return fmt.Errorf("marshaling {{ .Lower }} {{ $.ModelSnake }} event: %w", err)
+	}
+
+	return w.writer.WriteMessages(ctx, kafka.Message{
+		Topic: {{ $.ModelLower }}Topic,
+		Key:   []byte(envelope.EntityID),
+		Value: data,
+	})
+}
+{{- end }}

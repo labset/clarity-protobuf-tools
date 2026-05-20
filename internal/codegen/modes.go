@@ -42,6 +42,14 @@ func GeneratorForMode(raw string) (Generator, error) {
 		}, nil
 	case "connect-handlers":
 		return &connectHandlersGenerator{outputDir: p.outputDir}, nil
+	case "kafka-worker":
+		if p.goModule == "" {
+			return nil, fmt.Errorf("kafka-worker mode requires go_module parameter")
+		}
+		return &kafkaWorkerGenerator{
+			goModule:  p.goModule,
+			outputDir: p.outputDir,
+		}, nil
 	default:
 		return nil, fmt.Errorf("unknown mode %q", p.mode)
 	}

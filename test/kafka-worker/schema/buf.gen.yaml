@@ -1,0 +1,9 @@
+version: v2
+inputs:
+  - directory: protos
+
+plugins:
+  # Clarity kafka-worker
+  - local: protoc-gen-clarity
+    out: ..
+    opt: mode=kafka-worker,go_module=github.com/labset/clarity-protobuf-tools/test/kafka-worker
