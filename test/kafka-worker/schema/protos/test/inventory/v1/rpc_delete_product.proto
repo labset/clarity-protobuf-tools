@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package test.inventory.v1;
+
+option go_package = "github.com/labset/clarity-protobuf-tools/test/kafka-worker/schema/gen/test/inventory/v1;inventoryv1";
+
+import "test/inventory/v1/models.proto";
+
+message DeleteProductRequest {
+  string id = 1;
+}
+
+message DeleteProductResponse {}

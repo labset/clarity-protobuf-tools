@@ -31,6 +31,7 @@ mise run lint:fix      # auto-fix lint issues
 mise run e2e                        # run all e2e tests (generates + tests)
 mise run e2e:connect-crud-outbox    # run connect-crud-outbox e2e only
 mise run e2e:connect-handlers       # run connect-handlers e2e only
+mise run e2e:kafka-worker           # run kafka-worker e2e only
 mise run e2e:mcp-tools              # run mcp-tools e2e only
 
 # full build (unit tests + e2e + goreleaser)
@@ -49,6 +50,7 @@ message Product {
   option (clarity.plugin.v1.message) = {
     role: ROLE_ENTITY
     operations: [OPERATION_CREATE, OPERATION_GET, OPERATION_LIST, OPERATION_UPDATE, OPERATION_DELETE]
+    subscribers: [SUBSCRIBER_AUDIT, SUBSCRIBER_INDEX]
   };
 
   clarity.plugin.v1.Entity entity = 1;
@@ -75,6 +77,17 @@ message Product {
 | `OPERATION_DELETE` | Generate a soft-delete RPC with validated id |
 
 Operations are opt-in — only specified operations produce service output.
+
+### Subscribers
+
+| Subscriber | Description |
+|------------|-------------|
+| `SUBSCRIBER_AUDIT` | Generates an audit consumer group for the entity |
+| `SUBSCRIBER_INDEX` | Generates a search index consumer group for the entity |
+| `SUBSCRIBER_WEBHOOK` | Generates a webhook consumer group for the entity |
+| `SUBSCRIBER_NOTIFICATION` | Generates a notification consumer group for the entity |
+
+Subscribers are opt-in and only meaningful when the entity has mutating operations. They drive the `kafka-worker` codegen mode — see below.
 
 ### Field Annotations
 
@@ -281,6 +294,59 @@ Generated handlers:
 - Create the SQLC store once in the constructor from `*pgxpool.Pool`
 - Use consistent Connect error codes: `CodeNotFound`, `CodeInvalidArgument`, `CodeAlreadyExists`
 
+### connect-crud-outbox
+
+Extends `connect-crud` with transactional outbox events using [River](https://riverqueue.com/) queue. Mutating operations (create, update, delete) are wrapped in a Postgres transaction that atomically enqueues a River job alongside the data change.
+
+```
+protoc --clarity_out=. --clarity_opt=mode=connect-crud-outbox,go_module=github.com/acme/app proto/*.proto
+```
+
+Generates everything from `connect-crud` plus:
+
+```
+internal/acme/inventory/v1/
+└── outbox/
+    ├── event_create_product.go    # CreateProductEventArgs (EntityID, OccurredAt)
+    ├── event_update_product.go    # UpdateProductEventArgs (EntityID, FieldMask, OccurredAt)
+    └── event_delete_product.go    # DeleteProductEventArgs (EntityID, OccurredAt)
+```
+
+Handler differences from `connect-crud`:
+- Deps include `*river.Client[pgx.Tx]` alongside `*pgxpool.Pool`
+- Create/Update/Delete RPCs wrap SQLC call + `river.InsertTx` in a single transaction
+- Get/List RPCs remain unchanged
+
+### kafka-worker
+
+Generates [River](https://riverqueue.com/) workers that publish outbox events to [Kafka](https://kafka.apache.org/) topics, and typed consumer group stubs driven by the `subscribers` annotation. Requires `connect-crud-outbox` to have generated the outbox events.
+
+```
+protoc --clarity_out=. --clarity_opt=mode=kafka-worker,go_module=github.com/acme/app proto/*.proto
+```
+
+For a message with `subscribers: [SUBSCRIBER_AUDIT, SUBSCRIBER_INDEX]` and all mutating operations, generates:
+
+```
+internal/acme/inventory/v1/
+├── workers/
+│   ├── envelope.go                # EventEnvelope type (shared)
+│   ├── register_product.go        # topic const, ProductWorkerDeps, RegisterProductWorkers()
+│   ├── worker_create_product.go   # River worker → Kafka for create events
+│   ├── worker_update_product.go   # River worker → Kafka for update events
+│   └── worker_delete_product.go   # River worker → Kafka for delete events
+└── consumers/
+    ├── consumer_audit_product.go  # ProductAuditHandler interface + RunProductAuditConsumer()
+    └── consumer_index_product.go  # ProductIndexHandler interface + RunProductIndexConsumer()
+```
+
+Key behaviours:
+- Topic naming: `<domain>.<entity_snake>.events.<version>` (e.g. `inventory.product.events.v1`)
+- Message key is entity ID for per-entity ordering within a partition
+- Consumer group ID: `<domain>.<entity_snake>.<subscriber>` (e.g. `inventory.product.audit`)
+- No output when `subscribers` is empty or entity has no mutating operations
+- Uses `segmentio/kafka-go` (pure Go, no CGO)
+
 ### Type Mapping (sqlc/atlas-sqlc)
 
 | Proto Type | PostgreSQL Type |
@@ -362,6 +428,44 @@ plugins:
       - go_module=github.com/acme/app
 ```
 
+#### connect-crud-outbox mode
+
+```yaml
+version: v2
+inputs:
+  - directory: protos
+
+plugins:
+  - local: protoc-gen-clarity
+    out: .
+    opt:
+      - mode=connect-crud-outbox
+      - go_module=github.com/acme/app
+```
+
+#### kafka-worker mode
+
+Typically used alongside `connect-crud-outbox` which generates the outbox events that kafka-worker consumes:
+
+```yaml
+version: v2
+inputs:
+  - directory: protos
+
+plugins:
+  - local: protoc-gen-clarity
+    out: .
+    opt:
+      - mode=connect-crud-outbox
+      - go_module=github.com/acme/app
+
+  - local: protoc-gen-clarity
+    out: .
+    opt:
+      - mode=kafka-worker
+      - go_module=github.com/acme/app
+```
+
 #### mcp-tools mode
 
 Generates MCP tool wrappers that invoke connect-crud handlers in-process. Includes `connect-crud` under the hood.
@@ -435,5 +539,6 @@ mise run go:vet        # run go vet
 mise run e2e           # run all e2e tests
 mise run e2e:connect-crud-outbox  # e2e for connect-crud-outbox
 mise run e2e:connect-handlers     # e2e for connect-handlers
+mise run e2e:kafka-worker         # e2e for kafka-worker
 mise run e2e:mcp-tools            # e2e for mcp-tools
 ```
