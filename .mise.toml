@@ -154,8 +154,14 @@ run = "buf generate"
 [tasks."e2e:kafka-worker"]
 description = "Run e2e tests for kafka-worker"
 dir = "test/kafka-worker"
-depends = ["e2e:kafka-worker:buf"]
+depends = ["e2e:kafka-worker:sqlc"]
 run = "go mod tidy && go test -v -count=1 ./e2e/..."
+
+[tasks."e2e:kafka-worker:sqlc"]
+description = "Run sqlc generate for kafka-worker e2e test"
+dir = "test/kafka-worker"
+depends = ["e2e:kafka-worker:buf"]
+run = "go generate ./..."
 
 [tasks."e2e:kafka-worker:buf"]
 description = "Run buf generate for kafka-worker e2e test"

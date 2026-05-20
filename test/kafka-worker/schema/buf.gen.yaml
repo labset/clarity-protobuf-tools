@@ -3,7 +3,22 @@ inputs:
   - directory: protos
 
 plugins:
-  # Clarity kafka-worker
+  # Go protobuf
+  - remote: buf.build/protocolbuffers/go
+    out: gen
+    opt: paths=source_relative
+
+  # Connect Go
+  - remote: buf.build/connectrpc/go
+    out: gen
+    opt: paths=source_relative
+
+  # Clarity connect-crud-outbox (generates outbox events, handlers, sqlc, atlas)
+  - local: protoc-gen-clarity
+    out: ..
+    opt: mode=connect-crud-outbox,go_module=github.com/labset/clarity-protobuf-tools/test/kafka-worker
+
+  # Clarity kafka-worker (generates workers + consumers)
   - local: protoc-gen-clarity
     out: ..
     opt: mode=kafka-worker,go_module=github.com/labset/clarity-protobuf-tools/test/kafka-worker
