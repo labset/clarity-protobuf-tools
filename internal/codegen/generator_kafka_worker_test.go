@@ -93,12 +93,34 @@ func testKafkaWorkerProtoFile(
 	}
 }
 
-func TestKafkaWorkerGenerator_AllOperations(t *testing.T) {
+func runKafkaWorkerGenerator(t *testing.T, gen *kafkaWorkerGenerator, ops []pluginV1.Operation, subs []pluginV1.Subscriber) map[string]string {
+	t.Helper()
 	deps := collectFileDescriptors(t,
 		"clarity/plugin/v1/options.proto",
 		"clarity/plugin/v1/entity.proto",
 	)
+	modelsFile := testKafkaWorkerProtoFile(t, ops, subs)
+	req := &pluginpb.CodeGeneratorRequest{
+		FileToGenerate: []string{"acme/inventory/v1/models.proto"},
+		ProtoFile:      append(deps, modelsFile),
+	}
+	plugin, err := protogen.Options{}.New(req)
+	require.NoError(t, err)
 
+	err = gen.Generate(plugin)
+	require.NoError(t, err)
+
+	resp := plugin.Response()
+	require.NotNil(t, resp)
+
+	files := make(map[string]string)
+	for _, f := range resp.GetFile() {
+		files[f.GetName()] = f.GetContent()
+	}
+	return files
+}
+
+func TestKafkaWorkerGenerator_AllOperations(t *testing.T) {
 	allOps := []pluginV1.Operation{
 		pluginV1.Operation_OPERATION_CREATE,
 		pluginV1.Operation_OPERATION_GET,
@@ -110,213 +132,99 @@ func TestKafkaWorkerGenerator_AllOperations(t *testing.T) {
 		pluginV1.Subscriber_SUBSCRIBER_AUDIT,
 		pluginV1.Subscriber_SUBSCRIBER_INDEX,
 	}
-	modelsFile := testKafkaWorkerProtoFile(t, allOps, subs)
 
-	req := &pluginpb.CodeGeneratorRequest{
-		FileToGenerate: []string{"acme/inventory/v1/models.proto"},
-		ProtoFile:      append(deps, modelsFile),
-	}
+	files := runKafkaWorkerGenerator(t, newTestKafkaWorkerGenerator(""), allOps, subs)
 
-	plugin, err := protogen.Options{}.New(req)
-	require.NoError(t, err)
+	// envelope + register + 3 workers + 2 consumers = 7
+	assert.Len(t, files, 7)
 
-	gen := newTestKafkaWorkerGenerator("")
-	err = gen.Generate(plugin)
-	require.NoError(t, err)
-
-	resp := plugin.Response()
-	require.NotNil(t, resp)
-
-	files := make(map[string]string)
-	for _, f := range resp.GetFile() {
-		files[f.GetName()] = f.GetContent()
-	}
-
-	// worker + consumer + envelope = 3
-	assert.Len(t, files, 3)
-
-	assert.Equal(
-		t,
-		loadKafkaWorkerGolden(t, "worker_product.go"),
-		files["internal/acme/inventory/v1/workers/worker_product.go"],
-	)
-	assert.Equal(
-		t,
-		loadKafkaWorkerGolden(t, "consumer_product.go"),
-		files["internal/acme/inventory/v1/workers/consumer_product.go"],
-	)
-	assert.Equal(
-		t,
+	// Workers
+	assert.Equal(t,
 		loadKafkaWorkerGolden(t, "envelope.go"),
 		files["internal/acme/inventory/v1/workers/envelope.go"],
+	)
+	assert.Equal(t,
+		loadKafkaWorkerGolden(t, "register_product.go"),
+		files["internal/acme/inventory/v1/workers/register_product.go"],
+	)
+	assert.Equal(t,
+		loadKafkaWorkerGolden(t, "worker_create_product.go"),
+		files["internal/acme/inventory/v1/workers/worker_create_product.go"],
+	)
+	assert.Equal(t,
+		loadKafkaWorkerGolden(t, "worker_update_product.go"),
+		files["internal/acme/inventory/v1/workers/worker_update_product.go"],
+	)
+	assert.Equal(t,
+		loadKafkaWorkerGolden(t, "worker_delete_product.go"),
+		files["internal/acme/inventory/v1/workers/worker_delete_product.go"],
+	)
+
+	// Consumers
+	assert.Equal(t,
+		loadKafkaWorkerGolden(t, "consumer_audit_product.go"),
+		files["internal/acme/inventory/v1/consumers/consumer_audit_product.go"],
+	)
+	assert.Equal(t,
+		loadKafkaWorkerGolden(t, "consumer_index_product.go"),
+		files["internal/acme/inventory/v1/consumers/consumer_index_product.go"],
 	)
 }
 
 func TestKafkaWorkerGenerator_NoSubscribers(t *testing.T) {
-	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
-	)
-
-	allOps := []pluginV1.Operation{
+	ops := []pluginV1.Operation{
 		pluginV1.Operation_OPERATION_CREATE,
 		pluginV1.Operation_OPERATION_GET,
 	}
-	modelsFile := testKafkaWorkerProtoFile(t, allOps, nil)
-
-	req := &pluginpb.CodeGeneratorRequest{
-		FileToGenerate: []string{"acme/inventory/v1/models.proto"},
-		ProtoFile:      append(deps, modelsFile),
-	}
-
-	plugin, err := protogen.Options{}.New(req)
-	require.NoError(t, err)
-
-	gen := newTestKafkaWorkerGenerator("")
-	err = gen.Generate(plugin)
-	require.NoError(t, err)
-
-	resp := plugin.Response()
-	require.NotNil(t, resp)
-
-	files := make(map[string]string)
-	for _, f := range resp.GetFile() {
-		files[f.GetName()] = f.GetContent()
-	}
-
+	files := runKafkaWorkerGenerator(t, newTestKafkaWorkerGenerator(""), ops, nil)
 	assert.Len(t, files, 0)
 }
 
 func TestKafkaWorkerGenerator_CreateOnly(t *testing.T) {
-	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
-	)
+	ops := []pluginV1.Operation{pluginV1.Operation_OPERATION_CREATE}
+	subs := []pluginV1.Subscriber{pluginV1.Subscriber_SUBSCRIBER_AUDIT}
 
-	ops := []pluginV1.Operation{
-		pluginV1.Operation_OPERATION_CREATE,
-	}
-	subs := []pluginV1.Subscriber{
-		pluginV1.Subscriber_SUBSCRIBER_AUDIT,
-	}
-	modelsFile := testKafkaWorkerProtoFile(t, ops, subs)
+	files := runKafkaWorkerGenerator(t, newTestKafkaWorkerGenerator(""), ops, subs)
 
-	req := &pluginpb.CodeGeneratorRequest{
-		FileToGenerate: []string{"acme/inventory/v1/models.proto"},
-		ProtoFile:      append(deps, modelsFile),
-	}
-
-	plugin, err := protogen.Options{}.New(req)
-	require.NoError(t, err)
-
-	gen := newTestKafkaWorkerGenerator("")
-	err = gen.Generate(plugin)
-	require.NoError(t, err)
-
-	resp := plugin.Response()
-	require.NotNil(t, resp)
-
-	files := make(map[string]string)
-	for _, f := range resp.GetFile() {
-		files[f.GetName()] = f.GetContent()
-	}
-
-	// worker + consumer + envelope = 3
-	assert.Len(t, files, 3)
-	assert.Contains(t, files, "internal/acme/inventory/v1/workers/worker_product.go")
-	assert.Contains(t, files, "internal/acme/inventory/v1/workers/consumer_product.go")
-	assert.Contains(t, files, "internal/acme/inventory/v1/workers/envelope.go")
-
-	workerContent := files["internal/acme/inventory/v1/workers/worker_product.go"]
-	assert.Contains(t, workerContent, "createProductWorker")
-	assert.NotContains(t, workerContent, "updateProductWorker")
-	assert.NotContains(t, workerContent, "deleteProductWorker")
-
-	consumerContent := files["internal/acme/inventory/v1/workers/consumer_product.go"]
-	assert.Contains(t, consumerContent, "ProductAuditHandler")
-	assert.NotContains(t, consumerContent, "ProductIndexHandler")
+	// envelope + register + 1 worker + 1 consumer = 4
+	assert.Len(t, files, 4)
+	assert.Contains(t, files, "internal/acme/inventory/v1/workers/register_product.go")
+	assert.Contains(t, files, "internal/acme/inventory/v1/workers/worker_create_product.go")
+	assert.NotContains(t, files, "internal/acme/inventory/v1/workers/worker_update_product.go")
+	assert.NotContains(t, files, "internal/acme/inventory/v1/workers/worker_delete_product.go")
+	assert.Contains(t, files, "internal/acme/inventory/v1/consumers/consumer_audit_product.go")
+	assert.NotContains(t, files, "internal/acme/inventory/v1/consumers/consumer_index_product.go")
 }
 
 func TestKafkaWorkerGenerator_ReadOnlyOpsWithSubscribers(t *testing.T) {
-	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
-	)
-
 	ops := []pluginV1.Operation{
 		pluginV1.Operation_OPERATION_GET,
 		pluginV1.Operation_OPERATION_LIST,
 	}
-	subs := []pluginV1.Subscriber{
-		pluginV1.Subscriber_SUBSCRIBER_AUDIT,
-	}
-	modelsFile := testKafkaWorkerProtoFile(t, ops, subs)
+	subs := []pluginV1.Subscriber{pluginV1.Subscriber_SUBSCRIBER_AUDIT}
 
-	req := &pluginpb.CodeGeneratorRequest{
-		FileToGenerate: []string{"acme/inventory/v1/models.proto"},
-		ProtoFile:      append(deps, modelsFile),
-	}
-
-	plugin, err := protogen.Options{}.New(req)
-	require.NoError(t, err)
-
-	gen := newTestKafkaWorkerGenerator("")
-	err = gen.Generate(plugin)
-	require.NoError(t, err)
-
-	resp := plugin.Response()
-	require.NotNil(t, resp)
-
-	files := make(map[string]string)
-	for _, f := range resp.GetFile() {
-		files[f.GetName()] = f.GetContent()
-	}
-
+	files := runKafkaWorkerGenerator(t, newTestKafkaWorkerGenerator(""), ops, subs)
 	assert.Len(t, files, 0)
 }
 
 func TestKafkaWorkerGenerator_OutputDir(t *testing.T) {
-	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
+	ops := []pluginV1.Operation{pluginV1.Operation_OPERATION_CREATE}
+	subs := []pluginV1.Subscriber{pluginV1.Subscriber_SUBSCRIBER_AUDIT}
+
+	files := runKafkaWorkerGenerator(t, newTestKafkaWorkerGenerator("custom/out"), ops, subs)
+
+	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/workers/register_product.go")
+	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/workers/worker_create_product.go")
+	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/workers/envelope.go")
+	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/consumers/consumer_audit_product.go")
+
+	workerContent := files["custom/out/internal/acme/inventory/v1/workers/worker_create_product.go"]
+	assert.Contains(t, workerContent,
+		"\"github.com/acme/app/custom/out/internal/acme/inventory/v1/outbox\"",
 	)
 
-	ops := []pluginV1.Operation{
-		pluginV1.Operation_OPERATION_CREATE,
-	}
-	subs := []pluginV1.Subscriber{
-		pluginV1.Subscriber_SUBSCRIBER_AUDIT,
-	}
-	modelsFile := testKafkaWorkerProtoFile(t, ops, subs)
-
-	req := &pluginpb.CodeGeneratorRequest{
-		FileToGenerate: []string{"acme/inventory/v1/models.proto"},
-		ProtoFile:      append(deps, modelsFile),
-	}
-
-	plugin, err := protogen.Options{}.New(req)
-	require.NoError(t, err)
-
-	gen := newTestKafkaWorkerGenerator("custom/out")
-	err = gen.Generate(plugin)
-	require.NoError(t, err)
-
-	resp := plugin.Response()
-	require.NotNil(t, resp)
-
-	files := make(map[string]string)
-	for _, f := range resp.GetFile() {
-		files[f.GetName()] = f.GetContent()
-	}
-
-	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/workers/worker_product.go")
-	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/workers/consumer_product.go")
-	assert.Contains(t, files, "custom/out/internal/acme/inventory/v1/workers/envelope.go")
-
-	workerContent := files["custom/out/internal/acme/inventory/v1/workers/worker_product.go"]
-	assert.Contains(
-		t,
-		workerContent,
-		"\"github.com/acme/app/custom/out/internal/acme/inventory/v1/outbox\"",
+	consumerContent := files["custom/out/internal/acme/inventory/v1/consumers/consumer_audit_product.go"]
+	assert.Contains(t, consumerContent,
+		"\"github.com/acme/app/custom/out/internal/acme/inventory/v1/workers\"",
 	)
 }

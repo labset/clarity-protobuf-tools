@@ -1,0 +1,40 @@
+package {{ .Package }}
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+
+	"github.com/segmentio/kafka-go"
+
+	"{{ .WorkersImport }}"
+)
+
+// {{ .Model }}{{ .SubTitle }}Handler handles {{ .SubLower }} events for {{ .Model }}.
+type {{ .Model }}{{ .SubTitle }}Handler interface {
+	Handle{{ .Model }}Event(ctx context.Context, envelope workers.EventEnvelope) error
+}
+
+// Run{{ .Model }}{{ .SubTitle }}Consumer starts a Kafka consumer for {{ .Model }} {{ .SubLower }} events.
+func Run{{ .Model }}{{ .SubTitle }}Consumer(ctx context.Context, brokers []string, handler {{ .Model }}{{ .SubTitle }}Handler) error {
+	reader := kafka.NewReader(kafka.ReaderConfig{
+		Brokers: brokers,
+		Topic:   "{{ .Domain }}.{{ .ModelSnake }}.events.{{ .Version }}",
+		GroupID: "{{ .Domain }}.{{ .ModelSnake }}.{{ .SubLower }}",
+	})
+	defer reader.Close()
+
+	for {
+		msg, err := reader.ReadMessage(ctx)
+		if err != nil {
+			return err
+		}
+		var envelope workers.EventEnvelope
+		if err := json.Unmarshal(msg.Value, &envelope); err != nil {
+			return fmt.Errorf("unmarshaling {{ .ModelSnake }} event: %w", err)
+		}
+		if err := handler.Handle{{ .Model }}Event(ctx, envelope); err != nil {
+			return fmt.Errorf("handling {{ .ModelSnake }} event: %w", err)
+		}
+	}
+}

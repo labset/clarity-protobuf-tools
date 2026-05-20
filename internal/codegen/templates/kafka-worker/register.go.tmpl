@@ -1,0 +1,20 @@
+package {{ .Package }}
+
+import (
+	"github.com/riverqueue/river"
+	"github.com/segmentio/kafka-go"
+)
+
+const {{ .ModelLower }}Topic = "{{ .Domain }}.{{ .ModelSnake }}.events.{{ .Version }}"
+
+// {{ .Model }}WorkerDeps holds dependencies for {{ .Model }} Kafka workers.
+type {{ .Model }}WorkerDeps struct {
+	Writer *kafka.Writer
+}
+
+// Register{{ .Model }}Workers registers River workers that publish {{ .Model }} outbox events to Kafka.
+func Register{{ .Model }}Workers(workers *river.Workers, deps {{ .Model }}WorkerDeps) {
+{{- range .Operations }}
+	river.AddWorker(workers, &{{ .Lower }}{{ $.Model }}Worker{writer: deps.Writer})
+{{- end }}
+}

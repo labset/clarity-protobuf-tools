@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/labset/clarity-protobuf-tools/test/kafka-worker/internal/test/inventory/v1/consumers"
 	"github.com/labset/clarity-protobuf-tools/test/kafka-worker/internal/test/inventory/v1/workers"
 )
 
@@ -17,9 +18,8 @@ func TestRegisterProductWorkers(t *testing.T) {
 }
 
 func TestProductConsumerHandlerInterfaces(t *testing.T) {
-	// Verify the handler interfaces exist and are usable as types
-	var _ workers.ProductAuditHandler = (*mockAuditHandler)(nil)
-	var _ workers.ProductIndexHandler = (*mockIndexHandler)(nil)
+	var _ consumers.ProductAuditHandler = (*mockAuditHandler)(nil)
+	var _ consumers.ProductIndexHandler = (*mockIndexHandler)(nil)
 
 	require.True(t, true, "handler interfaces compile correctly")
 }

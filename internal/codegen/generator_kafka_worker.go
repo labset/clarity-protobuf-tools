@@ -23,7 +23,7 @@ type kafkaWorkerGenerator struct {
 	outputDir string
 }
 
-type kafkaWorkerData struct {
+type kafkaRegisterData struct {
 	Package      string
 	Model        string
 	ModelLower   string
@@ -40,19 +40,26 @@ type kafkaWorkerOp struct {
 	HasFieldMask bool
 }
 
-type kafkaConsumerData struct {
-	Package     string
-	Model       string
-	ModelLower  string
-	ModelSnake  string
-	Domain      string
-	Version     string
-	Subscribers []kafkaSubscriber
+type kafkaWorkerOpData struct {
+	Package      string
+	Model        string
+	ModelLower   string
+	ModelSnake   string
+	OutboxImport string
+	OpLower      string
+	OpTitle      string
+	HasFieldMask bool
 }
 
-type kafkaSubscriber struct {
-	Lower string
-	Title string
+type kafkaConsumerSubData struct {
+	Package       string
+	Model         string
+	ModelSnake    string
+	Domain        string
+	Version       string
+	WorkersImport string
+	SubLower      string
+	SubTitle      string
 }
 
 func (g *kafkaWorkerGenerator) Generate(plugin *protogen.Plugin) error {
@@ -67,6 +74,7 @@ func (g *kafkaWorkerGenerator) Generate(plugin *protogen.Plugin) error {
 			baseDir = fmt.Sprintf("%s/%s", g.outputDir, baseDir)
 		}
 		workersDir := fmt.Sprintf("%s/workers", baseDir)
+		consumersDir := fmt.Sprintf("%s/consumers", baseDir)
 
 		outboxBase := fmt.Sprintf(
 			"internal/%s/%s/%s/outbox",
@@ -76,6 +84,15 @@ func (g *kafkaWorkerGenerator) Generate(plugin *protogen.Plugin) error {
 			outboxBase = fmt.Sprintf("%s/%s", g.outputDir, outboxBase)
 		}
 		outboxImport := fmt.Sprintf("%s/%s", g.goModule, outboxBase)
+
+		workersBase := fmt.Sprintf(
+			"internal/%s/%s/%s/workers",
+			pe.meta.Provider, pe.meta.Domain, pe.meta.Version,
+		)
+		if g.outputDir != "" {
+			workersBase = fmt.Sprintf("%s/%s", g.outputDir, workersBase)
+		}
+		workersImport := fmt.Sprintf("%s/%s", g.goModule, workersBase)
 
 		hasWorkers := false
 		for _, msg := range pe.messages {
@@ -112,7 +129,8 @@ func (g *kafkaWorkerGenerator) Generate(plugin *protogen.Plugin) error {
 			modelSnake := toSnakeCase(modelName)
 			modelLower := strings.ToLower(modelName[:1]) + modelName[1:]
 
-			data := kafkaWorkerData{
+			// Generate register file
+			regData := kafkaRegisterData{
 				Package:      "workers",
 				Model:        modelName,
 				ModelLower:   modelLower,
@@ -122,55 +140,59 @@ func (g *kafkaWorkerGenerator) Generate(plugin *protogen.Plugin) error {
 				OutboxImport: outboxImport,
 				Operations:   workerOps,
 			}
-
-			content, err := renderKafkaWorker(data)
-			if err != nil {
-				return err
-			}
-			filePath := fmt.Sprintf("%s/worker_%s.go", workersDir, modelSnake)
-			if _, err := plugin.NewGeneratedFile(filePath, "").Write([]byte(content)); err != nil {
+			if err := g.writeTemplate(plugin, "register.go.tmpl", regData,
+				fmt.Sprintf("%s/register_%s.go", workersDir, modelSnake)); err != nil {
 				return err
 			}
 
-			var subs []kafkaSubscriber
+			// Generate one worker file per operation
+			for _, op := range workerOps {
+				opData := kafkaWorkerOpData{
+					Package:      "workers",
+					Model:        modelName,
+					ModelLower:   modelLower,
+					ModelSnake:   modelSnake,
+					OutboxImport: outboxImport,
+					OpLower:      op.Lower,
+					OpTitle:      op.Title,
+					HasFieldMask: op.HasFieldMask,
+				}
+				if err := g.writeTemplate(plugin, "worker_op.go.tmpl", opData,
+					fmt.Sprintf("%s/worker_%s_%s.go", workersDir, op.Lower, modelSnake)); err != nil {
+					return err
+				}
+			}
+
+			// Generate one consumer file per subscriber
 			for _, s := range subscribers {
 				if s == 0 {
 					continue
 				}
 				lower := strings.ToLower(strings.TrimPrefix(s.String(), "SUBSCRIBER_"))
 				title := strings.ToUpper(lower[:1]) + lower[1:]
-				subs = append(subs, kafkaSubscriber{Lower: lower, Title: title})
-			}
 
-			consumerData := kafkaConsumerData{
-				Package:     "workers",
-				Model:       modelName,
-				ModelLower:  modelLower,
-				ModelSnake:  modelSnake,
-				Domain:      pe.meta.Domain,
-				Version:     pe.meta.Version,
-				Subscribers: subs,
-			}
-
-			consumerContent, err := renderKafkaConsumer(consumerData)
-			if err != nil {
-				return err
-			}
-			consumerPath := fmt.Sprintf("%s/consumer_%s.go", workersDir, modelSnake)
-			if _, err := plugin.NewGeneratedFile(consumerPath, "").Write([]byte(consumerContent)); err != nil {
-				return err
+				subData := kafkaConsumerSubData{
+					Package:       "consumers",
+					Model:         modelName,
+					ModelSnake:    modelSnake,
+					Domain:        pe.meta.Domain,
+					Version:       pe.meta.Version,
+					WorkersImport: workersImport,
+					SubLower:      lower,
+					SubTitle:      title,
+				}
+				if err := g.writeTemplate(plugin, "consumer_sub.go.tmpl", subData,
+					fmt.Sprintf("%s/consumer_%s_%s.go", consumersDir, lower, modelSnake)); err != nil {
+					return err
+				}
 			}
 
 			hasWorkers = true
 		}
 
 		if hasWorkers {
-			envelopeContent, err := renderKafkaEnvelope()
-			if err != nil {
-				return err
-			}
-			envelopePath := fmt.Sprintf("%s/envelope.go", workersDir)
-			if _, err := plugin.NewGeneratedFile(envelopePath, "").Write([]byte(envelopeContent)); err != nil {
+			if err := g.writeTemplate(plugin, "envelope.go.tmpl", nil,
+				fmt.Sprintf("%s/envelope.go", workersDir)); err != nil {
 				return err
 			}
 		}
@@ -179,26 +201,15 @@ func (g *kafkaWorkerGenerator) Generate(plugin *protogen.Plugin) error {
 	return nil
 }
 
-func renderKafkaWorker(data kafkaWorkerData) (string, error) {
+func (g *kafkaWorkerGenerator) writeTemplate(plugin *protogen.Plugin, tmpl string, data any, path string) error {
 	var buf bytes.Buffer
-	if err := kafkaWorkerTemplates.ExecuteTemplate(&buf, "worker.go.tmpl", data); err != nil {
-		return "", fmt.Errorf("executing kafka worker template: %w", err)
+	if err := kafkaWorkerTemplates.ExecuteTemplate(&buf, tmpl, data); err != nil {
+		return fmt.Errorf("executing %s template: %w", tmpl, err)
 	}
-	return formatGo(buf.Bytes())
-}
-
-func renderKafkaConsumer(data kafkaConsumerData) (string, error) {
-	var buf bytes.Buffer
-	if err := kafkaWorkerTemplates.ExecuteTemplate(&buf, "consumer.go.tmpl", data); err != nil {
-		return "", fmt.Errorf("executing kafka consumer template: %w", err)
+	content, err := formatGo(buf.Bytes())
+	if err != nil {
+		return err
 	}
-	return formatGo(buf.Bytes())
-}
-
-func renderKafkaEnvelope() (string, error) {
-	var buf bytes.Buffer
-	if err := kafkaWorkerTemplates.ExecuteTemplate(&buf, "envelope.go.tmpl", nil); err != nil {
-		return "", fmt.Errorf("executing kafka envelope template: %w", err)
-	}
-	return formatGo(buf.Bytes())
+	_, err = plugin.NewGeneratedFile(path, "").Write([]byte(content))
+	return err
 }
