@@ -34,6 +34,7 @@ Kafka consumer groups are the natural fit for this pattern. A single River worke
 - [ ] DFR-2: Dead-letter topic codegen for failed consumer processing
 - [ ] DFR-3: Consumer retry policies and backoff configuration
 - [ ] DFR-4: Populate entity payload in Kafka envelope — requires worker to fetch entity from DB via store, adding store/mapper dependencies to the generated worker
+- [ ] DFR-5: Include reference fields in outbox event args — all fields with `ROLE_REFERENCE` type should be included alongside EntityID in event args (e.g. TenantID, CategoryID), regardless of `foreign_key` annotation. Requires changes to `connect-crud-outbox` event templates, then flows through to kafka-worker envelope
 
 ## Constraints
 
