@@ -12,27 +12,28 @@ Kafka consumer groups are the natural fit for this pattern. A single River worke
 
 ### Functional
 
-- [ ] FR-1: Extend `ClarityMessageOptions` with a `repeated Subscriber subscribers` field and a `Subscriber` enum (`AUDIT`, `INDEX`, `WEBHOOK`, `NOTIFICATION`)
-- [ ] FR-2: Introduce a new codegen mode `kafka-worker` that reads the `subscribers` annotation from entity messages
-- [ ] FR-3: Generate a River worker per entity that consumes the outbox event and publishes to a Kafka topic named `<domain>.<entity_snake>.events.<version>` (e.g. `inventory.product.events.v1`)
-- [ ] FR-4: Kafka message envelope includes: entity ID, operation (create/update/delete), field mask (for updates), occurred_at timestamp, and proto-JSON encoded entity payload
-- [ ] FR-5: Kafka message key is the entity ID to guarantee per-entity ordering within a partition
-- [ ] FR-6: Generate a typed consumer handler interface per subscriber per entity (e.g. `ProductAuditHandler`, `ProductIndexHandler`)
-- [ ] FR-7: Generate consumer group registration that wires handler implementations to a Kafka consumer with group ID `<domain>.<entity_snake>.<subscriber_snake>` (e.g. `inventory.product.audit`)
-- [ ] FR-8: If `subscribers` is empty or absent on an entity, the `kafka-worker` mode produces no output for that entity
+- [x] FR-1: Extend `ClarityMessageOptions` with a `repeated Subscriber subscribers` field and a `Subscriber` enum (`AUDIT`, `INDEX`, `WEBHOOK`, `NOTIFICATION`)
+- [x] FR-2: Introduce a new codegen mode `kafka-worker` that reads the `subscribers` annotation from entity messages
+- [x] FR-3: Generate a River worker per entity that consumes the outbox event and publishes to a Kafka topic named `<domain>.<entity_snake>.events.<version>` (e.g. `inventory.product.events.v1`)
+- [x] FR-4: Kafka message envelope includes: entity ID, operation (create/update/delete), field mask (for updates), occurred_at timestamp, and a `Payload` field reserved for future entity payload inclusion
+- [x] FR-5: Kafka message key is the entity ID to guarantee per-entity ordering within a partition
+- [x] FR-6: Generate a typed consumer handler interface per subscriber per entity (e.g. `ProductAuditHandler`, `ProductIndexHandler`)
+- [x] FR-7: Generate consumer group registration that wires handler implementations to a Kafka consumer with group ID `<domain>.<entity_snake>.<subscriber_snake>` (e.g. `inventory.product.audit`)
+- [x] FR-8: If `subscribers` is empty or absent on an entity, the `kafka-worker` mode produces no output for that entity
 
 ### Non-Functional
 
-- [ ] NFR-1: Follow existing codegen conventions — `generator_` file prefix, `embed` for templates, golden file tests
-- [ ] NFR-2: Templates live under `internal/codegen/templates/kafka-worker/`
-- [ ] NFR-3: Golden test files scoped under `internal/codegen/testdata/golden/kafka-worker/`
-- [ ] NFR-4: Use `segmentio/kafka-go` as the Kafka client (pure Go, no CGO dependency)
+- [x] NFR-1: Follow existing codegen conventions — `generator_` file prefix, `embed` for templates, golden file tests
+- [x] NFR-2: Templates live under `internal/codegen/templates/kafka-worker/`
+- [x] NFR-3: Golden test files scoped under `internal/codegen/testdata/golden/kafka-worker/`
+- [x] NFR-4: Use `segmentio/kafka-go` as the Kafka client (pure Go, no CGO dependency)
 
 ### Deferred
 
 - [ ] DFR-1: Schema registry integration (Confluent Schema Registry / protobuf schema evolution) — evaluate once event format stabilises
 - [ ] DFR-2: Dead-letter topic codegen for failed consumer processing
 - [ ] DFR-3: Consumer retry policies and backoff configuration
+- [ ] DFR-4: Populate entity payload in Kafka envelope — requires worker to fetch entity from DB via store, adding store/mapper dependencies to the generated worker
 
 ## Constraints
 

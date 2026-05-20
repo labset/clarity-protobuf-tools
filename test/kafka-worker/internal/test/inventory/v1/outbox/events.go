@@ -1,3 +1,5 @@
+// Manually maintained stubs mirroring connect-crud-outbox generated output.
+// Must be kept in sync with the outbox event args shape.
 package outbox
 
 import (

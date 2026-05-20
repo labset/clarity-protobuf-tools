@@ -134,6 +134,9 @@ func (g *kafkaWorkerGenerator) Generate(plugin *protogen.Plugin) error {
 
 			var subs []kafkaSubscriber
 			for _, s := range subscribers {
+				if s == 0 {
+					continue
+				}
 				lower := strings.ToLower(strings.TrimPrefix(s.String(), "SUBSCRIBER_"))
 				title := strings.ToUpper(lower[:1]) + lower[1:]
 				subs = append(subs, kafkaSubscriber{Lower: lower, Title: title})
