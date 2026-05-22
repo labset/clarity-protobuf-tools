@@ -7,12 +7,12 @@ import (
 
 	"buf.build/go/bufplugin/check"
 	"buf.build/go/bufplugin/check/checkutil"
-	"github.com/labset/clarity-protobuf-tools/internal/clarity"
+	"github.com/labset/clarity-protobuf-tools/internal/protoutil"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 var entityFileRuleSpec = &check.RuleSpec{
-	ID:      "CLARITY_ENTITY_FILE",
+	ID:      "LABSET_ENTITY_FILE",
 	Default: true,
 	Purpose: "Checks that ROLE_ENTITY is only used on messages defined in models.proto files under a <provider>.<domain>.<version> package.",
 	Type:    check.RuleTypeLint,
@@ -25,7 +25,7 @@ func checkEntityFile(
 	_ check.Request,
 	messageDescriptor protoreflect.MessageDescriptor,
 ) error {
-	if !clarity.IsEntity(messageDescriptor) {
+	if !protoutil.IsEntity(messageDescriptor) {
 		return nil
 	}
 

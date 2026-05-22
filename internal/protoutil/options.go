@@ -1,0 +1,101 @@
+package protoutil
+
+import (
+	"path"
+
+	optionsV1 "github.com/labset/clarity-protobuf-tools/api/labset/options/v1"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/descriptorpb"
+)
+
+// messageRole returns the clarity Role for a message descriptor, or ROLE_UNSPECIFIED
+// if the message has no clarity options.
+func messageRole(md protoreflect.MessageDescriptor) optionsV1.Role {
+	opts, ok := md.Options().(*descriptorpb.MessageOptions)
+	if !ok {
+		return optionsV1.Role_ROLE_UNSPECIFIED
+	}
+	if !proto.HasExtension(opts, optionsV1.E_Message) {
+		return optionsV1.Role_ROLE_UNSPECIFIED
+	}
+	ext := proto.GetExtension(opts, optionsV1.E_Message)
+	labsetOpts, ok := ext.(*optionsV1.LabsetMessageOptions)
+	if !ok || labsetOpts == nil {
+		return optionsV1.Role_ROLE_UNSPECIFIED
+	}
+	return labsetOpts.GetRole()
+}
+
+// IsEntity returns true if the message has ROLE_ENTITY.
+func IsEntity(md protoreflect.MessageDescriptor) bool {
+	return messageRole(md) == optionsV1.Role_ROLE_ENTITY
+}
+
+// IsReference returns true if the message has ROLE_REFERENCE.
+func IsReference(md protoreflect.MessageDescriptor) bool {
+	return messageRole(md) == optionsV1.Role_ROLE_REFERENCE
+}
+
+// IsReferenceField returns true if the field is a message type with ROLE_REFERENCE
+// defined in a refs.proto file.
+func IsReferenceField(fd protoreflect.FieldDescriptor) bool {
+	if fd.Kind() != protoreflect.MessageKind {
+		return false
+	}
+	if !IsReference(fd.Message()) {
+		return false
+	}
+	return path.Base(string(fd.Message().ParentFile().Path())) == "refs.proto"
+}
+
+// HasForeignKey returns true if the field has the foreign_key option set to true.
+func HasForeignKey(fd protoreflect.FieldDescriptor) bool {
+	opts, ok := fd.Options().(*descriptorpb.FieldOptions)
+	if !ok {
+		return false
+	}
+	if !proto.HasExtension(opts, optionsV1.E_Field) {
+		return false
+	}
+	ext := proto.GetExtension(opts, optionsV1.E_Field)
+	fieldOpts, ok := ext.(*optionsV1.LabsetFieldOptions)
+	if !ok || fieldOpts == nil {
+		return false
+	}
+	return fieldOpts.GetForeignKey()
+}
+
+// Operations returns the operations configured for a message descriptor.
+func Operations(md protoreflect.MessageDescriptor) []optionsV1.Operation {
+	opts, ok := md.Options().(*descriptorpb.MessageOptions)
+	if !ok {
+		return nil
+	}
+	if !proto.HasExtension(opts, optionsV1.E_Message) {
+		return nil
+	}
+	ext := proto.GetExtension(opts, optionsV1.E_Message)
+	clarityOpts, ok := ext.(*optionsV1.LabsetMessageOptions)
+	if !ok || clarityOpts == nil {
+		return nil
+	}
+	return clarityOpts.GetOperations()
+}
+
+// Subscribers returns the subscribers configured for a message descriptor.
+func Subscribers(md protoreflect.MessageDescriptor) []optionsV1.Subscriber {
+	opts, ok := md.Options().(*descriptorpb.MessageOptions)
+	if !ok {
+		return nil
+	}
+	if !proto.HasExtension(opts, optionsV1.E_Message) {
+		return nil
+	}
+	ext := proto.GetExtension(opts, optionsV1.E_Message)
+	clarityOpts, ok := ext.(*optionsV1.LabsetMessageOptions)
+	if !ok || clarityOpts == nil {
+		return nil
+	}
+	return clarityOpts.GetSubscribers()
+}

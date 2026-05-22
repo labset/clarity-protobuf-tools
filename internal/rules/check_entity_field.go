@@ -5,14 +5,14 @@ import (
 
 	"buf.build/go/bufplugin/check"
 	"buf.build/go/bufplugin/check/checkutil"
-	"github.com/labset/clarity-protobuf-tools/internal/clarity"
+	"github.com/labset/clarity-protobuf-tools/internal/protoutil"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 var entityFieldRuleSpec = &check.RuleSpec{
-	ID:      "CLARITY_ENTITY_FIELD",
+	ID:      "LABSET_ENTITY_FIELD",
 	Default: true,
-	Purpose: "Checks that messages with ROLE_ENTITY have a field named entity of type clarity.plugin.v1.Entity at field number 1.",
+	Purpose: "Checks that messages with ROLE_ENTITY have a field named entity of type labset.data.v1.Entity at field number 1.",
 	Type:    check.RuleTypeLint,
 	Handler: checkutil.NewMessageRuleHandler(checkEntityField, checkutil.WithoutImports()),
 }
@@ -23,7 +23,7 @@ func checkEntityField(
 	_ check.Request,
 	messageDescriptor protoreflect.MessageDescriptor,
 ) error {
-	if !clarity.IsEntity(messageDescriptor) {
+	if !protoutil.IsEntity(messageDescriptor) {
 		return nil
 	}
 
@@ -51,10 +51,10 @@ func checkEntityField(
 	}
 
 	if entityField.Kind() != protoreflect.MessageKind ||
-		entityField.Message().FullName() != "clarity.plugin.v1.Entity" {
+		entityField.Message().FullName() != "labset.data.v1.Entity" {
 		responseWriter.AddAnnotation(
 			check.WithMessagef(
-				"Message %q field \"entity\" must be of type clarity.plugin.v1.Entity, got %s.",
+				"Message %q field \"entity\" must be of type labset.data.v1.Entity, got %s.",
 				messageDescriptor.FullName(),
 				fieldTypeName(entityField),
 			),

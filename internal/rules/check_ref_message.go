@@ -6,12 +6,12 @@ import (
 
 	"buf.build/go/bufplugin/check"
 	"buf.build/go/bufplugin/check/checkutil"
-	"github.com/labset/clarity-protobuf-tools/internal/clarity"
+	"github.com/labset/clarity-protobuf-tools/internal/protoutil"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 var refMessageRuleSpec = &check.RuleSpec{
-	ID:      "CLARITY_REF_MESSAGE",
+	ID:      "LABSET_REF_MESSAGE",
 	Default: true,
 	Purpose: "Checks that every ROLE_ENTITY message in models.proto has a corresponding <Model>Ref message with ROLE_REFERENCE in refs.proto within the same package.",
 	Type:    check.RuleTypeLint,
@@ -24,7 +24,7 @@ func checkRefMessage(
 	request check.Request,
 	messageDescriptor protoreflect.MessageDescriptor,
 ) error {
-	if !clarity.IsEntity(messageDescriptor) {
+	if !protoutil.IsEntity(messageDescriptor) {
 		return nil
 	}
 
@@ -80,7 +80,7 @@ func checkRefMessage(
 		return nil
 	}
 
-	if !clarity.IsReference(refMsg) {
+	if !protoutil.IsReference(refMsg) {
 		responseWriter.AddAnnotation(
 			check.WithMessagef(
 				"Message %s.%s in refs.proto must have ROLE_REFERENCE.",
