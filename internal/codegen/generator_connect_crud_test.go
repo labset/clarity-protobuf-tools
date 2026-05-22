@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	pluginV1 "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1"
+	optionsV1 "github.com/labset/clarity-protobuf-tools/api/labset/options/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/compiler/protogen"
@@ -29,7 +30,7 @@ func newTestConnectCrudGenerator(outputDir string) *connectCrudGenerator {
 
 func testConnectCrudProtoFile(
 	t *testing.T,
-	ops ...pluginV1.Operation,
+	ops ...optionsV1.Operation,
 ) *descriptorpb.FileDescriptorProto {
 	t.Helper()
 	return &descriptorpb.FileDescriptorProto{
@@ -40,8 +41,8 @@ func testConnectCrudProtoFile(
 			GoPackage: proto.String("github.com/acme/inventory/v1;inventoryv1"),
 		},
 		Dependency: []string{
-			"clarity/plugin/v1/options.proto",
-			"clarity/plugin/v1/entity.proto",
+			"labset/options/v1/options.proto",
+			"labset/data/v1/entity.proto",
 		},
 		EnumType: []*descriptorpb.EnumDescriptorProto{
 			{
@@ -88,8 +89,8 @@ func testConnectCrudProtoFile(
 
 func TestConnectCrudGenerator_AllOperations(t *testing.T) {
 	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
+		"labset/options/v1/options.proto",
+		"labset/data/v1/entity.proto",
 	)
 
 	allOps := []pluginV1.Operation{
@@ -173,8 +174,8 @@ func TestConnectCrudGenerator_AllOperations(t *testing.T) {
 
 func TestConnectCrudGenerator_NoOperations(t *testing.T) {
 	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
+		"labset/options/v1/options.proto",
+		"labset/data/v1/entity.proto",
 	)
 
 	modelsFile := testConnectCrudProtoFile(t)
@@ -206,8 +207,8 @@ func TestConnectCrudGenerator_NoOperations(t *testing.T) {
 
 func TestConnectCrudGenerator_SingleOperation(t *testing.T) {
 	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
+		"labset/options/v1/options.proto",
+		"labset/data/v1/entity.proto",
 	)
 
 	modelsFile := testConnectCrudProtoFile(t, pluginV1.Operation_OPERATION_GET)
@@ -241,8 +242,8 @@ func TestConnectCrudGenerator_SingleOperation(t *testing.T) {
 
 func TestConnectCrudGenerator_RefFields(t *testing.T) {
 	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
+		"labset/options/v1/options.proto",
+		"labset/data/v1/entity.proto",
 	)
 
 	refFiles := testRefProtoFiles(t)
@@ -281,8 +282,8 @@ func TestConnectCrudGenerator_RefFields(t *testing.T) {
 
 func TestConnectCrudGenerator_OutputDir(t *testing.T) {
 	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
+		"labset/options/v1/options.proto",
+		"labset/data/v1/entity.proto",
 	)
 
 	modelsFile := testConnectCrudProtoFile(t, pluginV1.Operation_OPERATION_GET)

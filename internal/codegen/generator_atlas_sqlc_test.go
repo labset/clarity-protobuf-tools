@@ -19,8 +19,8 @@ func loadAtlasSqlcGolden(t *testing.T, name string) string {
 
 func TestAtlasSqlcGenerator_Generate(t *testing.T) {
 	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
+		"labset/options/v1/options.proto",
+		"labset/data/v1/entity.proto",
 	)
 
 	modelsFile := testProtoFile(t)
@@ -66,8 +66,8 @@ func TestAtlasSqlcGenerator_Generate(t *testing.T) {
 
 func TestAtlasSqlcGenerator_ExistingSqlcModeUnchanged(t *testing.T) {
 	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
+		"labset/options/v1/options.proto",
+		"labset/data/v1/entity.proto",
 	)
 
 	modelsFile := testProtoFile(t)

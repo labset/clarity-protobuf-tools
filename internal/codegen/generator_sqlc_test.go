@@ -4,7 +4,8 @@ import (
 	"os"
 	"testing"
 
-	pluginV1 "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1"
+	_ "github.com/labset/clarity-protobuf-tools/api/labset/data/v1"
+	optionsV1 "github.com/labset/clarity-protobuf-tools/api/labset/options/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/compiler/protogen"
@@ -52,8 +53,8 @@ func collectFileDescriptors(t *testing.T, paths ...string) []*descriptorpb.FileD
 func entityMessageOptions(t *testing.T) *descriptorpb.MessageOptions {
 	t.Helper()
 	opts := &descriptorpb.MessageOptions{}
-	proto.SetExtension(opts, pluginV1.E_Message, &pluginV1.ClarityMessageOptions{
-		Role: pluginV1.Role_ROLE_ENTITY,
+	proto.SetExtension(opts, optionsV1.E_Message, &optionsV1.LabsetMessageOptions{
+		Role: optionsV1.Role_ROLE_ENTITY,
 	})
 	return opts
 }
@@ -73,8 +74,8 @@ func testProtoFile(t *testing.T) *descriptorpb.FileDescriptorProto {
 			GoPackage: proto.String("github.com/acme/inventory/v1;inventoryv1"),
 		},
 		Dependency: []string{
-			"clarity/plugin/v1/options.proto",
-			"clarity/plugin/v1/entity.proto",
+			"labset/options/v1/options.proto",
+			"labset/data/v1/entity.proto",
 		},
 		MessageType: []*descriptorpb.DescriptorProto{
 			{
@@ -137,8 +138,8 @@ func testProtoFile(t *testing.T) *descriptorpb.FileDescriptorProto {
 
 func TestSqlcGenerator_Generate(t *testing.T) {
 	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
+		"labset/options/v1/options.proto",
+		"labset/data/v1/entity.proto",
 	)
 
 	modelsFile := testProtoFile(t)
@@ -187,8 +188,8 @@ func TestSqlcGenerator_Generate(t *testing.T) {
 
 func TestSqlcGenerator_Generate_SkipsNonModelsProto(t *testing.T) {
 	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
+		"labset/options/v1/options.proto",
+		"labset/data/v1/entity.proto",
 	)
 
 	nonModelsFile := testProtoFile(t)
@@ -213,8 +214,8 @@ func TestSqlcGenerator_Generate_SkipsNonModelsProto(t *testing.T) {
 
 func TestSqlcGenerator_Generate_MultiplePackages(t *testing.T) {
 	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
+		"labset/options/v1/options.proto",
+		"labset/data/v1/entity.proto",
 	)
 
 	// Package 1: inventory.
@@ -226,8 +227,8 @@ func TestSqlcGenerator_Generate_MultiplePackages(t *testing.T) {
 			GoPackage: proto.String("github.com/acme/inventory/v1;inventoryv1"),
 		},
 		Dependency: []string{
-			"clarity/plugin/v1/options.proto",
-			"clarity/plugin/v1/entity.proto",
+			"labset/options/v1/options.proto",
+			"labset/data/v1/entity.proto",
 		},
 		MessageType: []*descriptorpb.DescriptorProto{
 			{
@@ -259,8 +260,8 @@ func TestSqlcGenerator_Generate_MultiplePackages(t *testing.T) {
 			GoPackage: proto.String("github.com/acme/billing/v1;billingv1"),
 		},
 		Dependency: []string{
-			"clarity/plugin/v1/options.proto",
-			"clarity/plugin/v1/entity.proto",
+			"labset/options/v1/options.proto",
+			"labset/data/v1/entity.proto",
 		},
 		MessageType: []*descriptorpb.DescriptorProto{
 			{
@@ -320,8 +321,8 @@ func TestSqlcGenerator_Generate_MultiplePackages(t *testing.T) {
 func referenceMessageOptions(t *testing.T) *descriptorpb.MessageOptions {
 	t.Helper()
 	opts := &descriptorpb.MessageOptions{}
-	proto.SetExtension(opts, pluginV1.E_Message, &pluginV1.ClarityMessageOptions{
-		Role: pluginV1.Role_ROLE_REFERENCE,
+	proto.SetExtension(opts, optionsV1.E_Message, &optionsV1.LabsetMessageOptions{
+		Role: optionsV1.Role_ROLE_REFERENCE,
 	})
 	return opts
 }
@@ -329,7 +330,7 @@ func referenceMessageOptions(t *testing.T) *descriptorpb.MessageOptions {
 func foreignKeyFieldOptions(t *testing.T) *descriptorpb.FieldOptions {
 	t.Helper()
 	opts := &descriptorpb.FieldOptions{}
-	proto.SetExtension(opts, pluginV1.E_Field, &pluginV1.ClarityFieldOptions{
+	proto.SetExtension(opts, optionsV1.E_Field, &optionsV1.LabsetFieldOptions{
 		ForeignKey: true,
 	})
 	return opts
@@ -346,7 +347,7 @@ func testRefProtoFiles(t *testing.T) []*descriptorpb.FileDescriptorProto {
 			GoPackage: proto.String("github.com/acme/inventory/v1;inventoryv1"),
 		},
 		Dependency: []string{
-			"clarity/plugin/v1/options.proto",
+			"labset/options/v1/options.proto",
 		},
 		MessageType: []*descriptorpb.DescriptorProto{
 			{
@@ -382,8 +383,8 @@ func testRefProtoFiles(t *testing.T) []*descriptorpb.FileDescriptorProto {
 			GoPackage: proto.String("github.com/acme/inventory/v1;inventoryv1"),
 		},
 		Dependency: []string{
-			"clarity/plugin/v1/options.proto",
-			"clarity/plugin/v1/entity.proto",
+			"labset/options/v1/options.proto",
+			"labset/data/v1/entity.proto",
 			"acme/inventory/v1/refs.proto",
 		},
 		MessageType: []*descriptorpb.DescriptorProto{
@@ -425,8 +426,8 @@ func testRefProtoFiles(t *testing.T) []*descriptorpb.FileDescriptorProto {
 
 func TestSqlcGenerator_Generate_RefFields(t *testing.T) {
 	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
+		"labset/options/v1/options.proto",
+		"labset/data/v1/entity.proto",
 	)
 
 	refFiles := testRefProtoFiles(t)
@@ -465,8 +466,8 @@ func TestSqlcGenerator_Generate_RefFields(t *testing.T) {
 
 func TestSqlcGenerator_Generate_OutputDir(t *testing.T) {
 	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
+		"labset/options/v1/options.proto",
+		"labset/data/v1/entity.proto",
 	)
 
 	modelsFile := testProtoFile(t)

@@ -26,8 +26,8 @@ func newTestMcpToolsGenerator(outputDir string) *mcpToolsGenerator {
 
 func TestMcpToolsGenerator_AllOperations(t *testing.T) {
 	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
+		"labset/options/v1/options.proto",
+		"labset/data/v1/entity.proto",
 	)
 
 	allOps := []pluginV1.Operation{
@@ -106,8 +106,8 @@ func TestMcpToolsGenerator_AllOperations(t *testing.T) {
 
 func TestMcpToolsGenerator_NoOperations(t *testing.T) {
 	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
+		"labset/options/v1/options.proto",
+		"labset/data/v1/entity.proto",
 	)
 
 	modelsFile := testConnectCrudProtoFile(t)
@@ -138,8 +138,8 @@ func TestMcpToolsGenerator_NoOperations(t *testing.T) {
 
 func TestMcpToolsGenerator_SingleOperation(t *testing.T) {
 	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
+		"labset/options/v1/options.proto",
+		"labset/data/v1/entity.proto",
 	)
 
 	modelsFile := testConnectCrudProtoFile(t, pluginV1.Operation_OPERATION_GET)

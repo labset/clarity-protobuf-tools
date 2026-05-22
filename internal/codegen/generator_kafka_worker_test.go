@@ -47,8 +47,8 @@ func testKafkaWorkerProtoFile(
 			GoPackage: proto.String("github.com/acme/inventory/v1;inventoryv1"),
 		},
 		Dependency: []string{
-			"clarity/plugin/v1/options.proto",
-			"clarity/plugin/v1/entity.proto",
+			"labset/options/v1/options.proto",
+			"labset/data/v1/entity.proto",
 		},
 		EnumType: []*descriptorpb.EnumDescriptorProto{
 			{
@@ -101,8 +101,8 @@ func runKafkaWorkerGenerator(
 ) map[string]string {
 	t.Helper()
 	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
+		"labset/options/v1/options.proto",
+		"labset/data/v1/entity.proto",
 	)
 	modelsFile := testKafkaWorkerProtoFile(t, ops, subs)
 	req := &pluginpb.CodeGeneratorRequest{

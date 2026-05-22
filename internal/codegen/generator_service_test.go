@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	pluginV1 "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1"
+	optionsV1 "github.com/labset/clarity-protobuf-tools/api/labset/options/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/compiler/protogen"
@@ -22,12 +22,12 @@ func loadServiceGolden(t *testing.T, name string) string {
 
 func entityMessageOptionsWithOps(
 	t *testing.T,
-	ops ...pluginV1.Operation,
+	ops ...optionsV1.Operation,
 ) *descriptorpb.MessageOptions {
 	t.Helper()
 	mopts := &descriptorpb.MessageOptions{}
-	proto.SetExtension(mopts, pluginV1.E_Message, &pluginV1.ClarityMessageOptions{
-		Role:       pluginV1.Role_ROLE_ENTITY,
+	proto.SetExtension(mopts, optionsV1.E_Message, &optionsV1.LabsetMessageOptions{
+		Role:       optionsV1.Role_ROLE_ENTITY,
 		Operations: ops,
 	})
 	return mopts
@@ -35,7 +35,7 @@ func entityMessageOptionsWithOps(
 
 func testServiceProtoFile(
 	t *testing.T,
-	ops ...pluginV1.Operation,
+	ops ...optionsV1.Operation,
 ) *descriptorpb.FileDescriptorProto {
 	t.Helper()
 	return &descriptorpb.FileDescriptorProto{
@@ -46,8 +46,8 @@ func testServiceProtoFile(
 			GoPackage: proto.String("github.com/acme/inventory/v1;inventoryv1"),
 		},
 		Dependency: []string{
-			"clarity/plugin/v1/options.proto",
-			"clarity/plugin/v1/entity.proto",
+			"labset/options/v1/options.proto",
+			"labset/data/v1/entity.proto",
 		},
 		MessageType: []*descriptorpb.DescriptorProto{
 			{
@@ -78,16 +78,16 @@ func testServiceProtoFile(
 
 func TestServiceGenerator_AllOperations(t *testing.T) {
 	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
+		"labset/options/v1/options.proto",
+		"labset/data/v1/entity.proto",
 	)
 
-	allOps := []pluginV1.Operation{
-		pluginV1.Operation_OPERATION_CREATE,
-		pluginV1.Operation_OPERATION_GET,
-		pluginV1.Operation_OPERATION_LIST,
-		pluginV1.Operation_OPERATION_UPDATE,
-		pluginV1.Operation_OPERATION_DELETE,
+	allOps := []optionsV1.Operation{
+		optionsV1.Operation_OPERATION_CREATE,
+		optionsV1.Operation_OPERATION_GET,
+		optionsV1.Operation_OPERATION_LIST,
+		optionsV1.Operation_OPERATION_UPDATE,
+		optionsV1.Operation_OPERATION_DELETE,
 	}
 	modelsFile := testServiceProtoFile(t, allOps...)
 
@@ -148,11 +148,11 @@ func TestServiceGenerator_AllOperations(t *testing.T) {
 
 func TestServiceGenerator_SingleOperation(t *testing.T) {
 	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
+		"labset/options/v1/options.proto",
+		"labset/data/v1/entity.proto",
 	)
 
-	modelsFile := testServiceProtoFile(t, pluginV1.Operation_OPERATION_GET)
+	modelsFile := testServiceProtoFile(t, optionsV1.Operation_OPERATION_GET)
 
 	req := &pluginpb.CodeGeneratorRequest{
 		FileToGenerate: []string{"acme/inventory/v1/models.proto"},
@@ -182,8 +182,8 @@ func TestServiceGenerator_SingleOperation(t *testing.T) {
 
 func TestServiceGenerator_NoOperations(t *testing.T) {
 	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
+		"labset/options/v1/options.proto",
+		"labset/data/v1/entity.proto",
 	)
 
 	// Entity with no operations — should produce no output
@@ -208,8 +208,8 @@ func TestServiceGenerator_NoOperations(t *testing.T) {
 
 func TestServiceGenerator_MultipleEntities(t *testing.T) {
 	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
+		"labset/options/v1/options.proto",
+		"labset/data/v1/entity.proto",
 	)
 
 	modelsFile := &descriptorpb.FileDescriptorProto{
@@ -222,16 +222,16 @@ func TestServiceGenerator_MultipleEntities(t *testing.T) {
 			),
 		},
 		Dependency: []string{
-			"clarity/plugin/v1/options.proto",
-			"clarity/plugin/v1/entity.proto",
+			"labset/options/v1/options.proto",
+			"labset/data/v1/entity.proto",
 		},
 		MessageType: []*descriptorpb.DescriptorProto{
 			{
 				Name: proto.String("Product"),
 				Options: entityMessageOptionsWithOps(
 					t,
-					pluginV1.Operation_OPERATION_CREATE,
-					pluginV1.Operation_OPERATION_GET,
+					optionsV1.Operation_OPERATION_CREATE,
+					optionsV1.Operation_OPERATION_GET,
 				),
 				Field: []*descriptorpb.FieldDescriptorProto{
 					{
@@ -251,9 +251,9 @@ func TestServiceGenerator_MultipleEntities(t *testing.T) {
 				Name: proto.String("Order"),
 				Options: entityMessageOptionsWithOps(
 					t,
-					pluginV1.Operation_OPERATION_GET,
-					pluginV1.Operation_OPERATION_LIST,
-					pluginV1.Operation_OPERATION_DELETE,
+					optionsV1.Operation_OPERATION_GET,
+					optionsV1.Operation_OPERATION_LIST,
+					optionsV1.Operation_OPERATION_DELETE,
 				),
 				Field: []*descriptorpb.FieldDescriptorProto{
 					{
@@ -311,11 +311,11 @@ func TestServiceGenerator_MultipleEntities(t *testing.T) {
 
 func TestServiceGenerator_OutputDir(t *testing.T) {
 	deps := collectFileDescriptors(t,
-		"clarity/plugin/v1/options.proto",
-		"clarity/plugin/v1/entity.proto",
+		"labset/options/v1/options.proto",
+		"labset/data/v1/entity.proto",
 	)
 
-	modelsFile := testServiceProtoFile(t, pluginV1.Operation_OPERATION_GET)
+	modelsFile := testServiceProtoFile(t, optionsV1.Operation_OPERATION_GET)
 
 	req := &pluginpb.CodeGeneratorRequest{
 		FileToGenerate: []string{"acme/inventory/v1/models.proto"},
