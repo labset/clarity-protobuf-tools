@@ -4,13 +4,13 @@
 
 ## Context
 
-The `protoc-gen-clarity` plugin already generates proto service definitions (`service` mode), SQLC queries/models (`sqlc` mode), and Atlas migrations (`atlas-sqlc` mode). The final piece is generating the Go handler layer that wires Connect-RPC services to the SQLC stores. This mode composes `atlas-sqlc` under the hood so a single invocation produces the full stack: SQL schema, SQLC queries/config, Atlas migration config, and Connect handler code.
+The `protoc-gen-labset-go` plugin already generates proto service definitions (`service` mode), SQLC queries/models (`sqlc` mode), and Atlas migrations (`atlas-sqlc` mode). The final piece is generating the Go handler layer that wires Connect-RPC services to the SQLC stores. This mode composes `atlas-sqlc` under the hood so a single invocation produces the full stack: SQL schema, SQLC queries/config, Atlas migration config, and Connect handler code.
 
 ## Requirements
 
 ### Functional
 
-- [x] FR-1: Add a new `connect-crud` codegen mode to `protoc-gen-clarity` that composes `atlas-sqlc` under the hood
+- [x] FR-1: Add a new `connect-crud` codegen mode to `protoc-gen-labset-go` that composes `atlas-sqlc` under the hood
 - [x] FR-2: Generate handler output under `<output_dir>/internal/<provider>/<domain>/<version>/api/`, aligned with `atlas-sqlc` output at `<output_dir>/internal/<provider>/<domain>/<version>/`
 - [x] FR-3: Generate `handler_<model>.go` per entity containing: a `<Model>Deps` struct (with `*pgxpool.Pool`), a constructor that creates the SQLC store, and Connect service handler registration
 - [x] FR-4: Generate `rpc_<op>_<model>.go` per opted-in operation containing the method implementation

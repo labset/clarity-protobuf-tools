@@ -4,7 +4,7 @@
 
 ## Context
 
-The `protoc-gen-clarity` plugin currently generates SQL schemas and queries from proto entity definitions. To complete the developer workflow, we need to generate proto service definitions that expose CRUD operations for annotated entities. This keeps the API layer consistent with the data model and avoids hand-writing boilerplate service protos.
+The `protoc-gen-labset-go` plugin currently generates SQL schemas and queries from proto entity definitions. To complete the developer workflow, we need to generate proto service definitions that expose CRUD operations for annotated entities. This keeps the API layer consistent with the data model and avoids hand-writing boilerplate service protos.
 
 Operations are opt-in per entity via the existing `ClarityMessageOptions`, and the generated protos follow the same package structure as the source models.
 
@@ -14,7 +14,7 @@ Operations are opt-in per entity via the existing `ClarityMessageOptions`, and t
 
 - [x] FR-1: Add `Operation` enum to `clarity.plugin.v1` with values: `OPERATION_UNSPECIFIED`, `OPERATION_CREATE`, `OPERATION_GET`, `OPERATION_LIST`, `OPERATION_UPDATE`, `OPERATION_DELETE`
 - [x] FR-2: Add repeated `operations` field to `ClarityMessageOptions`
-- [x] FR-3: Add a new `service` codegen mode to `protoc-gen-clarity`
+- [x] FR-3: Add a new `service` codegen mode to `protoc-gen-labset-go`
 - [x] FR-4: Generate output under `<output_dir>/<provider>/<domain>/<version>/` respecting proto package structure
 - [x] FR-5: Generate `service_<model>.proto` per entity containing a `service <Model>Service` with RPCs for each opted-in operation
 - [x] FR-6: Generate `rpc_<op>_<model>.proto` per operation per entity containing request and response messages

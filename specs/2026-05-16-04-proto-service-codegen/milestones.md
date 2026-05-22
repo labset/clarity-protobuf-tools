@@ -14,7 +14,7 @@
 - **Status:** done
 - **Description:** Add `generator_service.go` with the `service` mode wired into the plugin, producing output directory structure and files
 - **Acceptance Criteria:**
-  - [x] `service` mode accepted by `protoc-gen-clarity`
+  - [x] `service` mode accepted by `protoc-gen-labset-go`
   - [x] Output directory follows `<provider>/<domain>/<version>/` structure
   - [x] Generates `service_<model>.proto` and `rpc_<op>_<model>.proto` files per entity with operations
 

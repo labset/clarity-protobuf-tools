@@ -4,7 +4,7 @@
 
 ## Context
 
-The `clarity-protobuf-tools` project provides a protoc plugin (`protoc-gen-clarity`) and a lint plugin (`clarity-lint-plugin`) for working with annotated proto messages. This spec covers extending the toolchain to generate database schema and query files suitable for use with sqlc, targeting PostgreSQL with the pgx driver.
+The `clarity-protobuf-tools` project provides a protoc plugin (`protoc-gen-labset-go`) and a lint plugin (`labset-lint-plugin`) for working with annotated proto messages. This spec covers extending the toolchain to generate database schema and query files suitable for use with sqlc, targeting PostgreSQL with the pgx driver.
 
 Proto messages annotated with `ROLE_ENTITY` must include a field `entity` of type `clarity.plugin.v1.Entity` at index 1. The codegen plugin inlines the base entity fields (`id`, `created_at`, `updated_at`) into the generated table and maps the remaining message fields to columns.
 
@@ -13,8 +13,8 @@ Proto messages annotated with `ROLE_ENTITY` must include a field `entity` of typ
 ### Functional
 
 - [x] FR-1: Add `ROLE_ENTITY` to the `Role` enum in `clarity/plugin/v1/options.proto`
-- [x] FR-2: The `clarity-lint-plugin` validates that messages with `ROLE_ENTITY` have a field named `entity` of type `clarity.plugin.v1.Entity` at field number 1
-- [x] FR-3: The `protoc-gen-clarity` plugin accepts an output directory flag and emits files to it
+- [x] FR-2: The `labset-lint-plugin` validates that messages with `ROLE_ENTITY` have a field named `entity` of type `clarity.plugin.v1.Entity` at field number 1
+- [x] FR-3: The `protoc-gen-labset-go` plugin accepts an output directory flag and emits files to it
 - [x] FR-4: Generate `internal/<provider>/<domain>/<version>/sql/schema.sql` containing `CREATE SCHEMA` and `CREATE TABLE` statements for all `ROLE_ENTITY` messages in a package
 - [x] FR-5: Generate `internal/<provider>/<domain>/<version>/sql/queries/<message_name>.sql` with sqlc-annotated CRUD queries (insert, get by id, list, update, delete) per entity
 - [x] FR-6: Generate `internal/<provider>/<domain>/<version>/sqlc.yaml` configured for PostgreSQL with pgx, referencing the schema and queries directory
@@ -53,7 +53,7 @@ Proto messages annotated with `ROLE_ENTITY` must include a field `entity` of typ
 
 ## Constraints
 
-- Must work as a standard protoc plugin (`protoc-gen-clarity`)
+- Must work as a standard protoc plugin (`protoc-gen-labset-go`)
 - Output directory structure follows `internal/<provider>/<domain>/<version>/` convention
 - Single `schema.sql` per package, separate query file per entity
 

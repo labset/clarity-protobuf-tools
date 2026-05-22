@@ -4,7 +4,7 @@
 
 ## Context
 
-The `protoc-gen-clarity` plugin currently supports a `sqlc` mode that generates SQL schema, queries, and sqlc config from proto entity definitions. To support database migrations via [Atlas](https://atlasgo.io/), we need a new mode that generates Atlas project configuration (`atlas.hcl`) alongside the sqlc output. Atlas will then handle migration diffing and application against the generated schema.
+The `protoc-gen-labset-go` plugin currently supports a `sqlc` mode that generates SQL schema, queries, and sqlc config from proto entity definitions. To support database migrations via [Atlas](https://atlasgo.io/), we need a new mode that generates Atlas project configuration (`atlas.hcl`) alongside the sqlc output. Atlas will then handle migration diffing and application against the generated schema.
 
 The current schema naming convention (`<provider>_<domain>`) does not include the version segment, which should be corrected across all modes.
 
@@ -13,7 +13,7 @@ The current schema naming convention (`<provider>_<domain>`) does not include th
 ### Functional
 
 - [ ] FR-1: Update `packageMeta.Schema` to use `<provider>_<domain>_<version>` format (e.g., `acme_inventory_v1`) across all existing sqlc output
-- [ ] FR-2: Add a new `atlas-sqlc` mode to `protoc-gen-clarity` that runs the sqlc generator and additionally generates Atlas configuration
+- [ ] FR-2: Add a new `atlas-sqlc` mode to `protoc-gen-labset-go` that runs the sqlc generator and additionally generates Atlas configuration
 - [ ] FR-3: Generate `atlas.hcl` at `<outputDir>/atlas.hcl` with:
   - Schema source referencing `sql/schema.sql` and `sql/baseline.sql`
   - Migration directory at `migrations/`

@@ -10,7 +10,7 @@ The existing `connect-crud` and `connect-crud-outbox` codegen modes generate ful
 
 ### Functional
 
-- [x] FR-1: Add a new `connect-handlers` codegen mode to `protoc-gen-clarity`
+- [x] FR-1: Add a new `connect-handlers` codegen mode to `protoc-gen-labset-go`
 - [x] FR-2: Process any proto service definition (not limited to `models.proto`)
 - [x] FR-3: Generate output under `<output_dir>/internal/<provider>/<domain>/<version>/api/`
 - [x] FR-4: Generate `handler_<model>.go` per service containing: a deps struct, a constructor, and Connect service handler registration

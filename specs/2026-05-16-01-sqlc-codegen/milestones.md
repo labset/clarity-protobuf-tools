@@ -51,7 +51,7 @@
 ## M5: sqlc config generation and plugin wiring
 
 - **Status:** done
-- **Description:** Generate `sqlc.yaml` configured for PostgreSQL with pgx, and wire everything into the `protoc-gen-clarity` plugin with output directory support.
+- **Description:** Generate `sqlc.yaml` configured for PostgreSQL with pgx, and wire everything into the `protoc-gen-labset-go` plugin with output directory support.
 - **Acceptance Criteria:**
   - [x] `sqlc.yaml` generated at `internal/<provider>/<domain>/<version>/sqlc.yaml`
   - [x] Config references `sql/schema.sql` and `sql/queries/` directory

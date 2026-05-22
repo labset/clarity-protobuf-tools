@@ -1,9 +1,9 @@
-# clarity-protobuf-tools
+# protobuf-toolchain
 
-A toolchain for working with [Clarity](https://github.com/labset)-annotated protobuf messages. It provides:
+A toolchain for working with [labset](https://github.com/labset)-annotated protobuf messages. It provides:
 
-- **clarity-lint-plugin** — a buf lint plugin that validates proto messages annotated with clarity options
-- **protoc-gen-clarity** — a protoc code generation plugin with multiple modes
+- **labset-lint-plugin** — a buf lint plugin that validates proto messages annotated with labset options
+- **protoc-gen-labset-go** — a protoc code generation plugin with multiple modes
 
 ## Quick Start
 
@@ -130,11 +130,11 @@ When an entity field uses a ref type:
 
 ## Lint Plugin
 
-The `clarity-lint-plugin` is a [buf lint plugin](https://buf.build/docs/lint/plugins) that validates clarity-annotated proto messages. Install it locally, then configure it in your `buf.yaml`:
+The `labset-lint-plugin` is a [buf lint plugin](https://buf.build/docs/lint/plugins) that validates clarity-annotated proto messages. Install it locally, then configure it in your `buf.yaml`:
 
 ```bash
 # install the plugin (must be on your PATH)
-go install github.com/labset/clarity-protobuf-tools/cmd/clarity-lint-plugin@latest
+go install github.com/labset/clarity-protobuf-tools/cmd/labset-lint-plugin@latest
 ```
 
 ```yaml
@@ -151,7 +151,7 @@ lint:
   use:
     - STANDARD
   plugins:
-    - plugin: clarity-lint-plugin
+    - plugin: labset-lint-plugin
 ```
 
 Run linting with:
@@ -379,7 +379,7 @@ inputs:
   - directory: protos
 
 plugins:
-  - local: protoc-gen-clarity
+  - local: protoc-gen-labset-go
     out: internal
     opt:
       - mode=sqlc
@@ -393,7 +393,7 @@ inputs:
   - directory: protos
 
 plugins:
-  - local: protoc-gen-clarity
+  - local: protoc-gen-labset-go
     out: internal
     opt:
       - mode=atlas-sqlc
@@ -407,7 +407,7 @@ inputs:
   - directory: protos
 
 plugins:
-  - local: protoc-gen-clarity
+  - local: protoc-gen-labset-go
     out: .
     opt:
       - mode=connect-handlers
@@ -421,7 +421,7 @@ inputs:
   - directory: protos
 
 plugins:
-  - local: protoc-gen-clarity
+  - local: protoc-gen-labset-go
     out: .
     opt:
       - mode=connect-crud
@@ -436,7 +436,7 @@ inputs:
   - directory: protos
 
 plugins:
-  - local: protoc-gen-clarity
+  - local: protoc-gen-labset-go
     out: .
     opt:
       - mode=connect-crud-outbox
@@ -453,13 +453,13 @@ inputs:
   - directory: protos
 
 plugins:
-  - local: protoc-gen-clarity
+  - local: protoc-gen-labset-go
     out: .
     opt:
       - mode=connect-crud-outbox
       - go_module=github.com/acme/app
 
-  - local: protoc-gen-clarity
+  - local: protoc-gen-labset-go
     out: .
     opt:
       - mode=kafka-worker
@@ -476,7 +476,7 @@ inputs:
   - directory: protos
 
 plugins:
-  - local: protoc-gen-clarity
+  - local: protoc-gen-labset-go
     out: .
     opt:
       - mode=mcp-tools
@@ -493,7 +493,7 @@ inputs:
   - directory: protos
 
 plugins:
-  - local: protoc-gen-clarity
+  - local: protoc-gen-labset-go
     out: protos
     opt:
       - mode=service
