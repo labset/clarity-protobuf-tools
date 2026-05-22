@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package labset.data.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/labset/protobuf-toolchain/api/labset/data/v1;dataV1";
+
+message Entity {
+  string id = 1;
+  google.protobuf.Timestamp created_at = 2;
+  google.protobuf.Timestamp updated_at = 3;
+}
