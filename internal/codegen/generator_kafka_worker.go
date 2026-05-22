@@ -7,7 +7,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/labset/clarity-protobuf-tools/internal/clarity"
+	"github.com/labset/clarity-protobuf-tools/internal/protoutil"
 	"google.golang.org/protobuf/compiler/protogen"
 )
 
@@ -96,12 +96,12 @@ func (g *kafkaWorkerGenerator) Generate(plugin *protogen.Plugin) error {
 
 		hasWorkers := false
 		for _, msg := range pe.messages {
-			subscribers := clarity.Subscribers(msg.Desc)
+			subscribers := protoutil.Subscribers(msg.Desc)
 			if len(subscribers) == 0 {
 				continue
 			}
 
-			ops := clarity.Operations(msg.Desc)
+			ops := protoutil.Operations(msg.Desc)
 			if len(ops) == 0 {
 				continue
 			}

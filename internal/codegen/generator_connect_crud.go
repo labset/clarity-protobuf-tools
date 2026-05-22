@@ -9,7 +9,7 @@ import (
 	"text/template"
 	"unicode"
 
-	"github.com/labset/clarity-protobuf-tools/internal/clarity"
+	"github.com/labset/clarity-protobuf-tools/internal/protoutil"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -107,7 +107,7 @@ func (g *connectCrudGenerator) Generate(plugin *protogen.Plugin) error {
 		protoImport, protoAlias, connectImport, connectAlias := deriveGoImports(pe.goPackage)
 
 		for _, msg := range pe.messages {
-			ops := clarity.Operations(msg.Desc)
+			ops := protoutil.Operations(msg.Desc)
 			if len(ops) == 0 {
 				continue
 			}
@@ -257,7 +257,7 @@ func extractMapperFields(msg *protogen.Message) []mapperField {
 			ProtoName: toPascalCase(string(field.Desc.Name())),
 			SQLCName:  toSQLCName(string(field.Desc.Name())),
 		}
-		if clarity.IsReferenceField(field.Desc) {
+		if protoutil.IsReferenceField(field.Desc) {
 			mf.IsRef = true
 			mf.RefType = string(field.Desc.Message().Name())
 			mf.SQLCName = toSQLCName(string(field.Desc.Name()) + "_id")

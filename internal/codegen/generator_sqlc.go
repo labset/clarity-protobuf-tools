@@ -9,8 +9,8 @@ import (
 	"text/template"
 	"unicode"
 
-	"github.com/labset/clarity-protobuf-tools/internal/clarity"
 	"github.com/labset/clarity-protobuf-tools/internal/codegen/pgtype"
+	"github.com/labset/clarity-protobuf-tools/internal/protoutil"
 	"google.golang.org/protobuf/compiler/protogen"
 )
 
@@ -55,7 +55,7 @@ func collectPackageEntities(plugin *protogen.Plugin) ([]*packageEntities, error)
 		}
 
 		for _, msg := range file.Messages {
-			if isEntityMessage(msg) {
+			if protoutil.IsEntity(msg.Desc) {
 				pe.messages = append(pe.messages, msg)
 			}
 		}
@@ -174,7 +174,7 @@ func renderSchema(meta packageMeta, messages []*protogen.Message) (string, error
 			if string(field.Desc.Name()) == "entity" {
 				continue
 			}
-			if clarity.IsReferenceField(field.Desc) {
+			if protoutil.IsReferenceField(field.Desc) {
 				col := refColumn(field, meta.Schema)
 				table.Columns = append(table.Columns, col.ColumnSQL())
 				continue
@@ -293,7 +293,7 @@ var managedColumns = map[string]bool{
 func refColumn(field *protogen.Field, schema string) pgtype.Column {
 	colName := string(field.Desc.Name()) + "_id"
 	col := pgtype.Column{Name: colName, Type: "UUID"}
-	if clarity.HasForeignKey(field.Desc) {
+	if protoutil.HasForeignKey(field.Desc) {
 		refMsgName := string(field.Desc.Message().Name())
 		refTable := toSnakeCase(strings.TrimSuffix(refMsgName, "Ref"))
 		col.Type = fmt.Sprintf("UUID REFERENCES %s.%s(id)", schema, refTable)
@@ -303,14 +303,10 @@ func refColumn(field *protogen.Field, schema string) pgtype.Column {
 
 // refColumnName returns the SQL column name for a field, appending _id for ref fields.
 func refColumnName(field *protogen.Field) string {
-	if clarity.IsReferenceField(field.Desc) {
+	if protoutil.IsReferenceField(field.Desc) {
 		return string(field.Desc.Name()) + "_id"
 	}
 	return string(field.Desc.Name())
-}
-
-func isEntityMessage(msg *protogen.Message) bool {
-	return clarity.IsEntity(msg.Desc)
 }
 
 func toSnakeCase(s string) string {

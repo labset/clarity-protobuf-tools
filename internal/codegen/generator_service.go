@@ -7,8 +7,8 @@ import (
 	"strings"
 	"text/template"
 
-	pluginV1 "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1"
-	"github.com/labset/clarity-protobuf-tools/internal/clarity"
+	optionsV1 "github.com/labset/clarity-protobuf-tools/api/labset/options/v1"
+	"github.com/labset/clarity-protobuf-tools/internal/protoutil"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/types/descriptorpb"
 )
@@ -35,7 +35,7 @@ type serviceEntityData struct {
 	Model        string
 	ModelFile    string
 	ImportPrefix string
-	Ops          []pluginV1.Operation
+	Ops          []optionsV1.Operation
 }
 
 type rpcFileData struct {
@@ -44,7 +44,7 @@ type rpcFileData struct {
 	GoPackage string
 	Model     string
 	ModelFile string
-	Op        pluginV1.Operation
+	Op        optionsV1.Operation
 }
 
 // servicePackageEntities extends packageEntities with service-specific metadata.
@@ -102,7 +102,7 @@ func (g *serviceGenerator) Generate(plugin *protogen.Plugin) error {
 		)
 
 		for _, msg := range pe.messages {
-			ops := clarity.Operations(msg.Desc)
+			ops := protoutil.Operations(msg.Desc)
 			if len(ops) == 0 {
 				continue
 			}
