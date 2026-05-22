@@ -2,11 +2,11 @@ syntax = "proto3";
 
 package acme.inventory.v1;
 
-import "clarity/plugin/v1/options.proto";
-import "clarity/plugin/v1/entity.proto";
+import "labset/options/v1/options.proto";
+import "labset/data/v1/entity.proto";
 
 message Product {
-  option (clarity.plugin.v1.message) = {role: ROLE_ENTITY};
+  option (labset.options.v1.message) = {role: ROLE_ENTITY};
   string name = 1;
-  clarity.plugin.v1.Entity entity = 2;
+  labset.data.v1.Entity entity = 2;
 }

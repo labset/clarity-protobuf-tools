@@ -15,7 +15,7 @@ func TestCheckEntityField_Pass(t *testing.T) {
 				DirPaths:  []string{"testdata/entity_field/pass", "../../protos"},
 				FilePaths: []string{"models.proto"},
 			},
-			RuleIDs: []string{"CLARITY_ENTITY_FIELD"},
+			RuleIDs: []string{"LABSET_ENTITY_FIELD"},
 		},
 		Spec: &check.Spec{
 			Rules: All,
@@ -32,14 +32,14 @@ func TestCheckEntityField_FailMissing(t *testing.T) {
 				DirPaths:  []string{"testdata/entity_field/fail_missing", "../../protos"},
 				FilePaths: []string{"models.proto"},
 			},
-			RuleIDs: []string{"CLARITY_ENTITY_FIELD"},
+			RuleIDs: []string{"LABSET_ENTITY_FIELD"},
 		},
 		Spec: &check.Spec{
 			Rules: All,
 		},
 		ExpectedAnnotations: []checktest.ExpectedAnnotation{
 			{
-				RuleID:  "CLARITY_ENTITY_FIELD",
+				RuleID:  "LABSET_ENTITY_FIELD",
 				Message: `Message "acme.inventory.v1.Product" with ROLE_ENTITY must have a field named "entity".`,
 				FileLocation: &checktest.ExpectedFileLocation{
 					FileName:    "models.proto",
@@ -61,21 +61,21 @@ func TestCheckEntityField_FailNumber(t *testing.T) {
 				DirPaths:  []string{"testdata/entity_field/fail_number", "../../protos"},
 				FilePaths: []string{"models.proto"},
 			},
-			RuleIDs: []string{"CLARITY_ENTITY_FIELD"},
+			RuleIDs: []string{"LABSET_ENTITY_FIELD"},
 		},
 		Spec: &check.Spec{
 			Rules: All,
 		},
 		ExpectedAnnotations: []checktest.ExpectedAnnotation{
 			{
-				RuleID:  "CLARITY_ENTITY_FIELD",
+				RuleID:  "LABSET_ENTITY_FIELD",
 				Message: `Message "acme.inventory.v1.Product" field "entity" must be at field number 1, got 2.`,
 				FileLocation: &checktest.ExpectedFileLocation{
 					FileName:    "models.proto",
 					StartLine:   10,
 					StartColumn: 2,
 					EndLine:     10,
-					EndColumn:   38,
+					EndColumn:   35,
 				},
 			},
 		},
@@ -90,15 +90,15 @@ func TestCheckEntityField_FailType(t *testing.T) {
 				DirPaths:  []string{"testdata/entity_field/fail_type", "../../protos"},
 				FilePaths: []string{"models.proto"},
 			},
-			RuleIDs: []string{"CLARITY_ENTITY_FIELD"},
+			RuleIDs: []string{"LABSET_ENTITY_FIELD"},
 		},
 		Spec: &check.Spec{
 			Rules: All,
 		},
 		ExpectedAnnotations: []checktest.ExpectedAnnotation{
 			{
-				RuleID:  "CLARITY_ENTITY_FIELD",
-				Message: `Message "acme.inventory.v1.Product" field "entity" must be of type clarity.plugin.v1.Entity, got string.`,
+				RuleID:  "LABSET_ENTITY_FIELD",
+				Message: `Message "acme.inventory.v1.Product" field "entity" must be of type labset.data.v1.Entity, got string.`,
 				FileLocation: &checktest.ExpectedFileLocation{
 					FileName:    "models.proto",
 					StartLine:   8,
