@@ -179,7 +179,7 @@ func TestConnectCrudOutboxGenerator_CreateOnly(t *testing.T) {
 		"labset/data/v1/entity.proto",
 	)
 
-	modelsFile := testConnectCrudProtoFile(t, pluginV1.Operation_OPERATION_CREATE)
+	modelsFile := testConnectCrudProtoFile(t, optionsV1.Operation_OPERATION_CREATE)
 
 	req := &pluginpb.CodeGeneratorRequest{
 		FileToGenerate: []string{"acme/inventory/v1/models.proto"},
@@ -219,8 +219,8 @@ func TestConnectCrudOutboxGenerator_RefFields(t *testing.T) {
 
 	refFiles := testRefProtoFiles(t)
 	refFiles[1].MessageType[0].Options = entityMessageOptionsWithOps(t,
-		pluginV1.Operation_OPERATION_CREATE,
-		pluginV1.Operation_OPERATION_GET,
+		optionsV1.Operation_OPERATION_CREATE,
+		optionsV1.Operation_OPERATION_GET,
 	)
 
 	req := &pluginpb.CodeGeneratorRequest{
@@ -265,7 +265,7 @@ func TestConnectCrudOutboxGenerator_OutputDir(t *testing.T) {
 		"labset/data/v1/entity.proto",
 	)
 
-	modelsFile := testConnectCrudProtoFile(t, pluginV1.Operation_OPERATION_CREATE)
+	modelsFile := testConnectCrudProtoFile(t, optionsV1.Operation_OPERATION_CREATE)
 
 	req := &pluginpb.CodeGeneratorRequest{
 		FileToGenerate: []string{"acme/inventory/v1/models.proto"},

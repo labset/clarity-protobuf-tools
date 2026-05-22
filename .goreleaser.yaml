@@ -8,9 +8,9 @@ before:
     - go test ./...
 
 builds:
-  - main: cmd/protoc-gen-clarity/main.go
-    id: protoc-gen-clarity
-    binary: protoc-gen-clarity
+  - main: cmd/protoc-gen-labset-go/main.go
+    id: protoc-gen-labset-go
+    binary: protoc-gen-labset-go
     env:
       - CGO_ENABLED=0
     goos:
@@ -18,9 +18,9 @@ builds:
       - windows
       - darwin
 
-  - main: cmd/clarity-lint-plugin/main.go
-    id: clarity-lint-plugin
-    binary: clarity-lint-plugin
+  - main: cmd/labset-lint-plugin/main.go
+    id: labset-lint-plugin
+    binary: labset-lint-plugin
     env:
       - CGO_ENABLED=0
     goos:
@@ -29,11 +29,11 @@ builds:
       - darwin
 
 archives:
-  - id: protoc-gen-clarity
-    ids: [protoc-gen-clarity]
+  - id: protoc-gen-labset-go
+    ids: [protoc-gen-labset-go]
     formats: [tar.gz]
     name_template: >-
-      protoc-gen-clarity_
+      protoc-gen-labset-go_
       {{- title .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386
@@ -43,11 +43,11 @@ archives:
       - goos: windows
         formats: [zip]
 
-  - id: clarity-lint-plugin
-    ids: [clarity-lint-plugin]
+  - id: labset-lint-plugin
+    ids: [labset-lint-plugin]
     formats: [tar.gz]
     name_template: >-
-      clarity-lint-plugin_
+      labset-lint-plugin_
       {{- title .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386

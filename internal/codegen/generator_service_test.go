@@ -58,7 +58,7 @@ func testServiceProtoFile(
 						Name:     proto.String("entity"),
 						Number:   proto.Int32(1),
 						Type:     descriptorpb.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
-						TypeName: proto.String(".clarity.plugin.v1.Entity"),
+						TypeName: proto.String(".labset.data.v1.Entity"),
 					},
 					{
 						Name:   proto.String("name"),
@@ -238,7 +238,7 @@ func TestServiceGenerator_MultipleEntities(t *testing.T) {
 						Name:     proto.String("entity"),
 						Number:   proto.Int32(1),
 						Type:     descriptorpb.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
-						TypeName: proto.String(".clarity.plugin.v1.Entity"),
+						TypeName: proto.String(".labset.data.v1.Entity"),
 					},
 					{
 						Name:   proto.String("name"),
@@ -260,7 +260,7 @@ func TestServiceGenerator_MultipleEntities(t *testing.T) {
 						Name:     proto.String("entity"),
 						Number:   proto.Int32(1),
 						Type:     descriptorpb.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
-						TypeName: proto.String(".clarity.plugin.v1.Entity"),
+						TypeName: proto.String(".labset.data.v1.Entity"),
 					},
 					{
 						Name:   proto.String("quantity"),

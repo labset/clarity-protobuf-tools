@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	pluginV1 "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1"
+	optionsV1 "github.com/labset/clarity-protobuf-tools/api/labset/options/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/compiler/protogen"
@@ -30,12 +30,12 @@ func TestMcpToolsGenerator_AllOperations(t *testing.T) {
 		"labset/data/v1/entity.proto",
 	)
 
-	allOps := []pluginV1.Operation{
-		pluginV1.Operation_OPERATION_CREATE,
-		pluginV1.Operation_OPERATION_GET,
-		pluginV1.Operation_OPERATION_LIST,
-		pluginV1.Operation_OPERATION_UPDATE,
-		pluginV1.Operation_OPERATION_DELETE,
+	allOps := []optionsV1.Operation{
+		optionsV1.Operation_OPERATION_CREATE,
+		optionsV1.Operation_OPERATION_GET,
+		optionsV1.Operation_OPERATION_LIST,
+		optionsV1.Operation_OPERATION_UPDATE,
+		optionsV1.Operation_OPERATION_DELETE,
 	}
 	modelsFile := testConnectCrudProtoFile(t, allOps...)
 
@@ -142,7 +142,7 @@ func TestMcpToolsGenerator_SingleOperation(t *testing.T) {
 		"labset/data/v1/entity.proto",
 	)
 
-	modelsFile := testConnectCrudProtoFile(t, pluginV1.Operation_OPERATION_GET)
+	modelsFile := testConnectCrudProtoFile(t, optionsV1.Operation_OPERATION_GET)
 
 	req := &pluginpb.CodeGeneratorRequest{
 		FileToGenerate: []string{"acme/inventory/v1/models.proto"},

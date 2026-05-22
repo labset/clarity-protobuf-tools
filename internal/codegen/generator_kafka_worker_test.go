@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	pluginV1 "github.com/labset/clarity-protobuf-tools/api/clarity/plugin/v1"
+	optionsV1 "github.com/labset/clarity-protobuf-tools/api/labset/options/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/compiler/protogen"
@@ -29,13 +29,13 @@ func newTestKafkaWorkerGenerator(outputDir string) *kafkaWorkerGenerator {
 
 func testKafkaWorkerProtoFile(
 	t *testing.T,
-	ops []pluginV1.Operation,
-	subs []pluginV1.Subscriber,
+	ops []optionsV1.Operation,
+	subs []optionsV1.Subscriber,
 ) *descriptorpb.FileDescriptorProto {
 	t.Helper()
 	mopts := &descriptorpb.MessageOptions{}
-	proto.SetExtension(mopts, pluginV1.E_Message, &pluginV1.ClarityMessageOptions{
-		Role:        pluginV1.Role_ROLE_ENTITY,
+	proto.SetExtension(mopts, optionsV1.E_Message, &optionsV1.LabsetMessageOptions{
+		Role:        optionsV1.Role_ROLE_ENTITY,
 		Operations:  ops,
 		Subscribers: subs,
 	})
@@ -69,7 +69,7 @@ func testKafkaWorkerProtoFile(
 						Name:     proto.String("entity"),
 						Number:   proto.Int32(1),
 						Type:     descriptorpb.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
-						TypeName: proto.String(".clarity.plugin.v1.Entity"),
+						TypeName: proto.String(".labset.data.v1.Entity"),
 					},
 					{
 						Name:   proto.String("name"),
@@ -96,8 +96,8 @@ func testKafkaWorkerProtoFile(
 func runKafkaWorkerGenerator(
 	t *testing.T,
 	gen *kafkaWorkerGenerator,
-	ops []pluginV1.Operation,
-	subs []pluginV1.Subscriber,
+	ops []optionsV1.Operation,
+	subs []optionsV1.Subscriber,
 ) map[string]string {
 	t.Helper()
 	deps := collectFileDescriptors(t,
@@ -126,16 +126,16 @@ func runKafkaWorkerGenerator(
 }
 
 func TestKafkaWorkerGenerator_AllOperations(t *testing.T) {
-	allOps := []pluginV1.Operation{
-		pluginV1.Operation_OPERATION_CREATE,
-		pluginV1.Operation_OPERATION_GET,
-		pluginV1.Operation_OPERATION_LIST,
-		pluginV1.Operation_OPERATION_UPDATE,
-		pluginV1.Operation_OPERATION_DELETE,
+	allOps := []optionsV1.Operation{
+		optionsV1.Operation_OPERATION_CREATE,
+		optionsV1.Operation_OPERATION_GET,
+		optionsV1.Operation_OPERATION_LIST,
+		optionsV1.Operation_OPERATION_UPDATE,
+		optionsV1.Operation_OPERATION_DELETE,
 	}
-	subs := []pluginV1.Subscriber{
-		pluginV1.Subscriber_SUBSCRIBER_AUDIT,
-		pluginV1.Subscriber_SUBSCRIBER_INDEX,
+	subs := []optionsV1.Subscriber{
+		optionsV1.Subscriber_SUBSCRIBER_AUDIT,
+		optionsV1.Subscriber_SUBSCRIBER_INDEX,
 	}
 
 	files := runKafkaWorkerGenerator(t, newTestKafkaWorkerGenerator(""), allOps, subs)
@@ -177,17 +177,17 @@ func TestKafkaWorkerGenerator_AllOperations(t *testing.T) {
 }
 
 func TestKafkaWorkerGenerator_NoSubscribers(t *testing.T) {
-	ops := []pluginV1.Operation{
-		pluginV1.Operation_OPERATION_CREATE,
-		pluginV1.Operation_OPERATION_GET,
+	ops := []optionsV1.Operation{
+		optionsV1.Operation_OPERATION_CREATE,
+		optionsV1.Operation_OPERATION_GET,
 	}
 	files := runKafkaWorkerGenerator(t, newTestKafkaWorkerGenerator(""), ops, nil)
 	assert.Len(t, files, 0)
 }
 
 func TestKafkaWorkerGenerator_CreateOnly(t *testing.T) {
-	ops := []pluginV1.Operation{pluginV1.Operation_OPERATION_CREATE}
-	subs := []pluginV1.Subscriber{pluginV1.Subscriber_SUBSCRIBER_AUDIT}
+	ops := []optionsV1.Operation{optionsV1.Operation_OPERATION_CREATE}
+	subs := []optionsV1.Subscriber{optionsV1.Subscriber_SUBSCRIBER_AUDIT}
 
 	files := runKafkaWorkerGenerator(t, newTestKafkaWorkerGenerator(""), ops, subs)
 
@@ -202,19 +202,19 @@ func TestKafkaWorkerGenerator_CreateOnly(t *testing.T) {
 }
 
 func TestKafkaWorkerGenerator_ReadOnlyOpsWithSubscribers(t *testing.T) {
-	ops := []pluginV1.Operation{
-		pluginV1.Operation_OPERATION_GET,
-		pluginV1.Operation_OPERATION_LIST,
+	ops := []optionsV1.Operation{
+		optionsV1.Operation_OPERATION_GET,
+		optionsV1.Operation_OPERATION_LIST,
 	}
-	subs := []pluginV1.Subscriber{pluginV1.Subscriber_SUBSCRIBER_AUDIT}
+	subs := []optionsV1.Subscriber{optionsV1.Subscriber_SUBSCRIBER_AUDIT}
 
 	files := runKafkaWorkerGenerator(t, newTestKafkaWorkerGenerator(""), ops, subs)
 	assert.Len(t, files, 0)
 }
 
 func TestKafkaWorkerGenerator_OutputDir(t *testing.T) {
-	ops := []pluginV1.Operation{pluginV1.Operation_OPERATION_CREATE}
-	subs := []pluginV1.Subscriber{pluginV1.Subscriber_SUBSCRIBER_AUDIT}
+	ops := []optionsV1.Operation{optionsV1.Operation_OPERATION_CREATE}
+	subs := []optionsV1.Subscriber{optionsV1.Subscriber_SUBSCRIBER_AUDIT}
 
 	files := runKafkaWorkerGenerator(t, newTestKafkaWorkerGenerator("custom/out"), ops, subs)
 
