@@ -2,7 +2,7 @@ version: v2
 
 modules:
   - path: protos
-    name: buf.build/labset/clarity-protobuf-tools
+    name: buf.build/labset/protobuf-tools
 
 lint:
   use:
